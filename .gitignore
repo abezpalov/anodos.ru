@@ -1,3 +1,5 @@
 venv/
 static/
+data/
+data
 .idea/
