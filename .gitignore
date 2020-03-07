@@ -1,5 +1,9 @@
-venv/
-static/
-data/
-data
-.idea/
+/venv/
+/static/
+/data/
+/data
+/.idea/
+/anodos/anodos/settings.py
+/anodos/static/
+/anodos/anodos/gunicorn.conf.py
+*__pycache__/
