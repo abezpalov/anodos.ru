@@ -7,3 +7,4 @@
 /anodos/static/
 /anodos/anodos/gunicorn.conf.py
 *__pycache__/
+/media

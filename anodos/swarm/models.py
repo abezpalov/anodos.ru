@@ -1,5 +1,7 @@
+import os
 import uuid
 from django.db import models
+from django.conf import settings
 from django.utils import timezone
 
 
@@ -68,11 +70,22 @@ class SourceData(models.Model):
 
     objects = SourceDataManager()
 
+    def save_file(self, data_):
+        self.file_name = '{}swarm/{}/{}'.format(settings.MEDIA_ROOT, self.source.name, self.url)
+        directory = '/'
+        for dir_ in self.file_name.split('/')[:-1]:
+            directory = '{}/{}'.format(directory, dir_)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+        with open(self.file_name, "wb") as f:
+            f.write(data_.getbuffer())
+        self.save()
+
     def __str__(self):
         if self.url:
-            return '{}/{}'.format(self.source.name, self.url)
+            return 'SourceData: {}/{}'.format(self.source.name, self.url)
         else:
-            return '{}'.format(self.source.name)
+            return 'SourceData: {}'.format(self.source.name)
 
     class Meta:
         ordering = ['url']
