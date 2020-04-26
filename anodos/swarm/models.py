@@ -65,8 +65,10 @@ class SourceData(models.Model):
 
     source = models.ForeignKey('Source', null=True, default=None,
                                on_delete=models.CASCADE, related_name='+')
-    url = models.TextField(null=True, default=None)
+    url = models.TextField(null=True, default=None, db_index=True)
     file_name = models.TextField(null=True, default=None)
+
+    created = models.DateTimeField(default=timezone.now)
 
     objects = SourceDataManager()
 
@@ -83,9 +85,9 @@ class SourceData(models.Model):
 
     def __str__(self):
         if self.url:
-            return 'SourceData: {}/{}'.format(self.source.name, self.url)
+            return 'SourceData: {}'.format(self.url)
         else:
             return 'SourceData: {}'.format(self.source.name)
 
     class Meta:
-        ordering = ['url']
+        ordering = ['created']
