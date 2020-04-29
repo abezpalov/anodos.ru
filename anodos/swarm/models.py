@@ -25,7 +25,6 @@ class SourceManager(models.Manager):
 
 
 class Source(models.Model):
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     name = models.CharField(max_length=512, unique=True)
@@ -60,7 +59,6 @@ class SourceDataManager(models.Manager):
 
 
 class SourceData(models.Model):
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     source = models.ForeignKey('Source', null=True, default=None,
@@ -69,6 +67,7 @@ class SourceData(models.Model):
     file_name = models.TextField(null=True, default=None)
 
     created = models.DateTimeField(default=timezone.now)
+    parsed = models.DateTimeField(null=True, default=None)
 
     objects = SourceDataManager()
 
@@ -83,6 +82,10 @@ class SourceData(models.Model):
             f.write(data_.getbuffer())
         self.save()
 
+    def set_parsed(self):
+        self.parsed = timezone.now()
+        self.save()
+
     def __str__(self):
         if self.url:
             return 'SourceData: {}'.format(self.url)
@@ -91,3 +94,44 @@ class SourceData(models.Model):
 
     class Meta:
         ordering = ['created']
+
+
+class DataManager(models.Manager):
+
+    @staticmethod
+    def add(source_data, content_type, content, **kwargs):
+        o = Data()
+        o.source_data = source_data
+        o.content_type = content_type
+        o.save()
+
+        o.file_name = '{}swarm/data/{}.{}'.format(settings.MEDIA_ROOT, o.id, o.content_type)
+        directory = '/'
+        for dir_ in o.file_name.split('/')[:-1]:
+            directory = '{}/{}'.format(directory, dir_)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+        with open(o.file_name, "wb") as f:
+            f.write(content)
+        o.save()
+
+        return o
+
+
+class Data(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    source_data = models.ForeignKey('SourceData', null=True, default=None,
+                                    on_delete=models.CASCADE, related_name='+')
+    content_type = models.TextField(null=True, default=None, db_index=True)
+    file_name = models.TextField(null=True, default=None, db_index=True)
+
+    created = models.DateTimeField(default=timezone.now)
+    parsed = models.DateTimeField(null=True, default=None)
+
+#    def __str__(self):
+#        'Data: {}'.format(self.id)
+
+    class Meta:
+        ordering = ['created']
+
+    objects = DataManager()

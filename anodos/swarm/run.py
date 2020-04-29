@@ -11,7 +11,7 @@ from django.core.wsgi import get_wsgi_application
 application = get_wsgi_application()
 
 # Выполняем необходимый загрузчик
-print("Пробую выполнить загрузчик " + sys.argv[1])
+print('Worker run', sys.argv[1])
 Worker = __import__('swarm.workers.' + sys.argv[1], fromlist=['Worker'])
 worker = Worker.Worker()
 
