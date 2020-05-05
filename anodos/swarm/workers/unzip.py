@@ -9,8 +9,11 @@ class Worker(Worker):
         super().__init__()
 
     def run(self):
+        # При необходимости удаляем предыдущие версии
+        # self.clear()
+
         # Забираем все объекты, требующие обработку
-        count = SourceData.objects.filter(parsed=None, file_name__icontains='.zip').count()
+        count = SourceData.objects.filter(parsed=None, file_name__endswith='.zip').count()
         print(f'Нераспакованных файлов: {count}')
         for source_data in SourceData.objects.filter(parsed=None, file_name__icontains='.zip'):
 
@@ -18,18 +21,26 @@ class Worker(Worker):
             try:
                 with zipfile.ZipFile(source_data.file_name, 'r') as zip:
                     for file_name in zip.namelist():
-                        content_type = None
-                        if file_name.endswith('.xml'):
-                            content_type = 'xml'
-                        if content_type:
-                            content = zip.open(file_name).read()
-                            data = Data.objects.add(source_data=source_data,
-                                                    content_type=content_type,
-                                                    file_name=file_name,
-                                                    content=content)
-                            print(data)
+                        content_type = file_name.split('.')[-1]
+                        content = zip.open(file_name).read()
+                        data = Data.objects.add(source_data=source_data,
+                                                content_type=content_type,
+                                                file_name=file_name,
+                                                content=content)
+                        print(data)
+
                     source_data.set_parsed()
                     print(source_data, '- parced', len(zip.namelist()))
 
             except zipfile.BadZipFile:
                 source_data.delete()
+
+    def clear(self):
+        print(Data.objects.all().count())
+        Data.objects.all().delete()
+        print(Data.objects.all().count())
+
+        print(SourceData.objects.filter(parsed=None, file_name__endswith='.zip').count())
+        SourceData.objects.filter(file_name__endswith='.zip').update(parsed=None)
+        print(SourceData.objects.filter(parsed=None, file_name__endswith='.zip').count())
+        exit()

@@ -1,6 +1,5 @@
 import os
 import sys
-from django.utils import timezone
 
 # Импортируем настройки проекта Django
 sys.path.append('/home/abezpalov/anodos.ru/anodos/')

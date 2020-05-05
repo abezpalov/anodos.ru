@@ -55,6 +55,12 @@ class SourceDataManager(models.Manager):
             o.url = url
             o.save()
 
+        # Проверяем наличие уже скачанного файла
+        file_name = '{}swarm/{}/{}'.format(settings.MEDIA_ROOT, o.source.name, o.url)
+        if os.path.isfile(file_name):
+            o.file_name = file_name
+            o.save()
+
         return o
 
 
@@ -105,7 +111,10 @@ class DataManager(models.Manager):
         o.content_type = content_type
         o.save()
 
-        o.file_name = '{}swarm/data/{}.{}'.format(settings.MEDIA_ROOT, o.id, o.content_type)
+        o.file_name = '{}swarm/data/{}/{}.{}'.format(settings.MEDIA_ROOT,
+                                                     o.content_type,
+                                                     o.id,
+                                                     o.content_type)
         directory = '/'
         for dir_ in o.file_name.split('/')[:-1]:
             directory = '{}/{}'.format(directory, dir_)
@@ -128,8 +137,8 @@ class Data(models.Model):
     created = models.DateTimeField(default=timezone.now)
     parsed = models.DateTimeField(null=True, default=None)
 
-#    def __str__(self):
-#        'Data: {}'.format(self.id)
+    def __str__(self):
+        'Data: {}'.format(self.file_name)
 
     class Meta:
         ordering = ['created']

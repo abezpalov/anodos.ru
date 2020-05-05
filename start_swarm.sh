@@ -1,1 +1,0 @@
-~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py zakupki_44_download
