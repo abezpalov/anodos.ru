@@ -52,4 +52,5 @@ class Worker(Worker):
                 if data_ is not None:
                     data.save_file(data_)
                 else:
+                    print('Delete', data)
                     data.delete()

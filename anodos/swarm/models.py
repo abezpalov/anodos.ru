@@ -42,13 +42,11 @@ class Source(models.Model):
 
 class SourceDataManager(models.Manager):
 
-    def take(self, source, url=None, **kwargs):
+    def take(self, source, url=None):
         if not source:
             return None
-
         try:
             o = self.get(source=source, url=url)
-
         except SourceData.DoesNotExist:
             o = SourceData()
             o.source = source
@@ -105,7 +103,7 @@ class SourceData(models.Model):
 class DataManager(models.Manager):
 
     @staticmethod
-    def add(source_data, content_type, content, **kwargs):
+    def add(source_data, content_type, content):
         o = Data()
         o.source_data = source_data
         o.content_type = content_type

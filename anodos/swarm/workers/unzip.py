@@ -10,7 +10,7 @@ class Worker(Worker):
 
     def run(self):
         # При необходимости удаляем предыдущие версии
-        # self.clear()
+        self.clear()
 
         # Забираем все объекты, требующие обработку
         count = SourceData.objects.filter(parsed=None, file_name__endswith='.zip').count()
@@ -27,8 +27,6 @@ class Worker(Worker):
                                                 content_type=content_type,
                                                 file_name=file_name,
                                                 content=content)
-                        print(data)
-
                     source_data.set_parsed()
                     print(source_data, '- parced', len(zip.namelist()))
 
