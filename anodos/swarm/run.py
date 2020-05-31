@@ -1,6 +1,10 @@
 import os
 import sys
 
+# Убираем предупреждения
+import warnings
+warnings.filterwarnings("ignore")
+
 # Импортируем настройки проекта Django
 sys.path.append('/home/abezpalov/anodos.ru/anodos/')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'anodos.settings'

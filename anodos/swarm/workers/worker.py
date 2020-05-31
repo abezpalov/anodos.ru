@@ -1,6 +1,11 @@
 import ftplib
+import requests
+import lxml.html
+import telebot
+from telebot import apihelper
 from io import BytesIO
 
+from django.conf import settings
 from django.utils import timezone
 from swarm.models import *
 
@@ -10,6 +15,14 @@ class Worker:
     def __init__(self):
         self.start_time = timezone.now()
         self.ftp = None
+        self.session = None
+        self.cookies = None
+        self.bot = telebot.TeleBot(settings.TELEGRAM_TOKEN)
+        apihelper.proxy = settings.TELEGRAM_PROXY
+
+    def send(self, content='test'):
+        self.bot.send_message(chat_id=371720209, text=content, parse_mode='HTML',
+                              disable_web_page_preview=True)
 
     def ftp_login(self, host):
         if self.ftp is None:
@@ -51,3 +64,29 @@ class Worker:
             self.ftp = None
             return None
         return data
+
+    def load(self, url, result_type=None):
+
+        if self.session is None:
+            self.session = requests.Session()
+
+        if self.cookies is None:
+            r = self.session.get(url, allow_redirects=True, verify=False)
+            self.cookies = r.cookies
+        else:
+            r = self.session.get(url, allow_redirects=True, verify=False,
+                                 cookies=self.cookies)
+            self.cookies = r.cookies
+
+        if result_type == 'cookie':
+            return r.cookie
+        elif result_type == 'text':
+            return r.text
+        elif result_type == 'html':
+            tree = lxml.html.fromstring(r.text)
+            return tree
+        elif result_type == 'content':
+            return r.content
+
+        return r
+

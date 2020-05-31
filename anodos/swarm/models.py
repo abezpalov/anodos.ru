@@ -69,6 +69,7 @@ class SourceData(models.Model):
                                on_delete=models.CASCADE, related_name='+')
     url = models.TextField(null=True, default=None, db_index=True)
     file_name = models.TextField(null=True, default=None)
+    content = models.TextField(null=True, default=None)
 
     created = models.DateTimeField(default=timezone.now)
     parsed = models.DateTimeField(null=True, default=None)

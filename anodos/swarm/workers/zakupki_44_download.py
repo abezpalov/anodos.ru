@@ -1,4 +1,3 @@
-import os
 from swarm.models import *
 from swarm.workers.worker import Worker
 
