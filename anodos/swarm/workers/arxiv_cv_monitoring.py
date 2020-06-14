@@ -4,12 +4,12 @@ from swarm.workers.worker import Worker
 
 class Worker(Worker):
 
-    name = 'ocs.ru/promo'
+    name = 'arxiv.org/cv'
     login = None
     password = None
-    start_url = 'https://www.ocs.ru/Promo'
-    base_url = 'https://www.ocs.ru'
-    company = 'OCS'
+    start_url = 'https://arxiv.org/list/cs.CV/recent'
+    base_url = 'https://arxiv.org'
+    company = 'Cornell Univercity'
 
     def __init__(self):
         self.source = Source.objects.take(
@@ -22,22 +22,28 @@ class Worker(Worker):
 
         # Заходим на первую страницу
         tree = self.load(url=self.start_url, result_type='html')
+        exit()
 
         # Получаем все ссылки
         items = tree.xpath('//div[@class="item"]')
+
         for item in items:
-            vendor = item.xpath('.//*[@class="vendor"]//text()')[0]
-            term = item.xpath('.//*[@class="term"]//text()')[0]
-            title = item.xpath('.//h2//text()')[0]
-            text = item.xpath('.//div[@class="info"]/p//text()')[0]
+            date = item.xpath('.//*[@class="date"]/strong/text()')[0]
+            location = item.xpath('.//*[@class="date"]/span/text()')[0]
+            title = item.xpath('.//h2/a/text()')[0]
             url = item.xpath('.//h2/a/@href')[0]
+            try:
+                text = item.xpath('.//div[@class="info"]/p//text()')[0]
+            except IndexError:
+                text = ''
+
             if not url.startswith(self.base_url):
                 url = '{}{}'.format(self.base_url, url)
 
             try:
                 SourceData.objects.get(source=self.source, url=url)
             except SourceData.DoesNotExist:
-                content = f'<b>Промо-акция {self.company} и {vendor}</b>\n<i>{term}</i>\n\n<a href="{url}">{title}</a>\n{text}\n'
+                content = f'<b>Мероприятие {self.company}</b>\n<i>{date} {location}</i>\n\n<a href="{url}">{title}</a>\n{text}\n'
                 print(content)
                 self.send(content)
                 data = SourceData.objects.take(source=self.source, url=url)

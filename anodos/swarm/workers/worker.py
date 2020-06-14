@@ -1,3 +1,4 @@
+import time
 import ftplib
 import requests
 import lxml.html
@@ -21,8 +22,9 @@ class Worker:
         apihelper.proxy = settings.TELEGRAM_PROXY
 
     def send(self, content='test'):
-        self.bot.send_message(chat_id=371720209, text=content, parse_mode='HTML',
+        self.bot.send_message(chat_id=-1001427939802, text=content, parse_mode='HTML',
                               disable_web_page_preview=True)
+        time.sleep(10)
 
     def ftp_login(self, host):
         if self.ftp is None:
