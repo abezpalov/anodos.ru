@@ -41,7 +41,9 @@ class Worker(Worker):
             except SourceData.DoesNotExist:
                 content = f'<b>{news_type} {self.company}</b>\n<i>{term}</i>\n\n<a href="{url}">{title}</a>\n{text}\n'
                 print(content)
+
                 self.send(content)
+
                 data = SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
