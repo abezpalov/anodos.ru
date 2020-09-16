@@ -10,3 +10,4 @@ class AdminSource(admin.ModelAdmin):
 @admin.register(SourceData)
 class AdminSourceData(admin.ModelAdmin):
     pass
+

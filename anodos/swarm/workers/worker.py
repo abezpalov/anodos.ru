@@ -2,9 +2,8 @@ import time
 import ftplib
 import requests
 import lxml.html
-import telebot
-from telebot import apihelper
 from io import BytesIO
+import telebot
 
 from django.conf import settings
 from django.utils import timezone
@@ -19,7 +18,6 @@ class Worker:
         self.session = None
         self.cookies = None
         self.bot = telebot.TeleBot(settings.TELEGRAM_TOKEN)
-        apihelper.proxy = settings.TELEGRAM_PROXY
 
     def send(self, content='test'):
         self.bot.send_message(chat_id=-1001427939802, text=content, parse_mode='HTML',
@@ -27,10 +25,10 @@ class Worker:
         time.sleep(10)
 
     def ftp_login(self, host):
-        if self.ftp is None:
-            self.ftp = ftplib.FTP(host=host, timeout=30)
-            self.ftp.set_pasv(val=True)
-            self.ftp.login(user=self.source.login, passwd=self.source.password)
+        self.ftp = ftplib.FTP(host=host, timeout=30)
+        self.ftp.set_pasv(val=True)
+        self.ftp.login(user=self.source.login, passwd=self.source.password)
+        self.ftp.encoding = 'utf-8'
 
     def get_ftp_catalog(self, host, catalog=None):
         """Возвращает содержимое папки"""
@@ -91,4 +89,3 @@ class Worker:
             return r.content
 
         return r
-
