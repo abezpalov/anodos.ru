@@ -19,9 +19,9 @@ class Worker:
         self.cookies = None
         self.bot = telebot.TeleBot(settings.TELEGRAM_TOKEN)
 
-    def send(self, content='test'):
+    def send(self, content='test', disable_web_page_preview=True):
         self.bot.send_message(chat_id=-1001427939802, text=content, parse_mode='HTML',
-                              disable_web_page_preview=True)
+                              disable_web_page_preview=disable_web_page_preview)
         time.sleep(10)
 
     def ftp_login(self, host):
@@ -89,3 +89,15 @@ class Worker:
             return r.content
 
         return r
+
+    @staticmethod
+    def fix_text(text):
+        while '  ' in text:
+            text = text.replace('  ', ' ')
+        while '/n/n' in text:
+            text = text.replace('/n/n', '/n')
+        text = text.replace(' : ', ': ')
+        text = text.replace(' - ', ' — ')
+        text = text.strip()
+
+        return text

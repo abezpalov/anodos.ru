@@ -37,11 +37,12 @@ class Worker(Worker):
 
                 tree = self.load(url=url, result_type='html')
                 title = tree.xpath('//title/text()')[0].split(' - ')[0]
+                title = self.fix_text(title)
 
-                content = f'<b>{news_type} {self.company}</b>\n<i>{term}</i>\n\n<a href="{url}">{title}</a>\n'
+                content = f'<b>{news_type} {self.company}</b>\n<i>{term}</i>\n\n{title}\n<a href="{url}">{url}</a>\n'
                 print(content)
 
-                self.send(content)
+                self.send(content, disable_web_page_preview=False)
                 data = SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
