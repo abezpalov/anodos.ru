@@ -24,7 +24,7 @@ class Worker(Worker):
         # Заходим на первую страницу
         tree = self.load(url=self.start_url, result_type='html')
 
-        youtube_ids = tree.xpath('//div[@class="tn-atom__videoiframe"]/@data-youtubeid')
+        youtube_ids = tree.xpath('//*/@data-youtubeid')
 
         for youtube_id in youtube_ids:
             news_type = 'Мероприятие'
@@ -36,7 +36,7 @@ class Worker(Worker):
             except SourceData.DoesNotExist:
 
                 tree = self.load(url=url, result_type='html')
-                title = tree.xpath('//title/text()')[0].split(' - ')[0]
+                title = tree.xpath('//title/text()')[0]
                 title = self.fix_text(title)
 
                 content = f'<b>{news_type} {self.company}</b>\n<i>{term}</i>\n\n{title}\n<a href="{url}">{url}</a>\n'
