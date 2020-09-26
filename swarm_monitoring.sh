@@ -12,5 +12,6 @@ timeout 2m ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py mont_new
 
 timeout 2m ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py fujitsu_news_monitoring
 timeout 2m ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py fujitsu_blog_monitoring
+timeout 2m ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py fujitsu_techblog_monitoring
 
 timeout 2m ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py maed_webinars_monitoring
