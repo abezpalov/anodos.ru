@@ -4,7 +4,7 @@ from swarm.workers.worker import Worker
 
 class Worker(Worker):
 
-    name = 'axoft.ru/news'
+    name = 'axoft.ru/events'
     login = None
     password = None
     start_url = 'https://axoft.ru/current/events/list/'
@@ -28,7 +28,7 @@ class Worker(Worker):
         items.reverse()
 
         for item in items:
-            news_type = 'Новость'
+            news_type = 'Мероприятие'
             try:
                 title = item.xpath('.//h3//a/text()')[0]
                 url = item.xpath('.//h3//a/@href')[0]

@@ -4,7 +4,7 @@ from swarm.workers.worker import Worker
 
 class Worker(Worker):
 
-    name = 'fujitsu.ru/news'
+    name = 'fujitsu.ru/techblog'
     login = None
     password = None
     start_url = 'https://techcommunity.ts.fujitsu.com/en/blog.html'
