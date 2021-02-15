@@ -35,7 +35,7 @@ class Worker(Worker):
         self.get_stocks_orderbooks()
 
 
-    def post(self, command=''):
+    def get(self, command=''):
         url = f'{self.url}{command}'
         print(url)
         headers = {'Authorization': f'Bearer {self.token}',
@@ -44,7 +44,7 @@ class Worker(Worker):
         return result.json()
 
     def get_stocks(self):
-        stocks = self.post(command='market/stocks')
+        stocks = self.get(command='market/stocks')
         for n, stock in enumerate(stocks['payload']['instruments']):
             instrument = Instrument.objects.take_by_figi(
                 figi=stock.get('figi', None),
@@ -62,7 +62,7 @@ class Worker(Worker):
                 instrument))
 
     def get_bonds(self):
-        bonds = self.post(command='market/bonds')
+        bonds = self.get(command='market/bonds')
         for n, bond in enumerate(bonds['payload']['instruments']):
             instrument = Instrument.objects.take_by_figi(
                 figi=bond.get('figi', None),
@@ -80,7 +80,7 @@ class Worker(Worker):
                 instrument))
 
     def get_etfs(self):
-        etfs = self.post(command='market/etfs')
+        etfs = self.get(command='market/etfs')
         for n, etf in enumerate(etfs['payload']['instruments']):
             instrument = Instrument.objects.take_by_figi(
                 figi=etf.get('figi', None),
@@ -98,7 +98,7 @@ class Worker(Worker):
                 instrument))
 
     def get_currencies(self):
-        currencies = self.post(command='market/currencies')
+        currencies = self.get(command='market/currencies')
         for n, currency in enumerate(currencies['payload']['instruments']):
             instrument = Instrument.objects.take_by_figi(
                 figi=currency.get('figi', None),
