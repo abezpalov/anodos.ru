@@ -1,6 +1,9 @@
 import requests as r
 import json
 
+from django.utils import timezone
+from datetime import timedelta
+
 from swarm.models import *
 from trader.models import *
 from swarm.workers.worker import Worker
@@ -27,16 +30,16 @@ class Worker(Worker):
 
         # Обновляем список инструментов
         self.get_stocks()
-        self.get_bonds()
-        self.get_etfs()
-        self.get_currencies()
+        # self.get_bonds()
+        # self.get_etfs()
+        # self.get_currencies()
 
         # Получаем информацию о текущих торгах
-        self.get_stocks_orderbooks()
+        self.get_stocks_now()
 
 
-    def get(self, command=''):
-        url = f'{self.url}{command}'
+    def get(self, command='', parameters=''):
+        url = f'{self.url}{command}{parameters}'
         print(url)
         headers = {'Authorization': f'Bearer {self.token}',
                    'accept': 'application/json'}
@@ -98,7 +101,8 @@ class Worker(Worker):
                 instrument))
 
     def get_currencies(self):
-        currencies = self.get(command='market/currencies')
+        command = 'market/currencies'
+        currencies = self.get(command=command)
         for n, currency in enumerate(currencies['payload']['instruments']):
             instrument = Instrument.objects.take_by_figi(
                 figi=currency.get('figi', None),
@@ -115,9 +119,33 @@ class Worker(Worker):
                 len(currencies['payload']['instruments']),
                 instrument))
 
-    def get_stocks_orderbooks(self):
+    def get_stocks_now(self):
+        stocks = Instrument.objects.filter(type='Stock')
+        l = len(stocks)
+        for n, stock in enumerate(stocks):
+            print(f'{n+1}/{l} {stock}')
 
-        stocks = Instruments.objects.filter(type='Stock')
-        for stock in stocks:
+            # Получаем состояние стакана
+            command = 'market/orderbook'
+            parameters = f'?figi={stock.figi}&depth=20'
+            orderbook = self.get(command=command, parameters=parameters)
 
+            # Получаем минутные свечи за 3 часа
+            command = '/market/candles'
+            now = timezone.now()
+            start = self.datetime_to_str(now - timedelta(hours=3))
+            end = self.datetime_to_str(now)
+            parameters = f'?figi={stock.figi}&from={start}&to={end}&interval=1min'
+            candles = self.get(command=command, parameters=parameters)
 
+            snapshot = Snapshot.objects.add(instrument=stock,
+                                            orderbook=orderbook,
+                                            candles=candles)
+            print(snapshot)
+
+    def datetime_to_str(self, x):
+        x = str(x)
+        x = x.replace(' ', 'T')
+        x = x.replace(':', '%3A')
+        x = x.replace('+', '%2B')
+        return x
