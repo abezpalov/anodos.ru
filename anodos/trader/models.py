@@ -60,7 +60,7 @@ class Instrument(models.Model):
     objects = InstrumentManager()
 
     def __str__(self):
-        return "Instrument: {} {}".format(self.ticker, self.name)
+        return "Instrument: {} ({})".format(self.ticker, self.name)
 
     class Meta:
         ordering = ['ticker']

@@ -35,12 +35,11 @@ class Worker(Worker):
         # self.get_currencies()
 
         # Получаем информацию о текущих торгах
-        self.get_stocks_now()
-
+        while True:
+            self.get_stocks_now()
 
     def get(self, command='', parameters=''):
         url = f'{self.url}{command}{parameters}'
-        print(url)
         headers = {'Authorization': f'Bearer {self.token}',
                    'accept': 'application/json'}
         result = r.get(url, headers=headers, verify=None)
