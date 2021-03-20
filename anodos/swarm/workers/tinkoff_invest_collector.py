@@ -30,20 +30,27 @@ class Worker(Worker):
 
         # Обновляем список инструментов
         self.get_stocks()
-        # self.get_bonds()
-        # self.get_etfs()
-        # self.get_currencies()
+        self.get_bonds()
+        self.get_etfs()
+        self.get_currencies()
+
+        # self.get_candles_history()
 
         # Получаем информацию о текущих торгах
-        while True:
-            self.get_stocks_now()
+        #while True:
+        #    self.get_stocks_now()
 
     def get(self, command='', parameters=''):
         url = f'{self.url}{command}{parameters}'
         headers = {'Authorization': f'Bearer {self.token}',
                    'accept': 'application/json'}
         result = r.get(url, headers=headers, verify=None)
-        return result.json()
+        try:
+            return result.json()
+        except json.decoder.JSONDecodeError:
+            return None
+        except r.exceptions.ConnectionError:
+            return None
 
     def get_stocks(self):
         stocks = self.get(command='market/stocks')
@@ -117,6 +124,12 @@ class Worker(Worker):
                 n + 1,
                 len(currencies['payload']['instruments']),
                 instrument))
+
+    def get_candles_history(self):
+        command = '/market/candles'
+
+
+
 
     def get_stocks_now(self):
         stocks = Instrument.objects.filter(type='Stock')

@@ -1,7 +1,12 @@
 from django.contrib import admin
-from trader.models import Instrument
+from trader.models import Instrument, Snapshot
 
 
 @admin.register(Instrument)
-class AdminSource(admin.ModelAdmin):
+class AdminInstrument(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Snapshot)
+class AdminSnapshot(admin.ModelAdmin):
     pass

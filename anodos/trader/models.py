@@ -62,6 +62,9 @@ class Instrument(models.Model):
     def __str__(self):
         return "Instrument: {} ({})".format(self.ticker, self.name)
 
+    def get_last_candles_datetime(self, interval):
+        pass
+
     class Meta:
         ordering = ['ticker']
 
@@ -92,3 +95,26 @@ class Snapshot(models.Model):
 
     class Meta:
         ordering = ['created']
+
+
+class CandleManager(models.Manager):
+
+    pass
+
+
+class Candle(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    instrument = models.ForeignKey('Instrument', on_delete=models.CASCADE)
+    datetime = models.DateTimeField(db_index=True)
+
+    interval = models.CharField(max_length=8, db_index=True)
+    o = models.DecimalField(max_digits=20, decimal_places=10)
+    c = models.DecimalField(max_digits=20, decimal_places=10)
+    h = models.DecimalField(max_digits=20, decimal_places=10)
+    l = models.DecimalField(max_digits=20, decimal_places=10)
+    v = models.DecimalField(max_digits=20, decimal_places=10)
+
+    objects = CandleManager()
+
+
