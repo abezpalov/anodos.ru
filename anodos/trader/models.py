@@ -2,7 +2,6 @@ import os
 import uuid
 from django.db import models
 from django.conf import settings
-from django.utils import timezone
 
 
 class InstrumentManager(models.Manager):
@@ -63,7 +62,16 @@ class Instrument(models.Model):
         return "Instrument: {} ({})".format(self.ticker, self.name)
 
     def get_last_candles_datetime(self, interval):
-        pass
+        try:
+            return Candle.objects.filter(instrument=self, interval=interval).order_by('-datetime')[0].datetime
+        except IndexError:
+            return None
+
+    def get_first_candles_datetime(self, interval):
+        try:
+            return Candle.objects.filter(instrument=self, interval=interval).order_by('datetime')[0].datetime
+        except IndexError:
+            return None
 
     class Meta:
         ordering = ['ticker']
@@ -99,7 +107,22 @@ class Snapshot(models.Model):
 
 class CandleManager(models.Manager):
 
-    pass
+    def write(self, instrument, datetime, interval, o, c, h, l, v):
+        try:
+            candle = self.get(instrument=instrument, datetime=datetime, interval=interval)
+        except Candle.DoesNotExist:
+            candle = Candle()
+            candle.instrument = instrument
+            candle.datetime = datetime
+            candle.interval = interval
+
+        candle.o = o
+        candle.c = c
+        candle.h = h
+        candle.l = l
+        candle.v = v
+        candle.save()
+        return candle
 
 
 class Candle(models.Model):
@@ -113,8 +136,12 @@ class Candle(models.Model):
     c = models.DecimalField(max_digits=20, decimal_places=10)
     h = models.DecimalField(max_digits=20, decimal_places=10)
     l = models.DecimalField(max_digits=20, decimal_places=10)
-    v = models.DecimalField(max_digits=20, decimal_places=10)
+    v = models.BigIntegerField()
 
     objects = CandleManager()
 
+    def __str__(self):
+        return "Candle: {} {} {}".format(self.instrument.ticker, self.interval, self.datetime)
 
+    class Meta:
+        ordering = ['-datetime']
