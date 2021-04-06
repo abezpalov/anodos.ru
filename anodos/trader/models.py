@@ -61,11 +61,18 @@ class Instrument(models.Model):
     def __str__(self):
         return "Instrument: {} ({})".format(self.ticker, self.name)
 
-    def get_last_candles_datetime(self, interval):
+    def get_last_candles_datetime(self, interval, default, force_default=False):
         try:
-            return Candle.objects.filter(instrument=self, interval=interval).order_by('-datetime')[0].datetime
+            result = Candle.objects.filter(instrument=self,
+                                           interval=interval).order_by('-datetime')[0].datetime
         except IndexError:
-            return None
+            if force_default:
+                print('Use Force default')
+                result = default
+            else:
+                print('Use NOT Force default')
+                result = self.get_first_candles_datetime(interval='month')
+        return result
 
     def get_first_candles_datetime(self, interval):
         try:

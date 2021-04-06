@@ -26,8 +26,8 @@ class Worker(Worker):
                        '15min': {'min': timedelta(minutes=15), 'max': timedelta(days=1)},
                        '30min': {'min': timedelta(minutes=30), 'max': timedelta(days=1)},
                        'hour': {'min': timedelta(hours=1), 'max': timedelta(days=7)},
-                       'day': {'min': timedelta(days=1), 'max': timedelta(days=200)},
-                       'week': {'min': timedelta(days=7), 'max': timedelta(days=210)},
+                       'day': {'min': timedelta(days=1), 'max': timedelta(days=365)},
+                       'week': {'min': timedelta(days=7), 'max': timedelta(days=365)},
                        'month': {'min': timedelta(days=31), 'max': timedelta(days=365)}}
     start_datetime = datetime.combine(date(2000, 1, 1), time(0, 0, 0, 0))
 
@@ -42,21 +42,13 @@ class Worker(Worker):
 
     def run(self):
 
-        # TODO for test
-        # self.get_candles_test()
-        # Candle.objects.all().delete()
-        #candles = Candle.objects.filter(instrument__ticker="GOSS", interval="day")
-        #for candle in candles:
-        #    print(candle)
-        # exit()
-
         # Обновляем список инструментов
-        self.get_stocks()
-        self.get_bonds()
-        self.get_etfs()
-        self.get_currencies()
+        self.update_stocks()
+        self.update_bonds()
+        self.update_etfs()
+        self.update_currencies()
 
-        self.get_candles_history(instrument_type='Stock')
+        self.update_instruments_history(instrument_type='Stock')
 
         # Получаем информацию о текущих торгах
         #while True:
@@ -76,7 +68,7 @@ class Worker(Worker):
             result = None
         return result
 
-    def get_stocks(self):
+    def update_stocks(self):
         stocks = self.get(command='market/stocks')
         for n, stock in enumerate(stocks['payload']['instruments']):
             instrument = Instrument.objects.take_by_figi(
@@ -93,9 +85,8 @@ class Worker(Worker):
                 n + 1,
                 len(stocks['payload']['instruments']),
                 instrument))
-        Instrument.objects.filter(ticker__contains='_old', type='Stock').delete()
 
-    def get_bonds(self):
+    def update_bonds(self):
         bonds = self.get(command='market/bonds')
         for n, bond in enumerate(bonds['payload']['instruments']):
             instrument = Instrument.objects.take_by_figi(
@@ -113,7 +104,7 @@ class Worker(Worker):
                 len(bonds['payload']['instruments']),
                 instrument))
 
-    def get_etfs(self):
+    def update_etfs(self):
         etfs = self.get(command='market/etfs')
         for n, etf in enumerate(etfs['payload']['instruments']):
             instrument = Instrument.objects.take_by_figi(
@@ -131,7 +122,7 @@ class Worker(Worker):
                 len(etfs['payload']['instruments']),
                 instrument))
 
-    def get_currencies(self):
+    def update_currencies(self):
         command = 'market/currencies'
         currencies = self.get(command=command)
         for n, currency in enumerate(currencies['payload']['instruments']):
@@ -150,7 +141,7 @@ class Worker(Worker):
                 len(currencies['payload']['instruments']),
                 instrument))
 
-    def get_candles_test(self):
+    def update_candles_test(self):
         instrument = Instrument.objects.filter(type='Stock')[0]
         command = '/market/candles'
         x = '2020-01-01T00%3A00%3A00.000000%2B00%3A00'
@@ -163,66 +154,96 @@ class Worker(Worker):
             print(candles['status'], candles['payload']['code'])
             print(candles['payload']['message'])
 
-    def get_candles_history(self, instrument_type):
+    def update_instruments_history(self, instrument_type=None):
 
-        instruments = Instrument.objects.filter(type=instrument_type)
-        command = '/market/candles'
+        if instrument_type is None:
+            instruments = Instrument.objects.all()
+        else:
+            instruments = Instrument.objects.filter(type=instrument_type)
 
         l = len(instruments)
 
         for n, instrument in enumerate(instruments):
+            print(f'\n\n{n+1}/{l} {instrument}')
+            self.update_instrument_history(instrument)
 
-            # Отображаем текущий инструмент
-            print(f'{n+1}/{l} {instrument}')
+    def update_instrument_history(self, instrument):
+        command = '/market/candles'
 
-            for i, interval in enumerate(self.intervals):
-                global_start = instrument.get_last_candles_datetime(interval=interval)
-                global_end = datetime.utcnow()
+        # Проверяем, есть ли торги за последний месяц
+        if not self.is_actual(instrument):
+            return None
 
-                if i > 0 and global_start is None:
-                    global_start = instrument.get_first_candles_datetime(
-                        interval=self.intervals[i-1])
+        # Проходим по всем интересуемым интервалам
+        for i, interval in enumerate(self.intervals):
 
-                # Готовим первый период
-                start, end = self.first_interval(interval, global_start, global_end)
+            # Определяем общие интервалы загрузки данных
+            if i == 0:
+                global_start = instrument.get_last_candles_datetime(interval=interval,
+                                                                    default=self.start_datetime,
+                                                                    force_default=True)
+            else:
+                global_start = instrument.get_last_candles_datetime(interval=interval,
+                                                                    default=self.start_datetime,
+                                                                    force_default=False)
+            global_end = datetime.utcnow()
+            print(interval, global_start, global_end)
 
-                # Получаем данные итерационно в пределах лимитов диапазонов
-                while True:
+            # Если нет стартового интервала, пропускаем
+            if global_start is None:
+                continue
 
-                    # Готовим запрос
-                    start_ = self.datetime_to_str(start)
-                    end_ = self.datetime_to_str(end)
-                    parameters = f'?figi={instrument.figi}&from={start_}&to={end_}&interval={interval}'
+            # Готовим первый период
+            start, end = self.first_interval(interval, global_start, global_end)
 
-                    # Получаем партию свечей
-                    print('Get candles:', interval, start, end)
-                    candles = self.get(command=command, parameters=parameters)
+            # Получаем данные итерационно в пределах лимитов диапазонов
+            while True:
 
-                    # Заносим информацию в базу
-                    if candles is None:
-                        pass
-                    elif candles['status'] == 'Ok':
-                        for candle in candles['payload']['candles']:
-                            candle = Candle.objects.write(instrument=instrument,
-                                                          datetime=candle['time'],
-                                                          interval=candle['interval'],
-                                                          o=candle['o'],
-                                                          c=candle['c'],
-                                                          h=candle['h'],
-                                                          l=candle['l'],
-                                                          v=candle['v'])
-                            print(candle)
-                    else:
-                        print(parameters)
-                        print(candles['status'], candles['payload']['code'])
-                        print(candles['payload']['message'])
+                # Готовим запрос
+                start_ = self.datetime_to_str(start)
+                end_ = self.datetime_to_str(end)
+                parameters = f'?figi={instrument.figi}&from={start_}&to={end_}&interval={interval}'
 
-                    # Готовим следующий интервал
-                    if not self.need_next_interval(interval, end, global_end):
-                        break
-                    start, end = self.next_interval(interval, start, end, global_end)
+                # Получаем партию свечей
+                print('Get candles:', instrument.ticker, instrument.figi, interval, start, end)
+                candles = self.get(command=command, parameters=parameters)
 
-    def get_stocks_now(self):
+                # Заносим информацию в базу
+                if candles is None:
+                    pass
+                elif candles['status'] == 'Ok':
+                    for candle in candles['payload']['candles']:
+                        candle = Candle.objects.write(instrument=instrument,
+                                                      datetime=candle['time'],
+                                                      interval=candle['interval'],
+                                                      o=candle['o'],
+                                                      c=candle['c'],
+                                                      h=candle['h'],
+                                                      l=candle['l'],
+                                                      v=candle['v'])
+                        print(candle)
+                else:
+                    print(parameters)
+                    print(candles['status'], candles['payload']['code'])
+                    print(candles['payload']['message'])
+
+                # Готовим следующий интервал
+                if not self.need_next_interval(interval, end, global_end):
+                    break
+                start, end = self.next_interval(interval, start, end, global_end)
+
+    def is_actual(self, instrument):
+        command = '/market/candles'
+        start = self.datetime_to_str(datetime.utcnow() - self.interval_limits['month']['min'])
+        end = self.datetime_to_str(datetime.utcnow())
+        parameters = f'?figi={instrument.figi}&from={start}&to={end}&interval=month'
+        candles = self.get(command=command, parameters=parameters)
+        if candles['payload']['candles']:
+            return True
+        else:
+            return False
+
+    def shot_stocks_now(self):
         stocks = Instrument.objects.filter(type='Stock')
         l = len(stocks)
         for n, stock in enumerate(stocks):
