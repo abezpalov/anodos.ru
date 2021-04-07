@@ -238,9 +238,12 @@ class Worker(Worker):
         end = self.datetime_to_str(datetime.utcnow())
         parameters = f'?figi={instrument.figi}&from={start}&to={end}&interval=month'
         candles = self.get(command=command, parameters=parameters)
-        if candles['payload']['candles']:
-            return True
-        else:
+        try:
+            if candles['payload']['candles']:
+                return True
+            else:
+                return False
+        except TypeError:
             return False
 
     def shot_stocks_now(self):
