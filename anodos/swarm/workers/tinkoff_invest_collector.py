@@ -1,6 +1,9 @@
 import requests as r
 import json
 
+from multiprocessing import Pool
+from multiprocessing.dummy import Pool as ThreadPool
+
 from django.utils import timezone
 from datetime import datetime, date, time, timedelta
 
@@ -161,11 +164,8 @@ class Worker(Worker):
         else:
             instruments = Instrument.objects.filter(type=instrument_type)
 
-        l = len(instruments)
-
-        for n, instrument in enumerate(instruments):
-            print(f'\n\n{n+1}/{l} {instrument}')
-            self.update_instrument_history(instrument)
+        pool = ThreadPool(4)
+        pool.map(self.update_instrument_history, instruments)
 
     def update_instrument_history(self, instrument):
         command = '/market/candles'
@@ -180,14 +180,13 @@ class Worker(Worker):
             # Определяем общие интервалы загрузки данных
             if i == 0:
                 global_start = instrument.get_last_candles_datetime(interval=interval,
-                                                                    default=self.start_datetime,
-                                                                    force_default=True)
+                                                                    default=self.start_datetime)
             else:
                 global_start = instrument.get_last_candles_datetime(interval=interval,
                                                                     default=self.start_datetime,
-                                                                    force_default=False)
+                                                                    previous_interval=self.intervals[i-1])
             global_end = datetime.utcnow()
-            print(interval, global_start, global_end)
+            # print(interval, global_start, global_end)
 
             # Если нет стартового интервала, пропускаем
             if global_start is None:
