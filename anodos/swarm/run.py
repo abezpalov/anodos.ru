@@ -14,9 +14,23 @@ from django.core.wsgi import get_wsgi_application
 application = get_wsgi_application()
 
 # Выполняем необходимый загрузчик
-print('Worker run', sys.argv[1])
-Worker = __import__('swarm.workers.' + sys.argv[1], fromlist=['Worker'])
+try:
+    worker_ = sys.argv[1]
+except IndexError:
+    exit()
+
+try:
+    command_ = sys.argv[2]
+except IndexError:
+    command_ = None
+
+print('Worker run', worker_)
+Worker = __import__('swarm.workers.' + worker_, fromlist=['Worker'])
 worker = Worker.Worker()
 
-worker.run()
+if command_ is None:
+    worker.run()
+else:
+    worker.run(command_)
+
 exit()

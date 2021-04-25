@@ -12,7 +12,7 @@ class Worker(Worker):
     login = None
     password = None
     company = 'OCS'
-    url = 'https://connector.b2b.ocs.ru'
+    url = 'https://testconnector.b2b.ocs.ru/api/v2/'
 
     def __init__(self):
         self.source = Source.objects.take(
@@ -25,13 +25,20 @@ class Worker(Worker):
 
     def run(self):
 
-        pass
+        self.update_catalog_categories()
 
     def get(self, command=''):
         url = f'{self.url}{command}'
         print(url)
-        headers = {'Authorization': f'Bearer {self.token}',
+        headers = {'X-API-Key': self.token,
                    'accept': 'application/json'}
+        print(headers)
         result = r.get(url, headers=headers, verify=None)
-        return result.json()
+        return result.text()
+
+    def update_catalog_categories(self):
+        command = 'catalog/categories'
+
+        currencies_exchanges = self.get(command)
+        print(currencies_exchanges)
 

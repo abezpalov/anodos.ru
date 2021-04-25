@@ -1,7 +1,6 @@
 import requests as r
 import json
 
-from multiprocessing import Pool
 from multiprocessing.dummy import Pool as ThreadPool
 
 from django.utils import timezone
@@ -9,10 +8,10 @@ from datetime import datetime, date, time, timedelta
 
 from swarm.models import *
 from trader.models import *
-from swarm.workers.worker import Worker
+from swarm.workers.worker import Worker as W
 
 
-class Worker(Worker):
+class Worker(W):
 
     name = 'tinkoff.ru/invest/collector'
     login = None
@@ -43,25 +42,32 @@ class Worker(Worker):
 
         super().__init__()
 
-    def run(self):
+    def run(self, command=None):
 
-        # Обновляем список инструментов
-        self.update_stocks()
-        self.update_bonds()
-        self.update_etfs()
-        self.update_currencies()
+        if command is None:
 
-        self.update_instruments_history(instrument_type='Stock')
+            # Обновляем список инструментов
+            self.update_stocks()
+            self.update_bonds()
+            self.update_etfs()
+            self.update_currencies()
 
-        # Получаем информацию о текущих торгах
-        #while True:
-        #    self.get_stocks_now()
+            # Обновляем историю торгов
+            self.update_instruments_history()
+
+        elif command == 'shoot':
+
+            print('shoot')
+
+            # Получаем информацию о текущих торгах
+            while True:
+                self.shoot_instruments()
 
     def get(self, command='', parameters=''):
         url = f'{self.url}{command}{parameters}'
         headers = {'Authorization': f'Bearer {self.token}',
                    'accept': 'application/json'}
-        result = r.get(url, headers=headers, verify=None)
+        result = r.get(url, headers=headers, verify=None, timeout=180)
         try:
             result = result.json()
             # TODO проверить код ответа и отправить ошибку в случае ошибки
@@ -144,20 +150,10 @@ class Worker(Worker):
                 len(currencies['payload']['instruments']),
                 instrument))
 
-    def update_candles_test(self):
-        instrument = Instrument.objects.filter(type='Stock')[0]
-        command = '/market/candles'
-        x = '2020-01-01T00%3A00%3A00.000000%2B00%3A00'
-        for interval in ['1min', '2min', '3min', '5min', '10min', '15min', '30min',
-                         'hour', 'day', 'week', 'month']:
-            parameters = f'?figi={instrument.figi}&from={x}&to={x}&interval={interval}'
-            candles = self.get(command=command, parameters=parameters)
-
-            print(parameters)
-            print(candles['status'], candles['payload']['code'])
-            print(candles['payload']['message'])
-
     def update_instruments_history(self, instrument_type=None):
+
+        content = 'Start update history {}'.format(Candle.objects.all().count())
+        print(f'\n\n{content}')
 
         if instrument_type is None:
             instruments = Instrument.objects.all()
@@ -168,6 +164,7 @@ class Worker(Worker):
         pool.map(self.update_instrument_history, instruments)
 
     def update_instrument_history(self, instrument):
+
         command = '/market/candles'
 
         # Проверяем, есть ли торги за последний месяц
@@ -186,7 +183,6 @@ class Worker(Worker):
                                                                     default=self.start_datetime,
                                                                     previous_interval=self.intervals[i-1])
             global_end = datetime.utcnow()
-            # print(interval, global_start, global_end)
 
             # Если нет стартового интервала, пропускаем
             if global_start is None:
@@ -204,13 +200,14 @@ class Worker(Worker):
                 parameters = f'?figi={instrument.figi}&from={start_}&to={end_}&interval={interval}'
 
                 # Получаем партию свечей
-                print('Get candles:', instrument.ticker, instrument.figi, interval, start, end)
                 candles = self.get(command=command, parameters=parameters)
 
                 # Заносим информацию в базу
                 if candles is None:
                     pass
                 elif candles['status'] == 'Ok':
+                    l = len(candles['payload']['candles'])
+                    print(f'Update {l} candles: {instrument.ticker} {interval} {start} {end}')
                     for candle in candles['payload']['candles']:
                         candle = Candle.objects.write(instrument=instrument,
                                                       datetime=candle['time'],
@@ -220,7 +217,6 @@ class Worker(Worker):
                                                       h=candle['h'],
                                                       l=candle['l'],
                                                       v=candle['v'])
-                        print(candle)
                 else:
                     print(parameters)
                     print(candles['status'], candles['payload']['code'])
@@ -230,6 +226,44 @@ class Worker(Worker):
                 if not self.need_next_interval(interval, end, global_end):
                     break
                 start, end = self.next_interval(interval, start, end, global_end)
+
+    def shoot_instruments(self):
+
+        instruments = Instrument.objects.all()
+
+        l = len(instruments)
+        for n, instrument in enumerate(instruments):
+            if self.is_actual(instrument):
+                print(f'{n+1}/{l} {instrument}')
+                self.shoot_instrument(instrument)
+
+    def shoot_instrument(self, instrument):
+
+        # Получаем состояние стакана
+        command = 'market/orderbook'
+        parameters = f'?figi={instrument.figi}&depth=20'
+        orderbook = self.get(command=command, parameters=parameters)
+        if orderbook is None:
+            return None
+
+        # Получаем минутные свечи
+        command = '/market/candles'
+        end = datetime.utcnow()
+        candles = {}
+        for interval in self.intervals:
+            start = end - self.interval_limits[interval]['max']
+            start_ = self.datetime_to_str(start)
+            end_ = self.datetime_to_str(end)
+            parameters = f'?figi={instrument.figi}&from={start_}&to={end_}&interval={interval}'
+            candles_ = self.get(command=command, parameters=parameters)
+            if candles_ is None:
+                return None
+            candles[interval] = candles_
+
+        snapshot = Snapshot.objects.add(instrument=instrument,
+                                        orderbook=orderbook,
+                                        candles=candles)
+        print(snapshot)
 
     def is_actual(self, instrument):
         command = '/market/candles'
@@ -244,30 +278,8 @@ class Worker(Worker):
                 return False
         except TypeError:
             return False
-
-    def shot_stocks_now(self):
-        stocks = Instrument.objects.filter(type='Stock')
-        l = len(stocks)
-        for n, stock in enumerate(stocks):
-            print(f'{n+1}/{l} {stock}')
-
-            # Получаем состояние стакана
-            command = 'market/orderbook'
-            parameters = f'?figi={stock.figi}&depth=20'
-            orderbook = self.get(command=command, parameters=parameters)
-
-            # Получаем минутные свечи за 3 часа
-            command = '/market/candles'
-            now = timezone.now()
-            start = self.datetime_to_str(now - timedelta(hours=3))
-            end = self.datetime_to_str(now)
-            parameters = f'?figi={stock.figi}&from={start}&to={end}&interval=1min'
-            candles = self.get(command=command, parameters=parameters)
-
-            snapshot = Snapshot.objects.add(instrument=stock,
-                                            orderbook=orderbook,
-                                            candles=candles)
-            print(snapshot)
+        except KeyError:
+            return False
 
     def datetime_to_str(self, x):
         x = str(x)

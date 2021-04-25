@@ -59,7 +59,7 @@ class Instrument(models.Model):
     objects = InstrumentManager()
 
     def __str__(self):
-        return "Instrument: {} ({})".format(self.ticker, self.name)
+        return "${} ({})".format(self.ticker, self.name)
 
     def get_last_candles_datetime(self, interval, default, previous_interval=None):
         try:
