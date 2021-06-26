@@ -19,7 +19,7 @@ class Worker(W):
     company = 'Tinkoff'
     url = 'https://api-invest.tinkoff.ru/openapi/'
 
-    intervals = ['month', 'week', 'day', 'hour', '5min']
+    intervals = ['month', 'week', 'day', 'hour', '5min', '1min']
     interval_limits = {'1min': {'min': timedelta(minutes=1), 'max': timedelta(days=1)},
                        '2min': {'min': timedelta(minutes=2), 'max': timedelta(days=1)},
                        '3min': {'min': timedelta(minutes=3), 'max': timedelta(days=1)},
@@ -43,9 +43,9 @@ class Worker(W):
         super().__init__()
 
     def run(self, command=None):
+        self.send(f'TI run {command}')
 
         if command is None:
-
             # Обновляем список инструментов
             self.update_stocks()
             self.update_bonds()
@@ -56,12 +56,11 @@ class Worker(W):
             self.update_instruments_history()
 
         elif command == 'shoot':
-
-            print('shoot')
-
             # Получаем информацию о текущих торгах
             while True:
                 self.shoot_instruments()
+
+        self.send(f'TI end {command}')
 
     def get(self, command='', parameters=''):
         url = f'{self.url}{command}{parameters}'
@@ -245,6 +244,8 @@ class Worker(W):
         orderbook = self.get(command=command, parameters=parameters)
         if orderbook is None:
             return None
+        elif settings.DEBUG:
+            print(orderbook)
 
         # Получаем минутные свечи
         command = '/market/candles'
@@ -320,3 +321,13 @@ class Worker(W):
         if end > global_end:
             end = global_end
         return start, end
+
+    def export_instruments_candles(self, instrument_type=None):
+
+        if instrument_type is None:
+            instruments = Instrument.objects.all()
+        else:
+            instruments = Instrument.objects.filter(type=instrument_type)
+
+        for instrument in instruments:
+            pass #TODO
