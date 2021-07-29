@@ -1,3 +1,4 @@
+from django.conf import settings
 from swarm.models import *
 from swarm.workers.worker import Worker
 
