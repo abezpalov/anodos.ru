@@ -8,8 +8,8 @@ class Worker(Worker):
     name = 'web.maed.ru'
     login = None
     password = None
-    start_url = 'https://web.maed.ru/'
-    base_url = 'https://web.maed.ru/'
+    start_url = 'https://webmaed.ru/'
+    base_url = 'https://webmaed.ru/'
     company = 'MaEd'
 
     def __init__(self):
