@@ -1,3 +1,4 @@
+from django.conf import settings
 from swarm.models import *
 from swarm.workers.worker import Worker
 
@@ -46,7 +47,7 @@ class Worker(Worker):
                 else:
                     content = f'<b>Мероприятие {self.company}</b>\n<i>{date} {location}</i>\n\n<a href="{url}">{title}</a>\n'
                 print(content)
-                self.send(content)
+                self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
                 data = SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()

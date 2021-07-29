@@ -1,4 +1,5 @@
 from swarm.models import *
+from django.conf import settings
 from swarm.workers.worker import Worker
 
 
@@ -48,7 +49,7 @@ class Worker(Worker):
             except SourceData.DoesNotExist:
                 content = f'<b>{news_type} {self.company}</b>\n<i>{term}</i>\n\n<a href="{url}">{title}</a>\n{text}\n'
                 print(content)
-                self.send(content)
+                self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
                 data = SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
