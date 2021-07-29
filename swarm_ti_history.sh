@@ -1,0 +1,1 @@
+timeout 1h ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py tinkoff_invest_collector
