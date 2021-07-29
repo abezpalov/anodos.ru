@@ -19,8 +19,8 @@ class Worker:
         self.cookies = None
         self.bot = telebot.TeleBot(settings.TELEGRAM_TOKEN)
 
-    def send(self, content='test', disable_web_page_preview=True):
-        self.bot.send_message(chat_id=settings.TELEGRAM_LOG_CHAT, text=content, parse_mode='HTML',
+    def send(self, content='test', chat_id=settings.TELEGRAM_LOG_CHAT, disable_web_page_preview=True):
+        self.bot.send_message(chat_id=chat_id, text=content, parse_mode='HTML',
                               disable_web_page_preview=disable_web_page_preview)
         # time.sleep(10)
 

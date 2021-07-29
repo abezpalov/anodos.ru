@@ -1,4 +1,5 @@
 from datetime import date
+from django.conf import settings
 from swarm.models import *
 from swarm.workers.worker import Worker
 
@@ -42,7 +43,7 @@ class Worker(Worker):
                 content = f'<b>{news_type} {self.company}</b>\n<i>{term}</i>\n\n{title}\n<a href="{url}">{url}</a>\n'
                 print(content)
 
-                self.send(content, disable_web_page_preview=False)
+                self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT, disable_web_page_preview=False)
                 data = SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
