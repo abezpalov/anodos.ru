@@ -46,14 +46,15 @@ class Worker(W):
         self.send(f'TI run {command}')
 
         if command is None:
-            # Обновляем список инструментов
-            self.update_stocks()
-            self.update_bonds()
-            self.update_etfs()
-            self.update_currencies()
+            while True:
+                # Обновляем список инструментов
+                self.update_stocks()
+                self.update_bonds()
+                self.update_etfs()
+                self.update_currencies()
 
-            # Обновляем историю торгов
-            self.update_instruments_history()
+                # Обновляем историю торгов
+                self.update_instruments_history()
 
         elif command == 'shoot':
             # Получаем информацию о текущих торгах

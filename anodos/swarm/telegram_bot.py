@@ -17,7 +17,6 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'anodos.settings'
 # Магия
 application = get_wsgi_application()
 
-
 bot = telebot.TeleBot(settings.TELEGRAM_TOKEN)
 print('Telegram bot loaded')
 
