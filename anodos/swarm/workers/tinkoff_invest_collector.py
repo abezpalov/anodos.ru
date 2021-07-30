@@ -3,6 +3,7 @@ import json
 
 from multiprocessing.dummy import Pool as ThreadPool
 
+from django.conf import settings
 from django.utils import timezone
 from datetime import datetime, date, time, timedelta
 
@@ -42,10 +43,13 @@ class Worker(W):
 
         super().__init__()
 
-    def run(self, command=None):
-        self.send(f'TI run {command}')
+    def run(self, command='history'):
 
-        if command is None:
+        if command is 'history':
+            count = Candle.objects.count()
+
+            self.send(f'TI run {command}\n{count} candles is now')
+
             while True:
                 # Обновляем список инструментов
                 self.update_stocks()
