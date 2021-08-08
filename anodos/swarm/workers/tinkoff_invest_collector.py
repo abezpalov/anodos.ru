@@ -334,3 +334,7 @@ class Worker(W):
 
         for instrument in instruments:
             pass #TODO
+
+    def export_instrument_candles(self, instrument_type=None):
+
+        pass

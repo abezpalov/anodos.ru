@@ -12,7 +12,7 @@ class Worker(Worker):
     login = None
     password = None
     company = 'OCS'
-    url = 'https://testconnector.b2b.ocs.ru/api/v2/'
+    url = 'https://connector.b2b.ocs.ru/api/v2/'
 
     def __init__(self):
         self.source = Source.objects.take(
@@ -24,7 +24,6 @@ class Worker(Worker):
         super().__init__()
 
     def run(self):
-
         self.update_catalog_categories()
 
     def get(self, command=''):
@@ -34,6 +33,8 @@ class Worker(Worker):
                    'accept': 'application/json'}
         print(headers)
         result = r.get(url, headers=headers, verify=None)
+        print(type(result))
+        print(result)
         return result.text()
 
     def update_catalog_categories(self):
@@ -41,4 +42,3 @@ class Worker(Worker):
 
         currencies_exchanges = self.get(command)
         print(currencies_exchanges)
-
