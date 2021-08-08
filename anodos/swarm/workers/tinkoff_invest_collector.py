@@ -20,7 +20,7 @@ class Worker(W):
     company = 'Tinkoff'
     url = 'https://api-invest.tinkoff.ru/openapi/'
 
-    intervals = ['month', 'week', 'day', 'hour', '5min', '1min']
+    intervals = ['month', 'week', 'day', 'hour', '5min']
     interval_limits = {'1min': {'min': timedelta(minutes=1), 'max': timedelta(days=1)},
                        '2min': {'min': timedelta(minutes=2), 'max': timedelta(days=1)},
                        '3min': {'min': timedelta(minutes=3), 'max': timedelta(days=1)},
@@ -45,9 +45,10 @@ class Worker(W):
 
     def run(self, command='history'):
 
-        if command is 'history':
-            count = Candle.objects.count()
+        Candle.objects.filter(interval='1min').delete()
 
+        if command is 'history':
+            count = '{:,}'.format(Candle.objects.count()).replace(',', ' ')
             self.send(f'TI run {command}\n{count} candles is now')
 
             while True:
@@ -155,9 +156,6 @@ class Worker(W):
                 instrument))
 
     def update_instruments_history(self, instrument_type=None):
-
-        content = 'Start update history {}'.format(Candle.objects.all().count())
-        print(f'\n\n{content}')
 
         if instrument_type is None:
             instruments = Instrument.objects.all()
