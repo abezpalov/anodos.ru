@@ -45,8 +45,6 @@ class Worker(W):
 
     def run(self, command='history'):
 
-        Candle.objects.filter(interval='1min').delete()
-
         if command is 'history':
             count = '{:,}'.format(Candle.objects.count()).replace(',', ' ')
             self.send(f'TI run {command}\n{count} candles is now')
@@ -65,6 +63,9 @@ class Worker(W):
             # Получаем информацию о текущих торгах
             while True:
                 self.shoot_instruments()
+
+        elif command == 'all_delete':
+            Candle.objects.all().delete()
 
         self.send(f'TI end {command}')
 
