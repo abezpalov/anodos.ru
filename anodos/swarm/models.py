@@ -84,7 +84,10 @@ class SourceData(models.Model):
             if not os.path.exists(directory):
                 os.makedirs(directory)
         with open(self.file_name, "wb") as f:
-            f.write(data_.getbuffer())
+            if type(data_) == str:
+                f.write(data_)
+            else:
+                f.write(data_.getbuffer())
         self.save()
 
     def set_parsed(self):
