@@ -62,6 +62,7 @@ class Worker(Worker):
             return None
 
     def save_data(self, url, content):
+        url = f'{url}.json'
         content = json.dumps(content)
         data = SourceData.objects.take(source=self.source, url=url)
         data.save_file(content)
