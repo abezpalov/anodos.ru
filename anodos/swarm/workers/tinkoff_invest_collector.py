@@ -4,7 +4,6 @@ import json
 from multiprocessing.dummy import Pool as ThreadPool
 
 from django.conf import settings
-from django.utils import timezone
 from datetime import datetime, date, time, timedelta
 
 from swarm.models import *
@@ -66,6 +65,7 @@ class Worker(W):
 
         elif command == 'all_delete':
             Candle.objects.all().delete()
+            Instrument.objects.all().delete()
 
         self.send(f'TI end {command}')
 

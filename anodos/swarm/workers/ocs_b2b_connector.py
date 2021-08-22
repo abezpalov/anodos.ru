@@ -50,7 +50,6 @@ class Worker(Worker):
             self.update_catalog_categories()
             self.update_catalog_products()
 
-
     def get(self, command=''):
         url = f'{self.url}{command}'
         headers = {'X-API-Key': self.token,
@@ -64,9 +63,18 @@ class Worker(Worker):
         else:
             return None
 
+    def save_data(self, url, content):
+        print(type(content))
+        content = json.dumps(content)
+        print(type(content))
+        data = SourceData.objects.take(source=self.source, url=url)
+        data.save_file(content)
+
     def update_currencies_exchanges(self):
         command = 'account/currencies/exchanges'
         data = self.get(command)
+
+        self.save_data(url=command, content=data)
 
         # TODO
         pass
@@ -76,12 +84,16 @@ class Worker(Worker):
         data = self.get(command)
         print(f'\n{command}\n{data}')
 
+        self.save_data(url=command, content=data)
+
         # TODO
         pass
 
     def update_payers(self):
         command = 'account/payers'
         data = self.get(command)
+
+        self.save_data(url=command, content=data)
 
         # TODO
         pass
@@ -91,12 +103,16 @@ class Worker(Worker):
         data = self.get(command)
         print(f'\n{command}\n{data}')
 
+        self.save_data(url=command, content=data)
+
         # TODO
         pass
 
     def update_finances(self):
         command = 'account/finances'
         data = self.get(command)
+
+        self.save_data(url=command, content=data)
 
         # TODO
         pass
@@ -107,12 +123,20 @@ class Worker(Worker):
 
         self.cities = data
 
+        self.save_data(url=command, content=data)
+
+        # TODO
+        pass
+
+
     def update_shipment_points(self):
         command = 'logistic/shipment/pickup-points'
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
             print(city)
             data = self.get(f'{command}?shipmentCity={city}')
+
+        self.save_data(url=command, content=data)
 
         # TODO
         pass
@@ -123,6 +147,8 @@ class Worker(Worker):
             city = urllib.parse.quote_plus(city)
             print(city)
             data = self.get(f'{command}?shipmentCity={city}')
+
+        self.save_data(url=command, content=data)
 
         # TODO
         pass
@@ -135,6 +161,11 @@ class Worker(Worker):
 
             self.stocks = self.stocks + data
 
+        self.save_data(url=command, content=data)
+
+        # TODO
+        pass
+
     def update_reserveplaces(self):
         command = 'logistic/stocks/reserveplaces'
         for city in self.cities:
@@ -143,9 +174,16 @@ class Worker(Worker):
 
             self.reserveplaces = self.reserveplaces + data
 
+        self.save_data(url=command, content=data)
+
+        # TODO
+        pass
+
     def update_catalog_categories(self):
         command = 'catalog/categories'
         data = self.get(command)
+
+        self.save_data(url=command, content=data)
 
         # TODO
         pass
@@ -156,6 +194,7 @@ class Worker(Worker):
             city = urllib.parse.quote_plus(city)
             data = self.get(f'{command}?shipmentCity={city}')
 
+        self.save_data(url=command, content=data)
+
         # TODO
         pass
-
