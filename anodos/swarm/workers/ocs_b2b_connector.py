@@ -56,22 +56,19 @@ class Worker(Worker):
                    'accept': 'application/json'}
         result = r.get(url, headers=headers, verify=None)
 
-        print(f'\n{command}\n{result}\n{result.text}')
-
         if result.status_code == 200:
             return result.json()
         else:
             return None
 
     def save_data(self, url, content):
-        print(type(content))
         content = json.dumps(content)
-        print(type(content))
         data = SourceData.objects.take(source=self.source, url=url)
         data.save_file(content)
 
     def update_currencies_exchanges(self):
         command = 'account/currencies/exchanges'
+        print(command)
         data = self.get(command)
 
         self.save_data(url=command, content=data)
@@ -81,8 +78,8 @@ class Worker(Worker):
 
     def update_contactpersons(self):
         command = 'account/contactpersons'
+        print(command)
         data = self.get(command)
-        print(f'\n{command}\n{data}')
 
         self.save_data(url=command, content=data)
 
@@ -91,6 +88,7 @@ class Worker(Worker):
 
     def update_payers(self):
         command = 'account/payers'
+        print(command)
         data = self.get(command)
 
         self.save_data(url=command, content=data)
@@ -100,8 +98,8 @@ class Worker(Worker):
 
     def update_consignees(self):
         command = 'account/consignees'
+        print(command)
         data = self.get(command)
-        print(f'\n{command}\n{data}')
 
         self.save_data(url=command, content=data)
 
@@ -110,6 +108,7 @@ class Worker(Worker):
 
     def update_finances(self):
         command = 'account/finances'
+        print(command)
         data = self.get(command)
 
         self.save_data(url=command, content=data)
@@ -119,6 +118,7 @@ class Worker(Worker):
 
     def update_shipment_cities(self):
         command = 'logistic/shipment/cities'
+        print(command)
         data = self.get(command)
 
         self.cities = data
@@ -131,9 +131,9 @@ class Worker(Worker):
 
     def update_shipment_points(self):
         command = 'logistic/shipment/pickup-points'
+        print(command)
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
-            print(city)
             data = self.get(f'{command}?shipmentCity={city}')
 
         self.save_data(url=command, content=data)
@@ -143,9 +143,9 @@ class Worker(Worker):
 
     def update_shipment_delivery_addresses(self):
         command = 'logistic/shipment/delivery-addresses'
+        print(command)
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
-            print(city)
             data = self.get(f'{command}?shipmentCity={city}')
 
         self.save_data(url=command, content=data)
@@ -155,6 +155,7 @@ class Worker(Worker):
 
     def update_stocks(self):
         command = 'logistic/stocks/locations'
+        print(command)
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
             data = self.get(f'{command}?shipmentCity={city}')
@@ -168,6 +169,7 @@ class Worker(Worker):
 
     def update_reserveplaces(self):
         command = 'logistic/stocks/reserveplaces'
+        print(command)
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
             data = self.get(f'{command}?shipmentCity={city}')
@@ -181,6 +183,7 @@ class Worker(Worker):
 
     def update_catalog_categories(self):
         command = 'catalog/categories'
+        print(command)
         data = self.get(command)
 
         self.save_data(url=command, content=data)
@@ -190,6 +193,7 @@ class Worker(Worker):
 
     def update_catalog_products(self):
         command = 'catalog/categories/all/products'
+        print(command)
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
             data = self.get(f'{command}?shipmentCity={city}')
