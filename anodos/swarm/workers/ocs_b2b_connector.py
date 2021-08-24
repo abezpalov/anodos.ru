@@ -3,13 +3,14 @@ import json
 import urllib.parse
 
 from swarm.models import *
-from trader.models import *
+from distributors.models import *
 from swarm.workers.worker import Worker
 
 
 class Worker(Worker):
 
-    name = 'ocs.ru/b2b'
+    source_name = 'ocs.ru/b2b'
+    name = 'OCS'
     login = None
     password = None
     company = 'OCS'
@@ -17,9 +18,12 @@ class Worker(Worker):
 
     def __init__(self):
         self.source = Source.objects.take(
-            name=self.name,
+            name=self.source_name,
             login=self.login,
             password=self.password)
+        self.distributor = Distributor.objects.take(
+            name=self.name
+        )
         self.token = settings.OCS_TOKEN
 
         self.cities = []
@@ -50,16 +54,27 @@ class Worker(Worker):
             self.update_catalog_categories()
             self.update_catalog_products()
 
-    def get(self, command=''):
-        url = f'{self.url}{command}'
-        headers = {'X-API-Key': self.token,
-                   'accept': 'application/json'}
-        result = r.get(url, headers=headers, verify=None)
+    def get(self, command='', params=''):
+        if self.token:
 
-        if result.status_code == 200:
-            return result.json()
+            if params:
+                url = f'{self.url}{command}?{params}'
+            else:
+                url = f'{self.url}{command}'
+            headers = {'X-API-Key': self.token,
+                       'accept': 'application/json'}
+            result = r.get(url, headers=headers, verify=None)
+
+            if result.status_code == 200:
+                return result.json()
+            else:
+                return None
         else:
-            return None
+            url = f'{command}.json'
+            data = SourceData.objects.take(source=self.source, url=url)
+            data = data.load_file()
+            data = json.loads(data)
+        return data
 
     def save_data(self, url, content):
         url = f'{url}.json'
@@ -72,8 +87,8 @@ class Worker(Worker):
         print(command)
         data = self.get(command)
 
-        self.save_data(url=command, content=data)
-
+        if self.token:
+            self.save_data(url=command, content=data)
         # TODO
         pass
 
@@ -82,8 +97,8 @@ class Worker(Worker):
         print(command)
         data = self.get(command)
 
-        self.save_data(url=command, content=data)
-
+        if self.token:
+            self.save_data(url=command, content=data)
         # TODO
         pass
 
@@ -92,8 +107,8 @@ class Worker(Worker):
         print(command)
         data = self.get(command)
 
-        self.save_data(url=command, content=data)
-
+        if self.token:
+            self.save_data(url=command, content=data)
         # TODO
         pass
 
@@ -102,8 +117,8 @@ class Worker(Worker):
         print(command)
         data = self.get(command)
 
-        self.save_data(url=command, content=data)
-
+        if self.token:
+            self.save_data(url=command, content=data)
         # TODO
         pass
 
@@ -112,7 +127,8 @@ class Worker(Worker):
         print(command)
         data = self.get(command)
 
-        self.save_data(url=command, content=data)
+        if self.token:
+            self.save_data(url=command, content=data)
 
         # TODO
         pass
@@ -124,20 +140,21 @@ class Worker(Worker):
 
         self.cities = data
 
-        self.save_data(url=command, content=data)
+        if self.token:
+            self.save_data(url=command, content=data)
 
         # TODO
         pass
-
 
     def update_shipment_points(self):
         command = 'logistic/shipment/pickup-points'
         print(command)
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
-            data = self.get(f'{command}?shipmentCity={city}')
+            data = self.get(command, f'shipmentCity={city}')
 
-        self.save_data(url=command, content=data)
+        if self.token:
+            self.save_data(url=command, content=data)
 
         # TODO
         pass
@@ -147,9 +164,10 @@ class Worker(Worker):
         print(command)
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
-            data = self.get(f'{command}?shipmentCity={city}')
+            data = self.get(command, f'shipmentCity={city}')
 
-        self.save_data(url=command, content=data)
+        if self.token:
+            self.save_data(url=command, content=data)
 
         # TODO
         pass
@@ -159,11 +177,12 @@ class Worker(Worker):
         print(command)
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
-            data = self.get(f'{command}?shipmentCity={city}')
+            data = self.get(command, f'shipmentCity={city}')
 
             self.stocks = self.stocks + data
 
-        self.save_data(url=command, content=data)
+        if self.token:
+            self.save_data(url=command, content=data)
 
         # TODO
         pass
@@ -173,33 +192,58 @@ class Worker(Worker):
         print(command)
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
-            data = self.get(f'{command}?shipmentCity={city}')
+            data = self.get(command, f'shipmentCity={city}')
 
             self.reserveplaces = self.reserveplaces + data
 
-        self.save_data(url=command, content=data)
+        if self.token:
+            self.save_data(url=command, content=data)
 
         # TODO
         pass
 
     def update_catalog_categories(self):
+
+        # Получить данные через API или из файла обмена
         command = 'catalog/categories'
         print(command)
         data = self.get(command)
 
-        self.save_data(url=command, content=data)
+        # Если загрузка была через API, выгрузить данные в файл обмена
+        if self.token:
+            self.save_data(url=command, content=data)
 
-        # TODO
-        pass
+        # Спарсить полученные данные
+        self.parse_categories(data)
+
+    def parse_categories(self, data, parent=None):
+        for item in data:
+            article = item['category']
+            name = item['name']
+            category = Category.objects.take(
+                distributor=self.distributor,
+                name=name,
+                parent=parent,
+                article=article
+            )
+            print(category)
+            if item['children']:
+                self.parse_categories(item['children'], category)
 
     def update_catalog_products(self):
+
+        # Получить данные через API или из файла обмена
         command = 'catalog/categories/all/products'
         print(command)
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
-            data = self.get(f'{command}?shipmentCity={city}')
+            data = self.get(command, f'shipmentCity={city}')
 
-        self.save_data(url=command, content=data)
+        # Если загрузка была через API, выгрузить данные в файл обмена
+        if self.token:
+            self.save_data(url=command, content=data)
 
         # TODO
-        pass
+        for n, item in enumerate(data['result']):
+            print(f"{n+1} of {len(data['result'])} {item['product']['itemName']}")
+

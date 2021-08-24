@@ -91,6 +91,13 @@ class SourceData(models.Model):
                 f.write(data_.getbuffer())
         self.save()
 
+    def load_file(self):
+        if self.file_name is None:
+            self.file_name = '{}swarm/{}/{}'.format(settings.MEDIA_ROOT, self.source.name, self.url)
+        f = open(self.file_name, 'r')
+        content = f.read()
+        return content
+
     def set_parsed(self):
         self.parsed = timezone.now()
         self.save()
