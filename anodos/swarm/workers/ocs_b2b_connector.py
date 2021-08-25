@@ -218,13 +218,11 @@ class Worker(Worker):
 
     def parse_categories(self, data, parent=None):
         for item in data:
-            article = item['category']
-            name = item['name']
+            name = f"{item['name']} [{item['category']}]"
             category = Category.objects.take(
                 distributor=self.distributor,
                 name=name,
-                parent=parent,
-                article=article
+                parent=parent
             )
             print(category)
             if item['children']:
@@ -237,13 +235,31 @@ class Worker(Worker):
         print(command)
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
-            data = self.get(command, f'shipmentCity={city}')
+            data = self.get(command, f'shipmentCity={city}&includesale=true&includeuncondition=true')
 
         # Если загрузка была через API, выгрузить данные в файл обмена
         if self.token:
             self.save_data(url=command, content=data)
 
+        itemId = set()
+        productKey = set()
+        partNumber = set()
+
         # TODO
         for n, item in enumerate(data['result']):
             print(f"{n+1} of {len(data['result'])} {item['product']['itemName']}")
 
+            vendor = Vendor.objects.take(distributor=self.distributor, name=item['product']['producer'])
+
+            itemId.add(item['product']['itemId'])
+            productKey.add(item['product']['productKey'])
+            partNumber.add(item['product']['partNumber'])
+
+            print(item['product']['itemId'], item['product']['productKey'], item['product']['partNumber'])
+            if item['product']['itemId'] != item['product']['productKey']:
+                exit()
+
+        print(len(itemId))
+        print(len(productKey))
+        print(len(partNumber))
+        print(len(data['result']))
