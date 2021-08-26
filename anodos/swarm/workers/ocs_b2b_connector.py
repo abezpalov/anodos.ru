@@ -241,25 +241,47 @@ class Worker(Worker):
         if self.token:
             self.save_data(url=command, content=data)
 
-        itemId = set()
-        productKey = set()
-        partNumber = set()
-
         # TODO
         for n, item in enumerate(data['result']):
-            print(f"{n+1} of {len(data['result'])} {item['product']['itemName']}")
+            vendor = Vendor.objects.take(distributor=self.distributor,
+                                         name=item['product']['producer'])
+            category = Category.objects.get_by_article(distributor=self.distributor,
+                                                       article=item['product']['category'])
+            condition = Condition.objects.take(distributor=self.distributor,
+                                               name=item['product']['condition'])
 
-            vendor = Vendor.objects.take(distributor=self.distributor, name=item['product']['producer'])
+            product_key = item['product'].get('itemId', None)
+            party_key = item['product'].get('productKey', None)
+            article = item['product'].get('partNumber', None)
+            name = item['product'].get('productName', None)
+            name_rus = item['product'].get('itemNameRus', None)
+            name_other = item['product'].get('itemName', None)
+            description = item['product'].get('productDescription', None)
 
-            itemId.add(item['product']['itemId'])
-            productKey.add(item['product']['productKey'])
-            partNumber.add(item['product']['partNumber'])
+            eaN128 = item['product'].get('eaN128', None)
+            upc = item['product'].get('upc', None)
+            pnc = item['product'].get('pnc', None)
+            hsCode = item['product'].get('hsCode', None)
 
-            print(item['product']['itemId'], item['product']['productKey'], item['product']['partNumber'])
-            if item['product']['itemId'] != item['product']['productKey']:
-                exit()
+            traceable = item['product'].get('traceable', None)
+            condition_description = item['product'].get('conditionDescription', None)
 
-        print(len(itemId))
-        print(len(productKey))
-        print(len(partNumber))
-        print(len(data['result']))
+            product = Product.objects.take_by_party_key(distributor=self.distributor,
+                                                        party_key=party_key,
+                                                        name=name,
+                                                        vendor=vendor,
+                                                        category=category,
+                                                        condition=condition,
+                                                        product_key=product_key,
+                                                        article=article,
+                                                        name_rus=name_rus,
+                                                        name_other=name_other,
+                                                        description=description,
+                                                        eaN128=eaN128,
+                                                        upc=upc,
+                                                        pnc=pnc,
+                                                        hsCode=hsCode,
+                                                        traceable=traceable,
+                                                        condition_description=condition_description)
+
+            print(f"{n+1} of {len(data['result'])} {product}")

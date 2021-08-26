@@ -56,7 +56,7 @@ class CategoryManager(models.Manager):
 
     def get_by_article(self, distributor, article):
         try:
-            o = self.get(distributor=distributor, name__cotains=f'[{article}]')
+            o = self.get(distributor=distributor, name__contains=f'[{article}]')
         except Category.DoesNotExist:
             return None
         return o
@@ -100,6 +100,7 @@ class VendorManager(models.Manager):
 
         return o
 
+
 class Vendor(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.TextField(db_index=True)
@@ -114,27 +115,180 @@ class Vendor(models.Model):
         ordering = ['name']
 
 
-#class Product(models.Model):
-#    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-#    key = models.TextField(db_index=True, null=True, default=None)
-#    part_number = models.TextField(db_index=True, null=True, default=None)
-#    distributor = models.ForeignKey('Distributor', null=True, default=None,
-#                                    on_delete=models.CASCADE, related_name='+')
-#    vendor = models.ForeignKey('Vendor', null=True, default=None,
-#                               on_delete=models.CASCADE, related_name='+')
-#    category = models.ForeignKey('Category', null=True, default=None,
-#                                 on_delete=models.CASCADE, related_name='+')
-#    name = models.TextField(db_index=True)
-#    name_rus = models.TextField(db_index=True, null=True, default=None)
-#    name_other = models.TextField(db_index=True, null=True, default=None)
-#    description = models.TextField(db_index=True, null=True, default=None)
+class ConditionManager(models.Manager):
 
-#    eaN128 = models.TextField(db_index=True, null=True, default=None)
-#    upc = models.TextField(db_index=True, null=True, default=None)
-#    pnc = models.TextField(db_index=True, null=True, default=None)
-#    hsCode = models.TextField(db_index=True, null=True, default=None)
+    def take(self, distributor, name, **kwargs):
+        if not distributor or not name:
+            return None
 
-#    traceable = models.BooleanField(null=True, default=None)
+        try:
+            o = self.get(distributor=distributor, name=name)
 
-#    condition = models.TextField(db_index=True, null=True, default=None)
-#    condition_description = models.TextField(null=True, default=None)
+        except Condition.DoesNotExist:
+            o = Condition()
+            o.distributor = distributor
+            o.name = name
+            o.save()
+
+        return o
+
+
+class Condition(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.TextField(db_index=True)
+    distributor = models.ForeignKey('Distributor', null=True, default=None,
+                                    on_delete=models.CASCADE, related_name='+')
+    objects = ConditionManager()
+
+    def __str__(self):
+        return f'{self.name}'
+
+    class Meta:
+        ordering = ['name']
+
+
+class ProductManager(models.Manager):
+
+    def take_by_party_key(self, distributor, party_key, name, **kwargs):
+
+        if not distributor or not party_key or not name:
+            return None
+
+        need_save = False
+
+        try:
+            o = self.get(distributor=distributor, party_key=party_key)
+        except Product.DoesNotExist:
+            o = Product()
+            o.distributor = distributor
+            o.party_key = party_key
+            o.name = name
+            need_save = True
+
+        # vendor
+        vendor = kwargs.get('vendor', None)
+        if vendor is not None and vendor != o.vendor:
+            o.vendor = vendor
+            need_save = True
+
+        # category
+        category = kwargs.get('category', None)
+        if category is not None and category != o.category:
+            o.category = category
+            need_save = True
+
+        # condition
+        condition = kwargs.get('condition', None)
+        if condition is not None and condition != o.condition:
+            o.condition = condition
+            need_save = True
+
+        # product_key
+        product_key = kwargs.get('product_key', None)
+        if product_key is not None and product_key != o.product_key:
+            o.product_key = product_key
+            need_save = True
+
+        # article
+        article = kwargs.get('article', None)
+        if article is not None and article != o.article:
+            o.article = article
+            need_save = True
+
+        # name_rus
+        name_rus = kwargs.get('name_rus', None)
+        if name_rus is not None and name_rus != o.name_rus:
+            o.name_rus = name_rus
+            need_save = True
+
+        # name_other
+        name_other = kwargs.get('name_other', None)
+        if name_other is not None and name_other != o.name_other:
+            o.name_other = name_other
+            need_save = True
+
+        # description
+        description = kwargs.get('description', None)
+        if description is not None and description != o.description:
+            o.description = description
+            need_save = True
+
+        # ean_128
+        ean_128 = kwargs.get('ean_128', None)
+        if ean_128 is not None and ean_128 != o.ean_128:
+            o.ean_128 = ean_128
+            need_save = True
+
+        # upc
+        upc = kwargs.get('upc', None)
+        if upc is not None and upc != o.upc:
+            o.upc = upc
+            need_save = True
+
+        # pnc
+        pnc = kwargs.get('pnc', None)
+        if pnc is not None and pnc != o.pnc:
+            o.pnc = pnc
+            need_save = True
+
+        # hs_code
+        hs_code = kwargs.get('hs_code', None)
+        if hs_code is not None and hs_code != o.hs_code:
+            o.hs_code = hs_code
+            need_save = True
+
+        # traceable
+        traceable = kwargs.get('traceable', None)
+        if traceable is not None and traceable != o.traceable:
+            o.traceable = traceable
+            need_save = True
+
+        # condition_description
+        condition_description = kwargs.get('condition_description', None)
+        if condition_description is not None and condition_description != o.condition_description:
+            o.condition_description = condition_description
+            need_save = True
+
+        if need_save:
+            o.save()
+
+        return o
+
+    def take_by_article(self, distributor, vendor, article, **kwargs):
+        pass
+
+
+class Product(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    product_key = models.TextField(null=True, default=None, db_index=True)
+    party_key = models.TextField(null=True, default=None, db_index=True)
+    article = models.TextField(null=True, default=None, db_index=True)
+    distributor = models.ForeignKey('Distributor', null=True, default=None,
+                                    on_delete=models.CASCADE, related_name='+')
+    vendor = models.ForeignKey('Vendor', null=True, default=None,
+                               on_delete=models.CASCADE, related_name='+')
+    category = models.ForeignKey('Category', null=True, default=None,
+                                 on_delete=models.CASCADE, related_name='+')
+    name = models.TextField(db_index=True)
+    name_rus = models.TextField(null=True, default=None, db_index=True)
+    name_other = models.TextField(null=True, default=None, db_index=True)
+    description = models.TextField(null=True, default=None)
+
+    ean_128 = models.TextField(null=True, default=None, db_index=True)
+    upc = models.TextField(null=True, default=None, db_index=True)
+    pnc = models.TextField(null=True, default=None, db_index=True)
+    hs_code = models.TextField(null=True, default=None, db_index=True)
+
+    traceable = models.BooleanField(null=True, default=None, db_index=True)
+
+    condition = models.ForeignKey('Condition', null=True, default=None,
+                                  on_delete=models.CASCADE, related_name='+')
+    condition_description = models.TextField(null=True, default=None)
+
+    objects = ProductManager()
+
+    def __str__(self):
+        return f'{self.name} [{self.article}]'
+
+    class Meta:
+        ordering = ['name']
