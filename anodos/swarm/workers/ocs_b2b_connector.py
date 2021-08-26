@@ -235,7 +235,8 @@ class Worker(Worker):
         print(command)
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
-            data = self.get(command, f'shipmentCity={city}&includesale=true&includeuncondition=true')
+            data = self.get(command,
+                            f'shipmentCity={city}&&includesale=true&includeuncondition=true&includemissing=true')
 
         # Если загрузка была через API, выгрузить данные в файл обмена
         if self.token:
@@ -253,18 +254,27 @@ class Worker(Worker):
             product_key = item['product'].get('itemId', None)
             party_key = item['product'].get('productKey', None)
             article = item['product'].get('partNumber', None)
-            name = item['product'].get('productName', None)
+            short_name = item['product'].get('productName', None)
             name_rus = item['product'].get('itemNameRus', None)
+            name = f"{name_rus} {short_name}"
             name_other = item['product'].get('itemName', None)
             description = item['product'].get('productDescription', None)
 
-            eaN128 = item['product'].get('eaN128', None)
+            ean_128 = item['product'].get('eaN128', None)
             upc = item['product'].get('upc', None)
             pnc = item['product'].get('pnc', None)
-            hsCode = item['product'].get('hsCode', None)
+            hs_code = item['product'].get('hsCode', None)
 
             traceable = item['product'].get('traceable', None)
             condition_description = item['product'].get('conditionDescription', None)
+
+            weight = item['packageInformation'].get('weight', None)
+            width = item['packageInformation'].get('width', None)
+            height = item['packageInformation'].get('height', None)
+            depth = item['packageInformation'].get('depth', None)
+            volume = item['packageInformation'].get('volume', None)
+            multiplicity = item['packageInformation'].get('multiplicity', None)
+            units = item['packageInformation'].get('units', None)
 
             product = Product.objects.take_by_party_key(distributor=self.distributor,
                                                         party_key=party_key,
@@ -274,14 +284,59 @@ class Worker(Worker):
                                                         condition=condition,
                                                         product_key=product_key,
                                                         article=article,
+                                                        short_name=short_name,
                                                         name_rus=name_rus,
                                                         name_other=name_other,
                                                         description=description,
-                                                        eaN128=eaN128,
+                                                        ean_128=ean_128,
                                                         upc=upc,
                                                         pnc=pnc,
-                                                        hsCode=hsCode,
+                                                        hs_code=hs_code,
                                                         traceable=traceable,
-                                                        condition_description=condition_description)
+                                                        condition_description=condition_description,
+                                                        weight=weight,
+                                                        width=width,
+                                                        height=height,
+                                                        depth=depth,
+                                                        volume=volume,
+                                                        multiplicity=multiplicity,
+                                                        units=units)
 
             print(f"{n+1} of {len(data['result'])} {product}")
+
+            # party
+
+            is_available_for_order = item.get('isAvailableForOrder', None)
+
+            try:
+                price_in = item['price']['order']['value']
+                currency_in = item['price']['order']['currency']
+            except KeyError:
+                price_in = None
+                currency_in = None
+
+            try:
+                price_out = item['price']['endUser']['value']
+                currency_out = item['price']['endUser']['currency']
+            except KeyError:
+                price_out = None
+                currency_out = None
+
+            try:
+                price_out_open = item['price']['endUserWeb']['value']
+                currency_out_open = item['price']['endUserWeb']['currency']
+            except KeyError:
+                price_out_open = None
+                currency_out_open = None
+
+            try:
+                must_keep_end_user_price = item['price']['must_keep_end_user_price']
+            except KeyError:
+                must_keep_end_user_price = None
+
+            # print(len(item['locations']))
+
+
+
+
+

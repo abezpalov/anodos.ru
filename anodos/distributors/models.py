@@ -152,6 +152,7 @@ class ProductManager(models.Manager):
     def take_by_party_key(self, distributor, party_key, name, **kwargs):
 
         if not distributor or not party_key or not name:
+            exit()
             return None
 
         need_save = False
@@ -162,6 +163,11 @@ class ProductManager(models.Manager):
             o = Product()
             o.distributor = distributor
             o.party_key = party_key
+            o.name = name
+            need_save = True
+
+        # name
+        if name is not None and name != o.name:
             o.name = name
             need_save = True
 
@@ -249,6 +255,48 @@ class ProductManager(models.Manager):
             o.condition_description = condition_description
             need_save = True
 
+        # weight
+        weight = kwargs.get('weight', None)
+        if weight is not None and weight != o.weight:
+            o.weight = weight
+            need_save = True
+
+        # width
+        width = kwargs.get('width', None)
+        if width is not None and width != o.width:
+            o.width = width
+            need_save = True
+
+        # height
+        height = kwargs.get('height', None)
+        if height is not None and height != o.height:
+            o.height = height
+            need_save = True
+
+        # depth
+        depth = kwargs.get('depth', None)
+        if depth is not None and depth != o.depth:
+            o.depth = depth
+            need_save = True
+
+        # volume
+        volume = kwargs.get('volume', None)
+        if volume is not None and volume != o.volume:
+            o.volume = volume
+            need_save = True
+
+        # multiplicity
+        multiplicity = kwargs.get('multiplicity', None)
+        if multiplicity is not None and multiplicity != o.multiplicity:
+            o.multiplicity = multiplicity
+            need_save = True
+
+        # units
+        units = kwargs.get('units', None)
+        if units is not None and units != o.units:
+            o.units = units
+            need_save = True
+
         if need_save:
             o.save()
 
@@ -269,26 +317,72 @@ class Product(models.Model):
                                on_delete=models.CASCADE, related_name='+')
     category = models.ForeignKey('Category', null=True, default=None,
                                  on_delete=models.CASCADE, related_name='+')
-    name = models.TextField(db_index=True)
+    name = models.TextField(null=True, default=None, db_index=True)
+    short_name = models.TextField(null=True, default=None, db_index=True)
     name_rus = models.TextField(null=True, default=None, db_index=True)
     name_other = models.TextField(null=True, default=None, db_index=True)
     description = models.TextField(null=True, default=None)
 
+    # Коды
     ean_128 = models.TextField(null=True, default=None, db_index=True)
     upc = models.TextField(null=True, default=None, db_index=True)
     pnc = models.TextField(null=True, default=None, db_index=True)
     hs_code = models.TextField(null=True, default=None, db_index=True)
 
+    # Прослеживаемый товар
     traceable = models.BooleanField(null=True, default=None, db_index=True)
 
+    # Кондиционность
     condition = models.ForeignKey('Condition', null=True, default=None,
                                   on_delete=models.CASCADE, related_name='+')
     condition_description = models.TextField(null=True, default=None)
 
+    # Характеристики упаковки
+    weight = models.DecimalField(max_digits=18, decimal_places=9, null=True, default=None)
+    width = models.DecimalField(max_digits=18, decimal_places=9, null=True, default=None)
+    height = models.DecimalField(max_digits=18, decimal_places=9, null=True, default=None)
+    depth = models.DecimalField(max_digits=18, decimal_places=9, null=True, default=None)
+    volume = models.DecimalField(max_digits=18, decimal_places=9, null=True, default=None)
+    multiplicity = models.IntegerField(null=True, default=None)
+    units = models.TextField(null=True, default=None, db_index=True)
+
     objects = ProductManager()
 
     def __str__(self):
-        return f'{self.name} [{self.article}]'
+        return f'{self.vendor.name} [{self.article}]'
+
+    class Meta:
+        ordering = ['vendor__name', 'article']
+
+
+class CurrencyManager(models.Manager):
+
+    def take(self, key, **kwargs):
+        if not key:
+            return None
+
+        try:
+            o = self.get(key=key)
+
+        except Currency.DoesNotExist:
+            o = Currency()
+            o.key = key[:32]
+            o.save()
+
+        return o
+
+
+class Currency(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    key = models.CharField(max_length=32, unique=True)
+
+    name = models.TextField(null=True, default=None, db_index=True)
+    print_name = models.TextField(null=True, default=None, db_index=True)
+
+    objects = DistributorManager()
+
+    def __str__(self):
+        return f'{self.key}'
 
     class Meta:
         ordering = ['name']
