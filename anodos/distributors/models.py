@@ -1,6 +1,5 @@
 import uuid
 from django.db import models
-from django.conf import settings
 from django.utils import timezone
 
 
@@ -147,6 +146,43 @@ class Condition(models.Model):
         ordering = ['name']
 
 
+class UnitManager(models.Manager):
+
+    def take(self, key, **kwargs):
+        if not key:
+            return None
+
+        try:
+            o = self.get(key=key)
+
+        except Unit.DoesNotExist:
+            o = Unit()
+            o.key = key[:32]
+            o.save()
+
+        if o.name is None:
+            o.name = key
+            o.save()
+
+        return o
+
+
+class Unit(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    key = models.CharField(max_length=32, unique=True)
+
+    name = models.TextField(null=True, default=None, db_index=True)
+    print_name = models.TextField(null=True, default=None, db_index=True)
+
+    objects = UnitManager()
+
+    def __str__(self):
+        return f'{self.key}'
+
+    class Meta:
+        ordering = ['key']
+
+
 class ProductManager(models.Manager):
 
     def take_by_party_key(self, distributor, party_key, name, **kwargs):
@@ -291,10 +327,10 @@ class ProductManager(models.Manager):
             o.multiplicity = multiplicity
             need_save = True
 
-        # units
-        units = kwargs.get('units', None)
-        if units is not None and units != o.units:
-            o.units = units
+        # unit
+        unit = kwargs.get('unit', None)
+        if unit is not None and unit != o.unit:
+            o.unit = unit
             need_save = True
 
         if need_save:
@@ -344,7 +380,8 @@ class Product(models.Model):
     depth = models.DecimalField(max_digits=18, decimal_places=9, null=True, default=None)
     volume = models.DecimalField(max_digits=18, decimal_places=9, null=True, default=None)
     multiplicity = models.IntegerField(null=True, default=None)
-    units = models.TextField(null=True, default=None, db_index=True)
+    unit = models.ForeignKey('Unit', null=True, default=None,
+                             on_delete=models.CASCADE, related_name='+')
 
     objects = ProductManager()
 
@@ -369,6 +406,10 @@ class CurrencyManager(models.Manager):
             o.key = key[:32]
             o.save()
 
+        if o.name is None:
+            o.name = key
+            o.save()
+
         return o
 
 
@@ -379,10 +420,90 @@ class Currency(models.Model):
     name = models.TextField(null=True, default=None, db_index=True)
     print_name = models.TextField(null=True, default=None, db_index=True)
 
-    objects = DistributorManager()
+    objects = CurrencyManager()
+
+    def __str__(self):
+        return f'{self.key}'
+
+    class Meta:
+        ordering = ['key']
+
+
+class LocationManager(models.Manager):
+
+    def take(self, key, **kwargs):
+        if not key:
+            return None
+
+        need_save = False
+
+        try:
+            o = self.get(key=key)
+
+        except Location.DoesNotExist:
+            o = Location()
+            o.key = key[:128]
+            need_save = True
+
+        if o.name is None:
+            o.name = key
+            need_save = True
+
+        description = kwargs.get('description', None)
+        if description is not None and o.description is None:
+            o.description = description
+            need_save = True
+
+        if need_save:
+            o.save()
+
+        return o
+
+
+class Location(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    key = models.CharField(max_length=128, unique=True)
+
+    name = models.TextField(null=True, default=None, db_index=True)
+    description = models.TextField(null=True, default=None)
+
+    objects = LocationManager()
 
     def __str__(self):
         return f'{self.key}'
 
     class Meta:
         ordering = ['name']
+
+
+class Party(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    distributor = models.ForeignKey('Distributor', null=True, default=None,
+                                    on_delete=models.CASCADE, related_name='+')
+    product = models.ForeignKey('Product', null=True, default=None,
+                                on_delete=models.CASCADE, related_name='+')
+
+    # Цены
+    price_in = models.DecimalField(max_digits=18, decimal_places=2, null=True, default=None)
+    currency_in = models.ForeignKey('Currency', null=True, default=None,
+                                    on_delete=models.CASCADE, related_name='+')
+    price_out = models.DecimalField(max_digits=18, decimal_places=2, null=True, default=None)
+    currency_out = models.ForeignKey('Currency', null=True, default=None,
+                                     on_delete=models.CASCADE, related_name='+')
+    price_out_open = models.DecimalField(max_digits=18, decimal_places=2, null=True, default=None)
+    currency_out_open = models.ForeignKey('Currency', null=True, default=None,
+                                          on_delete=models.CASCADE, related_name='+')
+    must_keep_end_user_price = models.BooleanField(null=True, default=None, db_index=True)
+
+    # Доступность
+    location = models.ForeignKey('Location', null=True, default=None,
+                                 on_delete=models.CASCADE, related_name='+')
+    quantity = models.IntegerField(null=True, default=None)
+    quantity_great_than = models.BooleanField(null=True, default=None, db_index=True)
+    unit = models.ForeignKey('Unit', null=True, default=None,
+                             on_delete=models.CASCADE, related_name='+')
+    can_reserve = models.BooleanField(null=True, default=None, db_index=True)
+    is_available_for_order = models.BooleanField(null=True, default=None, db_index=True)
+
+    created = models.DateTimeField(default=timezone.now)
+

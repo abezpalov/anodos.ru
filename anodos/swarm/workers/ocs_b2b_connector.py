@@ -274,7 +274,7 @@ class Worker(Worker):
             depth = item['packageInformation'].get('depth', None)
             volume = item['packageInformation'].get('volume', None)
             multiplicity = item['packageInformation'].get('multiplicity', None)
-            units = item['packageInformation'].get('units', None)
+            unit = Unit.objects.take(key=item['packageInformation'].get('units', None))
 
             product = Product.objects.take_by_party_key(distributor=self.distributor,
                                                         party_key=party_key,
@@ -300,17 +300,20 @@ class Worker(Worker):
                                                         depth=depth,
                                                         volume=volume,
                                                         multiplicity=multiplicity,
-                                                        units=units)
+                                                        unit=unit)
 
             print(f"{n+1} of {len(data['result'])} {product}")
 
-            # party
+            # Удаляем имеющиеся партии товара
+            Party.objects.filte(distributor=self.distributor, product=product).delete()
 
+            # Получаем актуальную информацию по партиям товара
             is_available_for_order = item.get('isAvailableForOrder', None)
 
             try:
                 price_in = item['price']['order']['value']
                 currency_in = item['price']['order']['currency']
+                currency_in = Currency.objects.take(key=currency_in)
             except KeyError:
                 price_in = None
                 currency_in = None
@@ -318,6 +321,7 @@ class Worker(Worker):
             try:
                 price_out = item['price']['endUser']['value']
                 currency_out = item['price']['endUser']['currency']
+                currency_out = Currency.objects.take(key=currency_out)
             except KeyError:
                 price_out = None
                 currency_out = None
@@ -325,6 +329,7 @@ class Worker(Worker):
             try:
                 price_out_open = item['price']['endUserWeb']['value']
                 currency_out_open = item['price']['endUserWeb']['currency']
+                currency_out_open = Currency.objects.take(key=currency_out_open)
             except KeyError:
                 price_out_open = None
                 currency_out_open = None
@@ -334,9 +339,37 @@ class Worker(Worker):
             except KeyError:
                 must_keep_end_user_price = None
 
-            # print(len(item['locations']))
+            for location in item['locations']:
+                print(location)
+                key = location['location']
+                description = location.get('description')
 
+                quantity = location['quantity']['value']
+                quantity_great_than = location['quantity'].get('isGreatThan', False)
 
+                can_reserve = location.get('canReserve', None)
 
+                location = Location.objects.take(key=key,
+                                                 description=description)
 
+                # TODO
+                party = Party.objects.add(distributor=self.distributor,
+                                          product=product,
+                                          price_in=price_in,
+                                          currency_in=currency_in,
+                                          price_out=price_out,
+                                          currency_out=currency_out,
+                                          price_out_open=price_out_open,
+                                          currency_out_open=currency_out_open,
+                                          must_keep_end_user_price=must_keep_end_user_price,
+                                          location=location,
+                                          quantity=quantity,
+                                          quantity_great_than=quantity_great_than,
+                                          can_reserve=can_reserve,
+                                          is_available_for_order=is_available_for_order)
 
+            if len(item['locations']) == 0:
+                location = None
+                quantity = None
+                quantity_great_than = None
+                can_reserve = None
