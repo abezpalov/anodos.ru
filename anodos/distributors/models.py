@@ -476,6 +476,11 @@ class Location(models.Model):
         ordering = ['name']
 
 
+class PartyManager(models.Manager):
+
+    pass
+
+
 class Party(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     distributor = models.ForeignKey('Distributor', null=True, default=None,
@@ -507,3 +512,10 @@ class Party(models.Model):
 
     created = models.DateTimeField(default=timezone.now)
 
+    objects = PartyManager()
+
+    def __str__(self):
+        return f'{self.product} | {self.quantity} = {self.price_in} {self.currency_in}'
+
+    class Meta:
+        ordering = ['created']

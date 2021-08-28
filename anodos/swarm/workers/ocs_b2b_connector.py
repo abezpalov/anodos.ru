@@ -305,7 +305,7 @@ class Worker(Worker):
             print(f"{n+1} of {len(data['result'])} {product}")
 
             # Удаляем имеющиеся партии товара
-            Party.objects.filte(distributor=self.distributor, product=product).delete()
+            Party.objects.filter(distributor=self.distributor, product=product).delete()
 
             # Получаем актуальную информацию по партиям товара
             is_available_for_order = item.get('isAvailableForOrder', None)
@@ -340,7 +340,6 @@ class Worker(Worker):
                 must_keep_end_user_price = None
 
             for location in item['locations']:
-                print(location)
                 key = location['location']
                 description = location.get('description')
 
@@ -352,24 +351,40 @@ class Worker(Worker):
                 location = Location.objects.take(key=key,
                                                  description=description)
 
-                # TODO
-                party = Party.objects.add(distributor=self.distributor,
-                                          product=product,
-                                          price_in=price_in,
-                                          currency_in=currency_in,
-                                          price_out=price_out,
-                                          currency_out=currency_out,
-                                          price_out_open=price_out_open,
-                                          currency_out_open=currency_out_open,
-                                          must_keep_end_user_price=must_keep_end_user_price,
-                                          location=location,
-                                          quantity=quantity,
-                                          quantity_great_than=quantity_great_than,
-                                          can_reserve=can_reserve,
-                                          is_available_for_order=is_available_for_order)
+                party = Party.objects.create(distributor=self.distributor,
+                                             product=product,
+                                             price_in=price_in,
+                                             currency_in=currency_in,
+                                             price_out=price_out,
+                                             currency_out=currency_out,
+                                             price_out_open=price_out_open,
+                                             currency_out_open=currency_out_open,
+                                             must_keep_end_user_price=must_keep_end_user_price,
+                                             location=location,
+                                             quantity=quantity,
+                                             quantity_great_than=quantity_great_than,
+                                             can_reserve=can_reserve,
+                                             is_available_for_order=is_available_for_order)
+                print(party)
 
             if len(item['locations']) == 0:
                 location = None
                 quantity = None
                 quantity_great_than = None
                 can_reserve = None
+
+                party = Party.objects.create(distributor=self.distributor,
+                                             product=product,
+                                             price_in=price_in,
+                                             currency_in=currency_in,
+                                             price_out=price_out,
+                                             currency_out=currency_out,
+                                             price_out_open=price_out_open,
+                                             currency_out_open=currency_out_open,
+                                             must_keep_end_user_price=must_keep_end_user_price,
+                                             location=location,
+                                             quantity=quantity,
+                                             quantity_great_than=quantity_great_than,
+                                             can_reserve=can_reserve,
+                                             is_available_for_order=is_available_for_order)
+                print(party)
