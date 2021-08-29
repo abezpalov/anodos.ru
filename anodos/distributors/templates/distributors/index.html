@@ -1,0 +1,18 @@
+{% extends "main.html" %}
+
+{% block title %}Anodos: Поиск по складам поставщиков{% endblock %}
+
+{% block content %}
+
+<div class="ui fluid action input">
+    <input type="text" placeholder="Search...">
+
+    <select class="ui compact selection dropdown">
+        <option value="all">All</option>
+        <option selected="" value="articles">Articles</option>
+        <option value="products">Products</option>
+    </select>
+    <div class="ui button">Search</div>
+</div>
+
+{% endblock %}

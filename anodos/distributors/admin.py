@@ -1,5 +1,5 @@
 from django.contrib import admin
-from distributors.models import Distributor, Category, Vendor, Condition, Product, Currency, Location
+from distributors.models import Distributor, Category, Vendor, Condition, Product, Currency, Location, Party
 
 
 @admin.register(Distributor)
@@ -35,3 +35,9 @@ class AdminSource(admin.ModelAdmin):
 @admin.register(Location)
 class AdminSource(admin.ModelAdmin):
     pass
+
+
+@admin.register(Party)
+class AdminSource(admin.ModelAdmin):
+    pass
+
