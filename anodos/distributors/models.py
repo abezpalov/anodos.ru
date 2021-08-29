@@ -383,6 +383,9 @@ class Product(models.Model):
     unit = models.ForeignKey('Unit', null=True, default=None,
                              on_delete=models.CASCADE, related_name='+')
 
+    # Контент
+    content = models.TextField(null=True, default=None)
+
     objects = ProductManager()
 
     def __str__(self):

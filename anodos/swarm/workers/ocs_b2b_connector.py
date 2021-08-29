@@ -44,15 +44,18 @@ class Worker(Worker):
             # self.update_finances()
 
             # Обновление информации о логистики
-            self.update_shipment_cities()
-            self.update_shipment_points()
-            self.update_shipment_delivery_addresses()
-            self.update_stocks()
-            self.update_reserveplaces()
+            #self.update_shipment_cities()
+            #self.update_shipment_points()
+            #self.update_shipment_delivery_addresses()
+            #self.update_stocks()
+            #self.update_reserveplaces()
 
             # Обновление каталога
-            self.update_catalog_categories()
-            self.update_catalog_products()
+            #self.update_catalog_categories()
+            #self.update_catalog_products()
+
+            # Обновление контента
+            self.update_content()
 
     def get(self, command='', params=''):
         if self.token:
@@ -386,3 +389,30 @@ class Worker(Worker):
                                              quantity_great_than=quantity_great_than,
                                              can_reserve=can_reserve,
                                              is_available_for_order=is_available_for_order)
+
+    def update_content(self):
+
+        command = 'content'
+        print(command)
+
+        batch_size = 42
+
+        # Получаем идентификаторы продуктов, которые нуждаются в обновлении контента
+        ids_ = Product.objects.filter(distributor=self.distributor).values('product_key')
+
+        ids = []
+        for id_ in ids_:
+            ids.append(id_['product_key'])
+
+        # Расчитываем количество партий
+        batches_count = len(ids) // batch_size
+        if len(ids) % batch_size:
+            batches_count += 1
+
+        for n in range(batches_count):
+            batch = ','.join(ids[n*batch_size:n*(batch_size+1)])
+            print(n, batch[0:32])
+
+            contents = self.get(command=f'{command}/batch')
+
+            # TODO
