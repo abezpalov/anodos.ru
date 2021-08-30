@@ -58,6 +58,7 @@ class Worker(Worker):
             self.update_content()
 
     def get(self, command='', params=''):
+        print(command)
         if self.token:
 
             if params:
@@ -71,6 +72,8 @@ class Worker(Worker):
             if result.status_code == 200:
                 return result.json()
             else:
+                print('Error:', result.status_code)
+                print('URL', url)
                 return None
         else:
             url = f'{command}.json'
@@ -395,7 +398,7 @@ class Worker(Worker):
         command = 'content'
         print(command)
 
-        batch_size = 42
+        batch_size = 16
 
         # Получаем идентификаторы продуктов, которые нуждаются в обновлении контента
         ids_ = Product.objects.filter(distributor=self.distributor).values('product_key')
@@ -410,9 +413,11 @@ class Worker(Worker):
             batches_count += 1
 
         for n in range(batches_count):
-            batch = ','.join(ids[n*batch_size:n*(batch_size+1)])
+            batch = ','.join(ids[n*batch_size:(n+1)*batch_size])
             print(n, batch[0:32])
 
-            contents = self.get(command=f'{command}/batch')
+            data = self.get(command=f'{command}/{batch}')
 
-            # TODO
+            # Если загрузка была через API, выгрузить данные в файл обмена
+            if self.token:
+                self.save_data(url=f'{command}_{n}', content=data)
