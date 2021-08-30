@@ -58,17 +58,34 @@ class Worker(Worker):
             self.update_content()
 
     def get(self, command='', params=''):
-        print(command)
+
+        if params:
+            url = f'{self.url}{command}?{params}'
+        else:
+            url = f'{self.url}{command}'
+        headers = {'X-API-Key': self.token,
+                   'accept': 'application/json'}
+        result = r.get(url, headers=headers, verify=None)
+
+        if result.status_code == 200:
+            return result.json()
+        else:
+            print('Error:', result.status_code)
+            print('URL', url)
+            return None
+
+    def post(self, command='', params=''):
+        url = f'{self.url}{command}'
+        headers = {'X-API-Key': self.token,
+                   'accept': 'application/json',
+                   'Content-Type': 'application/json'}
+
+        print(url)
+        print(headers)
+        print(params)
+
         if self.token:
-
-            if params:
-                url = f'{self.url}{command}?{params}'
-            else:
-                url = f'{self.url}{command}'
-            headers = {'X-API-Key': self.token,
-                       'accept': 'application/json'}
-            result = r.get(url, headers=headers, verify=None)
-
+            result = r.post(url, headers=headers, data=str(params), verify=None)
             if result.status_code == 200:
                 return result.json()
             else:
@@ -80,21 +97,14 @@ class Worker(Worker):
             data = SourceData.objects.take(source=self.source, url=url)
             data = data.load_file()
             data = json.loads(data)
-        return data
 
-    def save_data(self, url, content):
-        url = f'{url}.json'
-        content = json.dumps(content)
-        data = SourceData.objects.take(source=self.source, url=url)
-        data.save_file(content)
+        return data
 
     def update_currencies_exchanges(self):
         command = 'account/currencies/exchanges'
         print(command)
         data = self.get(command)
 
-        if self.token:
-            self.save_data(url=command, content=data)
         # TODO
         pass
 
@@ -103,8 +113,6 @@ class Worker(Worker):
         print(command)
         data = self.get(command)
 
-        if self.token:
-            self.save_data(url=command, content=data)
         # TODO
         pass
 
@@ -113,8 +121,6 @@ class Worker(Worker):
         print(command)
         data = self.get(command)
 
-        if self.token:
-            self.save_data(url=command, content=data)
         # TODO
         pass
 
@@ -123,8 +129,6 @@ class Worker(Worker):
         print(command)
         data = self.get(command)
 
-        if self.token:
-            self.save_data(url=command, content=data)
         # TODO
         pass
 
@@ -132,9 +136,6 @@ class Worker(Worker):
         command = 'account/finances'
         print(command)
         data = self.get(command)
-
-        if self.token:
-            self.save_data(url=command, content=data)
 
         # TODO
         pass
@@ -146,9 +147,6 @@ class Worker(Worker):
 
         self.cities = data
 
-        if self.token:
-            self.save_data(url=command, content=data)
-
         # TODO
         pass
 
@@ -159,9 +157,6 @@ class Worker(Worker):
             city = urllib.parse.quote_plus(city)
             data = self.get(command, f'shipmentCity={city}')
 
-        if self.token:
-            self.save_data(url=command, content=data)
-
         # TODO
         pass
 
@@ -171,9 +166,6 @@ class Worker(Worker):
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
             data = self.get(command, f'shipmentCity={city}')
-
-        if self.token:
-            self.save_data(url=command, content=data)
 
         # TODO
         pass
@@ -187,9 +179,6 @@ class Worker(Worker):
 
             self.stocks = self.stocks + data
 
-        if self.token:
-            self.save_data(url=command, content=data)
-
         # TODO
         pass
 
@@ -202,22 +191,13 @@ class Worker(Worker):
 
             self.reserveplaces = self.reserveplaces + data
 
-        if self.token:
-            self.save_data(url=command, content=data)
-
         # TODO
         pass
 
     def update_catalog_categories(self):
-
-        # Получить данные через API или из файла обмена
         command = 'catalog/categories'
         print(command)
         data = self.get(command)
-
-        # Если загрузка была через API, выгрузить данные в файл обмена
-        if self.token:
-            self.save_data(url=command, content=data)
 
         # Спарсить полученные данные
         self.parse_categories(data)
@@ -230,13 +210,10 @@ class Worker(Worker):
                 name=name,
                 parent=parent
             )
-            print(category)
             if item['children']:
                 self.parse_categories(item['children'], category)
 
     def update_catalog_products(self):
-
-        # Получить данные через API или из файла обмена
         command = 'catalog/categories/all/products'
         print(command)
         for city in self.cities:
@@ -244,11 +221,6 @@ class Worker(Worker):
             data = self.get(command,
                             f'shipmentCity={city}&&includesale=true&includeuncondition=true&includemissing=true')
 
-        # Если загрузка была через API, выгрузить данные в файл обмена
-        if self.token:
-            self.save_data(url=command, content=data)
-
-        # TODO
         for n, item in enumerate(data['result']):
             vendor = Vendor.objects.take(distributor=self.distributor,
                                          name=item['product']['producer'])
@@ -395,10 +367,10 @@ class Worker(Worker):
 
     def update_content(self):
 
-        command = 'content'
+        command = 'content/batch'
         print(command)
 
-        batch_size = 16
+        batch_size = 32
 
         # Получаем идентификаторы продуктов, которые нуждаются в обновлении контента
         ids_ = Product.objects.filter(distributor=self.distributor).values('product_key')
@@ -413,11 +385,12 @@ class Worker(Worker):
             batches_count += 1
 
         for n in range(batches_count):
-            batch = ','.join(ids[n*batch_size:(n+1)*batch_size])
-            print(n, batch[0:32])
+            batch = ids[n*batch_size:(n+1)*batch_size]
+            print(n, batch)
 
-            data = self.get(command=f'{command}/{batch}')
+            data = self.post(command=command, params=batch)
 
-            # Если загрузка была через API, выгрузить данные в файл обмена
             if self.token:
-                self.save_data(url=f'{command}_{n}', content=data)
+                self.save_data(url=command, content=data)
+
+            exit()
