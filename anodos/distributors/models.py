@@ -1,5 +1,8 @@
+import os
 import uuid
+import requests as r
 from django.db import models
+from django.conf import settings
 from django.utils import timezone
 
 
@@ -385,6 +388,7 @@ class Product(models.Model):
 
     # Контент
     content = models.TextField(null=True, default=None)
+    content_loaded = models.DateTimeField(null=True, default=None)
 
     objects = ProductManager()
 
@@ -522,3 +526,235 @@ class Party(models.Model):
 
     class Meta:
         ordering = ['created']
+
+
+class ParameterGroupManager(models.Manager):
+
+    def take(self, name, **kwargs):
+        if not name:
+            return None
+
+        try:
+            o = self.get(name=name)
+
+        except ParameterGroup.DoesNotExist:
+            o = ParameterGroup()
+            o.name = name
+            o.save()
+
+        return o
+
+
+class ParameterGroup(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    distributor = models.ForeignKey('Distributor', null=True, default=None,
+                                    on_delete=models.CASCADE, related_name='+')
+    name = models.TextField(null=True, default=None, db_index=True)
+
+    objects = ParameterGroupManager()
+
+    def __str__(self):
+        return f'{self.name}'
+
+    class Meta:
+        ordering = ['name']
+
+
+class ParameterManager(models.Manager):
+
+    def take(self, distributor, name, **kwargs):
+        if not distributor or not name:
+            return None
+
+        need_save = False
+
+        try:
+            o = self.get(distributor=distributor, name=name)
+
+        except Parameter.DoesNotExist:
+            o = Parameter()
+            o.name = name
+            need_save = True
+
+        group = kwargs.get('group', None)
+        if group is not None and o.group is None:
+            o.group = group
+            need_save = True
+
+        description = kwargs.get('description', None)
+        if description is not None and o.description is None:
+            o.description = description
+            need_save = True
+
+        if need_save:
+            o.save()
+
+        return o
+
+
+class Parameter(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    distributor = models.ForeignKey('Distributor', null=True, default=None,
+                                    on_delete=models.CASCADE, related_name='+')
+    group = models.ForeignKey('ParameterGroup', null=True, default=None,
+                              on_delete=models.CASCADE, related_name='+')
+    name = models.TextField(null=True, default=None, db_index=True)
+    description = models.TextField(null=True, default=None)
+
+    objects = ParameterManager()
+
+    def __str__(self):
+        return f'{self.name}'
+
+    class Meta:
+        ordering = ['name']
+
+
+class ParameterUnitManager(models.Manager):
+
+    def take(self, key, **kwargs):
+        if not key:
+            return None
+
+        need_save = False
+
+        try:
+            o = self.get(key=key)
+
+        except ParameterUnit.DoesNotExist:
+            o = ParameterUnit()
+            o.key = key[:32]
+            need_save = True
+
+        if o.name is None:
+            o.name = key
+            need_save = True
+
+        if need_save:
+            o.save()
+
+        return o
+
+
+class ParameterUnit(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    key = models.CharField(max_length=32, unique=True)
+
+    name = models.TextField(null=True, default=None, db_index=True)
+    print_name = models.TextField(null=True, default=None, db_index=True)
+
+    objects = ParameterUnitManager()
+
+    def __str__(self):
+        return f'{self.key}'
+
+    class Meta:
+        ordering = ['key']
+
+
+class ParameterValueManager(models.Manager):
+
+    def take(self, distributor, product, parameter, **kwargs):
+        if not distributor or not product or not parameter:
+            return None
+
+        need_save = False
+
+        try:
+            o = self.get(distributor=distributor, product=product, parameter=parameter)
+
+        except ParameterValue.DoesNotExist:
+            o = ParameterValue()
+            o.distributor = distributor
+            o.product = product
+            o.parameter = parameter
+            need_save = True
+
+        value = kwargs.get('value', None)
+        if value and value != o.value:
+            o.value = value
+            need_save = True
+
+        unit = kwargs.get('unit', None)
+        if unit and unit != o.unit:
+            o.unit = unit
+            need_save = True
+
+        if need_save:
+            o.save()
+
+        return o
+
+
+class ParameterValue(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    distributor = models.ForeignKey('Distributor', null=True, default=None,
+                                    on_delete=models.CASCADE, related_name='+')
+    product = models.ForeignKey('Product', null=True, default=None,
+                                on_delete=models.CASCADE, related_name='+')
+    parameter = models.ForeignKey('Parameter', null=True, default=None,
+                                  on_delete=models.CASCADE, related_name='+')
+
+    value = models.TextField(null=True, default=None, db_index=True)
+    unit = models.ForeignKey('ParameterUnit', null=True, default=None,
+                             on_delete=models.CASCADE, related_name='+')
+
+    objects = ParameterValueManager()
+
+    def __str__(self):
+        if self.unit:
+            return f'{self.product}: {self.parameter} = {self.value} {self.unit}'
+        else:
+            return f'{self.product}: {self.parameter} = {self.value}'
+
+
+class ProductImageManager(models.Manager):
+
+    def take(self, product, source_url, **kwargs):
+        if not product or not source_url:
+            return None
+
+        try:
+            o = self.get(product=product, source_url=source_url)
+
+        except ProductImage.DoesNotExist:
+            o = ProductImage()
+            o.product = product
+            o.source_url = source_url
+            o.save()
+
+        if o.file_name is None:
+            o.download_file()
+
+        return o
+
+
+class ProductImage(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    product = models.ForeignKey('Product', null=True, default=None,
+                                on_delete=models.CASCADE, related_name='+')
+    source_url = models.TextField(null=True, default=None, db_index=True)
+    file_name = models.TextField(null=True, default=None)
+
+    objects = ProductImageManager()
+
+    def download_file(self):
+
+        # Определяем имя файла
+        ext = self.source_url.rpartition('.')
+        self.file_name = f'{settings.MEDIA_ROOT}products/photos/{self.id}.{ext[2]}'
+
+        # Загружаем фотографию
+        result = r.get(self.source_url)
+
+        directory = '/'
+        for dir_ in self.file_name.split('/')[:-1]:
+            directory = '{}/{}'.format(directory, dir_)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+        with open(self.file_name, "wb") as f:
+            f.write(result.content)
+        self.save()
+
+    def __str__(self):
+        return f'{self.product}: {self.source_url}'

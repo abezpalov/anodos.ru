@@ -1,6 +1,11 @@
+import time
+import random
+
 import requests as r
 import json
 import urllib.parse
+
+from django.utils import timezone
 
 from swarm.models import *
 from distributors.models import *
@@ -34,7 +39,9 @@ class Worker(Worker):
 
     def run(self, command='update'):
 
-        if command is 'update':
+        print(command)
+
+        if command == 'update':
 
             # Обновление информации об аккаунте
             # self.update_currencies_exchanges()
@@ -44,18 +51,22 @@ class Worker(Worker):
             # self.update_finances()
 
             # Обновление информации о логистики
-            #self.update_shipment_cities()
-            #self.update_shipment_points()
-            #self.update_shipment_delivery_addresses()
-            #self.update_stocks()
-            #self.update_reserveplaces()
+            self.update_shipment_cities()
+            self.update_shipment_points()
+            self.update_shipment_delivery_addresses()
+            self.update_stocks()
+            self.update_reserveplaces()
 
             # Обновление каталога
-            #self.update_catalog_categories()
-            #self.update_catalog_products()
+            self.update_catalog_categories()
+            self.update_catalog_products()
 
-            # Обновление контента
+        elif command == 'content':
+            print('///')
             self.update_content()
+
+        elif command == 'test':
+            Product.objects.all().delete()
 
     def get(self, command='', params=''):
 
@@ -70,8 +81,7 @@ class Worker(Worker):
         if result.status_code == 200:
             return result.json()
         else:
-            print('Error:', result.status_code)
-            print('URL', url)
+            print(f'Error: {result.status_code} in URL {url}')
             return None
 
     def post(self, command='', params=''):
@@ -80,25 +90,18 @@ class Worker(Worker):
                    'accept': 'application/json',
                    'Content-Type': 'application/json'}
 
-        print(url)
-        print(headers)
-        print(params)
-
-        if self.token:
-            result = r.post(url, headers=headers, data=str(params), verify=None)
-            if result.status_code == 200:
-                return result.json()
-            else:
-                print('Error:', result.status_code)
-                print('URL', url)
-                return None
+        result = r.post(url, headers=headers, data=str(params), verify=None)
+        if result.status_code == 200:
+            return result.json()
         else:
-            url = f'{command}.json'
-            data = SourceData.objects.take(source=self.source, url=url)
-            data = data.load_file()
-            data = json.loads(data)
+            print(f'Error: {result.status_code} in URL {url}')
+            return None
 
-        return data
+    def save_data(self, url, content):
+        url = f'{url}.json'
+        content = json.dumps(content)
+        data = SourceData.objects.take(source=self.source, url=url)
+        data.save_file(content)
 
     def update_currencies_exchanges(self):
         command = 'account/currencies/exchanges'
@@ -208,176 +211,187 @@ class Worker(Worker):
             category = Category.objects.take(
                 distributor=self.distributor,
                 name=name,
-                parent=parent
-            )
+                parent=parent)
+            print(category)
             if item['children']:
                 self.parse_categories(item['children'], category)
 
     def update_catalog_products(self):
         command = 'catalog/categories/all/products'
         print(command)
+
         for city in self.cities:
-            city = urllib.parse.quote_plus(city)
-            data = self.get(command,
-                            f'shipmentCity={city}&&includesale=true&includeuncondition=true&includemissing=true')
+            if settings.OCS_TEST:
+                data = SourceData.objects.take(source=self.source, url=f'{command}.json')
+                data = data.load_file()
+                data = json.loads(data)
+            else:
+                city = urllib.parse.quote_plus(city)
+                data = self.get(command,
+                                f'shipmentCity={city}&&includesale=true&includeuncondition=true&includemissing=true')
 
-        for n, item in enumerate(data['result']):
-            vendor = Vendor.objects.take(distributor=self.distributor,
-                                         name=item['product']['producer'])
-            category = Category.objects.get_by_article(distributor=self.distributor,
-                                                       article=item['product']['category'])
-            condition = Condition.objects.take(distributor=self.distributor,
-                                               name=item['product']['condition'])
+            for n, item in enumerate(data['result']):
+                product = self.parse_product(item)
+                print(f"{n + 1} of {len(data['result'])} {product}")
 
-            product_key = item['product'].get('itemId', None)
-            party_key = item['product'].get('productKey', None)
-            article = item['product'].get('partNumber', None)
-            short_name = item['product'].get('productName', None)
-            name_rus = item['product'].get('itemNameRus', None)
-            name = f"{name_rus} {short_name}"
-            name_other = item['product'].get('itemName', None)
-            description = item['product'].get('productDescription', None)
+    def parse_product(self, item):
+        vendor = Vendor.objects.take(distributor=self.distributor,
+                                     name=item['product']['producer'])
+        category = Category.objects.get_by_article(distributor=self.distributor,
+                                                   article=item['product']['category'])
+        condition = Condition.objects.take(distributor=self.distributor,
+                                           name=item['product']['condition'])
 
-            ean_128 = item['product'].get('eaN128', None)
-            upc = item['product'].get('upc', None)
-            pnc = item['product'].get('pnc', None)
-            hs_code = item['product'].get('hsCode', None)
+        product_key = item['product'].get('itemId', None)
+        party_key = item['product'].get('productKey', None)
+        article = item['product'].get('partNumber', None)
+        short_name = item['product'].get('productName', None)
+        name_rus = item['product'].get('itemNameRus', None)
+        name_other = item['product'].get('itemName', None)
+        name = f"{name_rus} {name_other}"
+        description = item['product'].get('productDescription', None)
 
-            traceable = item['product'].get('traceable', None)
-            condition_description = item['product'].get('conditionDescription', None)
+        ean_128 = item['product'].get('eaN128', None)
+        upc = item['product'].get('upc', None)
+        pnc = item['product'].get('pnc', None)
+        hs_code = item['product'].get('hsCode', None)
 
-            weight = item['packageInformation'].get('weight', None)
-            width = item['packageInformation'].get('width', None)
-            height = item['packageInformation'].get('height', None)
-            depth = item['packageInformation'].get('depth', None)
-            volume = item['packageInformation'].get('volume', None)
-            multiplicity = item['packageInformation'].get('multiplicity', None)
-            unit = Unit.objects.take(key=item['packageInformation'].get('units', None))
+        traceable = item['product'].get('traceable', None)
+        condition_description = item['product'].get('conditionDescription', None)
 
-            product = Product.objects.take_by_party_key(distributor=self.distributor,
-                                                        party_key=party_key,
-                                                        name=name,
-                                                        vendor=vendor,
-                                                        category=category,
-                                                        condition=condition,
-                                                        product_key=product_key,
-                                                        article=article,
-                                                        short_name=short_name,
-                                                        name_rus=name_rus,
-                                                        name_other=name_other,
-                                                        description=description,
-                                                        ean_128=ean_128,
-                                                        upc=upc,
-                                                        pnc=pnc,
-                                                        hs_code=hs_code,
-                                                        traceable=traceable,
-                                                        condition_description=condition_description,
-                                                        weight=weight,
-                                                        width=width,
-                                                        height=height,
-                                                        depth=depth,
-                                                        volume=volume,
-                                                        multiplicity=multiplicity,
-                                                        unit=unit)
+        weight = item['packageInformation'].get('weight', None)
+        width = item['packageInformation'].get('width', None)
+        height = item['packageInformation'].get('height', None)
+        depth = item['packageInformation'].get('depth', None)
+        volume = item['packageInformation'].get('volume', None)
+        multiplicity = item['packageInformation'].get('multiplicity', None)
+        unit = Unit.objects.take(key=item['packageInformation'].get('units', None))
 
-            print(f"{n+1} of {len(data['result'])} {product}")
+        product = Product.objects.take_by_party_key(distributor=self.distributor,
+                                                    party_key=party_key,
+                                                    name=name,
+                                                    vendor=vendor,
+                                                    category=category,
+                                                    condition=condition,
+                                                    product_key=product_key,
+                                                    article=article,
+                                                    short_name=short_name,
+                                                    name_rus=name_rus,
+                                                    name_other=name_other,
+                                                    description=description,
+                                                    ean_128=ean_128,
+                                                    upc=upc,
+                                                    pnc=pnc,
+                                                    hs_code=hs_code,
+                                                    traceable=traceable,
+                                                    condition_description=condition_description,
+                                                    weight=weight,
+                                                    width=width,
+                                                    height=height,
+                                                    depth=depth,
+                                                    volume=volume,
+                                                    multiplicity=multiplicity,
+                                                    unit=unit)
 
-            # Удаляем имеющиеся партии товара
-            Party.objects.filter(distributor=self.distributor, product=product).delete()
+        # Удаляем имеющиеся партии товара
+        Party.objects.filter(distributor=self.distributor, product=product).delete()
 
-            # Получаем актуальную информацию по партиям товара
-            is_available_for_order = item.get('isAvailableForOrder', None)
+        # Получаем актуальную информацию по партиям товара
+        is_available_for_order = item.get('isAvailableForOrder', None)
 
-            try:
-                price_in = item['price']['order']['value']
-                currency_in = item['price']['order']['currency']
-                currency_in = Currency.objects.take(key=currency_in)
-            except KeyError:
-                price_in = None
-                currency_in = None
+        try:
+            price_in = item['price']['order']['value']
+            currency_in = item['price']['order']['currency']
+            currency_in = Currency.objects.take(key=currency_in)
+        except KeyError:
+            price_in = None
+            currency_in = None
 
-            try:
-                price_out = item['price']['endUser']['value']
-                currency_out = item['price']['endUser']['currency']
-                currency_out = Currency.objects.take(key=currency_out)
-            except KeyError:
-                price_out = None
-                currency_out = None
+        try:
+            price_out = item['price']['endUser']['value']
+            currency_out = item['price']['endUser']['currency']
+            currency_out = Currency.objects.take(key=currency_out)
+        except KeyError:
+            price_out = None
+            currency_out = None
 
-            try:
-                price_out_open = item['price']['endUserWeb']['value']
-                currency_out_open = item['price']['endUserWeb']['currency']
-                currency_out_open = Currency.objects.take(key=currency_out_open)
-            except KeyError:
-                price_out_open = None
-                currency_out_open = None
+        try:
+            price_out_open = item['price']['endUserWeb']['value']
+            currency_out_open = item['price']['endUserWeb']['currency']
+            currency_out_open = Currency.objects.take(key=currency_out_open)
+        except KeyError:
+            price_out_open = None
+            currency_out_open = None
 
-            try:
-                must_keep_end_user_price = item['price']['must_keep_end_user_price']
-            except KeyError:
-                must_keep_end_user_price = None
+        try:
+            must_keep_end_user_price = item['price']['must_keep_end_user_price']
+        except KeyError:
+            must_keep_end_user_price = None
 
-            for location in item['locations']:
-                key = location['location']
-                description = location.get('description')
+        for location in item['locations']:
+            key = location['location']
+            description = location.get('description')
 
-                quantity = location['quantity']['value']
-                quantity_great_than = location['quantity'].get('isGreatThan', False)
+            quantity = location['quantity']['value']
+            quantity_great_than = location['quantity'].get('isGreatThan', False)
 
-                can_reserve = location.get('canReserve', None)
+            can_reserve = location.get('canReserve', None)
 
-                location = Location.objects.take(key=key,
-                                                 description=description)
+            location = Location.objects.take(key=key,
+                                             description=description)
 
-                party = Party.objects.create(distributor=self.distributor,
-                                             product=product,
-                                             price_in=price_in,
-                                             currency_in=currency_in,
-                                             price_out=price_out,
-                                             currency_out=currency_out,
-                                             price_out_open=price_out_open,
-                                             currency_out_open=currency_out_open,
-                                             must_keep_end_user_price=must_keep_end_user_price,
-                                             location=location,
-                                             quantity=quantity,
-                                             quantity_great_than=quantity_great_than,
-                                             can_reserve=can_reserve,
-                                             is_available_for_order=is_available_for_order)
+            party = Party.objects.create(distributor=self.distributor,
+                                         product=product,
+                                         price_in=price_in,
+                                         currency_in=currency_in,
+                                         price_out=price_out,
+                                         currency_out=currency_out,
+                                         price_out_open=price_out_open,
+                                         currency_out_open=currency_out_open,
+                                         must_keep_end_user_price=must_keep_end_user_price,
+                                         location=location,
+                                         quantity=quantity,
+                                         quantity_great_than=quantity_great_than,
+                                         can_reserve=can_reserve,
+                                         is_available_for_order=is_available_for_order)
 
-            if len(item['locations']) == 0:
-                location = None
-                quantity = None
-                quantity_great_than = None
-                can_reserve = None
+        if len(item['locations']) == 0:
+            location = None
+            quantity = None
+            quantity_great_than = None
+            can_reserve = None
 
-                party = Party.objects.create(distributor=self.distributor,
-                                             product=product,
-                                             price_in=price_in,
-                                             currency_in=currency_in,
-                                             price_out=price_out,
-                                             currency_out=currency_out,
-                                             price_out_open=price_out_open,
-                                             currency_out_open=currency_out_open,
-                                             must_keep_end_user_price=must_keep_end_user_price,
-                                             location=location,
-                                             quantity=quantity,
-                                             quantity_great_than=quantity_great_than,
-                                             can_reserve=can_reserve,
-                                             is_available_for_order=is_available_for_order)
+            party = Party.objects.create(distributor=self.distributor,
+                                         product=product,
+                                         price_in=price_in,
+                                         currency_in=currency_in,
+                                         price_out=price_out,
+                                         currency_out=currency_out,
+                                         price_out_open=price_out_open,
+                                         currency_out_open=currency_out_open,
+                                         must_keep_end_user_price=must_keep_end_user_price,
+                                         location=location,
+                                         quantity=quantity,
+                                         quantity_great_than=quantity_great_than,
+                                         can_reserve=can_reserve,
+                                         is_available_for_order=is_available_for_order)
+
+        return product
 
     def update_content(self):
-
         command = 'content/batch'
         print(command)
 
         batch_size = 32
 
         # Получаем идентификаторы продуктов, которые нуждаются в обновлении контента
-        ids_ = Product.objects.filter(distributor=self.distributor).values('product_key')
+        ids_ = Product.objects.filter(distributor=self.distributor, content__isnull=True).values('product_key')
 
         ids = []
         for id_ in ids_:
             ids.append(id_['product_key'])
+
+        random.shuffle(ids)
 
         # Расчитываем количество партий
         batches_count = len(ids) // batch_size
@@ -385,12 +399,65 @@ class Worker(Worker):
             batches_count += 1
 
         for n in range(batches_count):
-            batch = ids[n*batch_size:(n+1)*batch_size]
-            print(n, batch)
+            print(f"{n+1} of {batches_count}")
+            batch = json.dumps(ids[n*batch_size:(n+1)*batch_size])
+
+            print(batch)
 
             data = self.post(command=command, params=batch)
 
-            if self.token:
-                self.save_data(url=command, content=data)
+            if data is not None:
+                for content in data['result']:
+                    self.parse_content(content)
 
-            exit()
+            print('wait')
+            time.sleep(18)
+
+    def parse_content(self, content):
+
+        products = Product.objects.filter(distributor=self.distributor,
+                                          product_key=content['itemId'])
+        for product in products:
+
+            print(product)
+
+            # description
+            description = content.get('description', None)
+
+            # properties
+            for parameter in content['properties']:
+                group = parameter.get('group', None)
+                name = parameter.get('name', None)
+                description = parameter.get('description', None)
+                value = parameter.get('value', None)
+                unit = parameter.get('unit', None)
+
+                if group:
+                    group = ParameterGroup.objects.take(distributor=self.distributor, name=group)
+
+                if name:
+                    parameter = Parameter.objects.take(distributor=self.distributor,
+                                                       group=group,
+                                                       name=name,
+                                                       description=description)
+                else:
+                    continue
+
+                if unit:
+                    unit = ParameterUnit.objects.take(key=unit)
+
+                parameter_value = ParameterValue.objects.take(distributor=self.distributor,
+                                                              product=product,
+                                                              parameter=parameter,
+                                                              value=value,
+                                                              unit=unit)
+                print(parameter_value)
+
+            # images
+            for image in content['images']:
+                url = image.get('url', None)
+                image = ProductImage.objects.take(product=product, source_url=url)
+                print(image)
+
+            product.content_loaded = timezone.now()
+            product.content = content
