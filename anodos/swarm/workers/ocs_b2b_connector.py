@@ -22,6 +22,7 @@ class Worker(Worker):
     url = 'https://connector.b2b.ocs.ru/api/v2/'
 
     def __init__(self):
+        self.start_time = timezone.now()
         self.source = Source.objects.take(
             name=self.source_name,
             login=self.login,
@@ -37,36 +38,46 @@ class Worker(Worker):
 
         super().__init__()
 
-    def run(self, command='update'):
+    def run(self, command=None):
 
         print(command)
 
-        if command == 'update':
-
-            # Обновление информации об аккаунте
-            # self.update_currencies_exchanges()
-            # self.update_contactpersons()
-            # self.update_payers()
-            # self.update_consignees()
-            # self.update_finances()
-
-            # Обновление информации о логистики
+        if command is None:
+            # Обновляем информации о логистике
             self.update_shipment_cities()
-            self.update_shipment_points()
-            self.update_shipment_delivery_addresses()
             self.update_stocks()
             self.update_reserveplaces()
 
-            # Обновление каталога
+            # Обновляем каталога
             self.update_catalog_categories()
             self.update_catalog_products()
 
-        elif command == 'content':
-            print('///')
+            # Удаляем устаревшие партии
+            Party.objects.filter(distributor=self.distributor,
+                                 created__lte=self.start_time).delete()
+
+            # Обновляем контент
             self.update_content()
 
-        elif command == 'test':
-            Product.objects.all().delete()
+        if command == 'update_stock':
+            # Обновляем информации о логистике
+            self.update_shipment_cities()
+            self.update_stocks()
+            self.update_reserveplaces()
+
+            # Обновляем каталога
+            self.update_catalog_categories()
+            self.update_catalog_products()
+
+            # Удаляем устаревшие партии
+            Party.objects.filter(distributor=self.distributor,
+                                 created__lte=self.start_time).delete()
+
+        elif command == 'update_content':
+            self.update_content()
+
+        elif command == 'all_delete':
+            self.distributor.delete()
 
     def get(self, command='', params=''):
 
@@ -207,9 +218,11 @@ class Worker(Worker):
 
     def parse_categories(self, data, parent=None):
         for item in data:
-            name = f"{item['name']} [{item['category']}]"
+            article = item['category']
+            name = item['name']
             category = Category.objects.take(
                 distributor=self.distributor,
+                article=article,
                 name=name,
                 parent=parent)
             print(category)
@@ -237,8 +250,8 @@ class Worker(Worker):
     def parse_product(self, item):
         vendor = Vendor.objects.take(distributor=self.distributor,
                                      name=item['product']['producer'])
-        category = Category.objects.get_by_article(distributor=self.distributor,
-                                                   article=item['product']['category'])
+        category = Category.objects.take(distributor=self.distributor,
+                                         article=item['product']['category'])
         condition = Condition.objects.take(distributor=self.distributor,
                                            name=item['product']['condition'])
 

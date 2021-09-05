@@ -38,22 +38,51 @@ class Distributor(models.Model):
 
 class CategoryManager(models.Manager):
 
-    def take(self, distributor, name, parent=None):
-        if not distributor or not name:
+    def take(self, distributor, article=None, name=None, parent=None):
+        if not distributor:
             return None
-        try:
-            o = self.get(distributor=distributor, name=name)
-        except Category.DoesNotExist:
-            o = Category()
-            o.distributor = distributor
-            o.name = name
-            o.parent = parent
-            if parent is None:
-                o.level = 0
-            else:
-                o.level = parent.level + 1
+        if not article and not name:
+            return None
 
-        o.save()
+        need_save = False
+
+        if article:
+            try:
+                o = self.get(distributor=distributor, article=article)
+            except Category.DoesNotExist:
+                o = Category()
+                o.distributor = distributor
+                o.article = article
+                o.name = name
+                o.parent = parent
+                need_save = True
+
+            if name and o.name != name:
+                o.name = name
+                need_save = True
+            if parent and o.parent != parent:
+                o.parent = parent
+
+            if o.parent is None:
+                level = 0
+            else:
+                level = o.parent.level + 1
+
+            if o.level != level:
+                o.level = level
+                need_save = True
+
+            if o.name is None:
+                o.name = o.article
+                need_save = True
+
+        else:
+            print('Category.take not work on name')
+            return None
+
+        if need_save:
+            o.save()
+
         return o
 
     def get_by_article(self, distributor, article):
@@ -68,6 +97,7 @@ class Category(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     distributor = models.ForeignKey('Distributor', null=True, default=None,
                                     on_delete=models.CASCADE, related_name='+')
+    article = models.TextField(db_index=True, null=True, default=None)
     name = models.TextField(db_index=True)
 
     parent = models.ForeignKey('Category', null=True, default=None,
@@ -742,7 +772,7 @@ class ProductImage(models.Model):
 
         # Определяем имя файла
         ext = self.source_url.rpartition('.')
-        self.file_name = f'{settings.MEDIA_ROOT}products/photos/{self.id}.{ext[2]}'
+        self.file_name = f'{settings.MEDIA_ROOT}distributors/products/photos/{self.id}.{ext[2]}'
 
         # Загружаем фотографию
         result = r.get(self.source_url)
