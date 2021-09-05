@@ -4,31 +4,42 @@
     <meta charset="UTF-8">
     <title>{% block title %}Поиск по складам поставщиков{% endblock %}</title>
     <link rel="stylesheet" type="text/css" href="/static/semantic/semantic.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/main.css">
 
 </head>
 <body>
+<main>
 <div class="ui container">
     <div class="ui grid"><div class="ui hidden divider"></div></div>
     <div class="ui equal width grid">
         <div class="column">
             <h1 class="ui left floated header"><a href="/">Anodos</a></h1>
-            <p >ИТ-оборудование со склада и на заказ</p>
+            <p >ИТ-инфраструктура для цифровой трансформации</p>
         </div>
-        <div class="column">
-            <p class="ui right aligned header"><a href="tel:+78469917885">+7 846 991 78 85</a></p>
+        <div class="right aligned column">
+            <p class="ui header"><a href="tel:+78469917885">+7 846 991 78 85</a></p>
+            <div class="ui list">
+                <div class="item">
+                    <div class="content">Самара, Врубеля, 17</div>
+                </div>
+                <div class="item">
+                    <div class="content">
+                        <a href="mailto:info@anodos.ru">info@anodos.ru</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <div class="ui secondary menu">
-        <a class="active item">Home</a>
-        <a class="item">Messages</a>
-        <a class="item">Friends</a>
+        <a class="active item">Новости</a>
+        <a class="item">Партнёры</a>
         <div class="ui dropdown item">
-            Dropdown
+            Продукты и решения
             <i class="dropdown icon"></i>
             <div class="menu">
-                <div class="item">Choice 1</div>
-                <div class="item">Choice 2</div>
-                <div class="item">Choice 3</div>
+                <a class="item">Серверы</a>
+                <a class="item">Системы хранения данных</a>
+                <a class="item">Сетевое оборудование</a>
             </div>
         </div>
         <div class="right menu">
@@ -38,6 +49,7 @@
                     <i class="search link icon"></i>
                 </div>
             </div>
+            <a class="item">Войти</a>
         </div>
 
     </div>
@@ -45,6 +57,20 @@
 
 {% endblock %}
 </div>
+</main>
+
+<footer>
+  <div class="ui vertical footer segment">
+    <div class="ui center aligned container">
+      <div class="ui horizontal small divided link list">
+        <a class="item" href="mailto:root@anodos.ru">&copy; Андрей Безпалов</a>
+        <a class="item">Контактные данные</a>
+        <a class="item">Условия и положения</a>
+        <a class="item">Политика конфиденциальности</a>
+      </div>
+    </div>
+  </div>
+</footer>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="/static/semantic/semantic.min.js"></script>

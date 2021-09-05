@@ -60,7 +60,7 @@ class Worker(Worker):
             # Обновляем контент
             self.update_content()
 
-        if command == 'update_stock':
+        if command == 'update_stocks':
             # Обновляем информации о логистике
             self.update_shipment_cities()
             self.update_stocks()
@@ -432,6 +432,7 @@ class Worker(Worker):
             data = self.post(command=command, params=batch)
 
             if data is not None:
+                print(f"Получил контент по {len(data['result'])} продуктам")
                 for content in data['result']:
                     self.parse_content(content)
 
