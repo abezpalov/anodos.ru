@@ -771,8 +771,8 @@ class ProductImage(models.Model):
     def download_file(self):
 
         # Определяем имя файла
-        ext = self.source_url.rpartition('.')
-        self.file_name = f'{settings.MEDIA_ROOT}distributors/products/photos/{self.id}.{ext[2]}'
+        ext = self.source_url.rpartition('.')[2]
+        self.file_name = f'{settings.MEDIA_ROOT}distributors/products/photos/{self.id}.{ext}'
 
         # Загружаем фотографию
         result = r.get(self.source_url)
