@@ -407,7 +407,7 @@ class Worker(Worker):
         command = 'content/batch'
         print(command)
 
-        batch_size = 32
+        batch_size = settings.OCS_BATCH_SIZE
 
         # Получаем идентификаторы продуктов, которые нуждаются в обновлении контента
         ids_ = Product.objects.filter(distributor=self.distributor, content__isnull=True).values('product_key')
