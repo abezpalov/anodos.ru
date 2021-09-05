@@ -40,9 +40,10 @@ class Worker(Worker):
 
     def run(self, command=None):
 
-        print(command)
+        self.send(f'OCS run {command}')
 
         if command is None:
+
             # Обновляем информации о логистике
             self.update_shipment_cities()
             self.update_stocks()
@@ -78,6 +79,17 @@ class Worker(Worker):
 
         elif command == 'all_delete':
             self.distributor.delete()
+
+        count_products = Product.objects.filter(distributor=self.distributor).count()
+        count_parties = Party.objects.filter(distributor=self.distributor).count()
+        count_photos = ProductImage.objects.filter(distributor=self.distributor).count()
+        count_parameter_values = ParameterValue.objects.filter(distributor=self.distributor).count()
+
+        self.send(f'OCS end {command}\n'
+                  f'count_products = {count_products}\n'
+                  f'count_parties = {count_parties}\n'
+                  f'count_photos = {count_photos}\n'
+                  f'count_parameter_values = {count_parameter_values}')
 
     def get(self, command='', params=''):
 
