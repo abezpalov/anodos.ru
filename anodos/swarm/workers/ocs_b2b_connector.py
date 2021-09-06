@@ -77,9 +77,8 @@ class Worker(Worker):
         elif command == 'update_content':
             self.update_content()
 
-        elif command == 'count_content':
-            count = Product.objects.filter(content__isnull=False).count()
-            print(count)
+        elif command == 'get_info':
+            pass
 
         elif command == 'all_delete':
             self.distributor.delete()
@@ -88,12 +87,14 @@ class Worker(Worker):
         count_parties = Party.objects.filter(distributor=self.distributor).count()
         count_photos = ProductImage.objects.filter(product__distributor=self.distributor).count()
         count_parameter_values = ParameterValue.objects.filter(distributor=self.distributor).count()
+        count_product_contents = Product.objects.filter(content__isnull=False).count()
 
         self.send(f'OCS end {command}\n'
                   f'count_products = {count_products}\n'
                   f'count_parties = {count_parties}\n'
                   f'count_photos = {count_photos}\n'
-                  f'count_parameter_values = {count_parameter_values}')
+                  f'count_parameter_values = {count_parameter_values}\n'
+                  f'count_product_contents = {count_product_contents}\n')
 
     def get(self, command='', params=''):
 
