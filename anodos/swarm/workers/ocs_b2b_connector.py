@@ -487,3 +487,4 @@ class Worker(Worker):
 
             product.content_loaded = timezone.now()
             product.content = content
+            product.save()
