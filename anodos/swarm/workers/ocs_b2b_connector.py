@@ -77,6 +77,10 @@ class Worker(Worker):
         elif command == 'update_content':
             self.update_content()
 
+        elif command == 'count_content':
+            count = Product.objects.filter(content__isnull=False).count()
+            print(count)
+
         elif command == 'all_delete':
             self.distributor.delete()
 
