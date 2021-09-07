@@ -421,7 +421,7 @@ class Worker(Worker):
         for id_ in ids_:
             ids.append(id_['product_key'])
 
-        random.shuffle(ids)
+        # random.shuffle(ids)
 
         # Расчитываем количество партий
         batches_count = len(ids) // batch_size
