@@ -493,3 +493,5 @@ class Worker(Worker):
             product.content_loaded = timezone.now()
             product.content = content
             product.save()
+
+            self.send(f'Content loaded: {product}')
