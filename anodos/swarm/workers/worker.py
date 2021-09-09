@@ -1,6 +1,6 @@
 import time
 import ftplib
-import requests
+import requests as r
 import lxml.html
 from io import BytesIO
 import telebot
@@ -68,27 +68,27 @@ class Worker:
     def load(self, url, result_type=None):
 
         if self.session is None:
-            self.session = requests.Session()
+            self.session = r.Session()
 
         if self.cookies is None:
-            r = self.session.get(url, allow_redirects=True, verify=False)
-            self.cookies = r.cookies
+            result = self.session.get(url, allow_redirects=True, verify=False)
+            self.cookies = result.cookies
         else:
-            r = self.session.get(url, allow_redirects=True, verify=False,
-                                 cookies=self.cookies)
-            self.cookies = r.cookies
+            result = self.session.get(url, allow_redirects=True, verify=False,
+                                      cookies=self.cookies)
+            self.cookies = result.cookies
 
         if result_type == 'cookie':
-            return r.cookie
+            return result.cookie
         elif result_type == 'text':
-            return r.text
+            return result.text
         elif result_type == 'html':
-            tree = lxml.html.fromstring(r.text)
+            tree = lxml.html.fromstring(result.text)
             return tree
         elif result_type == 'content':
-            return r.content
+            return result.content
 
-        return r
+        return result
 
     @staticmethod
     def fix_text(text):

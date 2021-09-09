@@ -19,7 +19,8 @@ class Worker(Worker):
     login = None
     password = None
     company = 'OCS'
-    url = 'https://connector.b2b.ocs.ru/api/v2/'
+    url = {'api': 'https://connector.b2b.ocs.ru/api/v2/',
+           'vendors': 'https://www.ocs.ru/Products/ByVendor/'}
 
     def __init__(self):
         self.start_time = timezone.now()
@@ -60,7 +61,10 @@ class Worker(Worker):
             # Обновляем контент
             self.update_content()
 
-        if command == 'update_stocks':
+        elif command == 'update_vendors':
+            self.update_vendors()
+
+        elif command == 'update_stocks':
             # Обновляем информации о логистике
             self.update_shipment_cities()
             self.update_stocks()
@@ -99,9 +103,9 @@ class Worker(Worker):
     def get(self, command='', params=''):
 
         if params:
-            url = f'{self.url}{command}?{params}'
+            url = f"{self.url['api']}{command}?{params}"
         else:
-            url = f'{self.url}{command}'
+            url = f"{self.url['api']}{command}"
         headers = {'X-API-Key': self.token,
                    'accept': 'application/json'}
         result = r.get(url, headers=headers, verify=None)
@@ -113,7 +117,7 @@ class Worker(Worker):
             return None
 
     def post(self, command='', params=''):
-        url = f'{self.url}{command}'
+        url = f"{self.url['api']}{command}"
         headers = {'X-API-Key': self.token,
                    'accept': 'application/json',
                    'Content-Type': 'application/json'}
@@ -130,6 +134,17 @@ class Worker(Worker):
         content = json.dumps(content)
         data = SourceData.objects.take(source=self.source, url=url)
         data.save_file(content)
+
+    def update_vendors(self):
+        tree = self.load(url=self.url['vendors'], result_type='html')
+        items = tree.xpath('.//div[@class="producers-list"]//li')
+
+        for item in items:
+            self.parse_vendor(item)
+
+    def parse_vendor(self, item):
+        print(item)
+        # TODO
 
     def update_currencies_exchanges(self):
         command = 'account/currencies/exchanges'
