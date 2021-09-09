@@ -1,5 +1,5 @@
 import time
-import random
+from lxml import etree
 
 import requests as r
 import json
@@ -60,9 +60,6 @@ class Worker(Worker):
 
             # Обновляем контент
             self.update_content()
-
-        elif command == 'update_vendors':
-            self.update_vendors()
 
         elif command == 'update_stocks':
             # Обновляем информации о логистике
@@ -134,17 +131,6 @@ class Worker(Worker):
         content = json.dumps(content)
         data = SourceData.objects.take(source=self.source, url=url)
         data.save_file(content)
-
-    def update_vendors(self):
-        tree = self.load(url=self.url['vendors'], result_type='html')
-        items = tree.xpath('.//div[@class="producers-list"]//li')
-
-        for item in items:
-            self.parse_vendor(item)
-
-    def parse_vendor(self, item):
-        print(item)
-        # TODO
 
     def update_currencies_exchanges(self):
         command = 'account/currencies/exchanges'
@@ -445,6 +431,7 @@ class Worker(Worker):
 
         for n in range(batches_count):
             print(f"{n+1} of {batches_count}")
+            self.send(f"{n+1} of {batches_count} batch load")
             batch = json.dumps(ids[n*batch_size:(n+1)*batch_size])
 
             print(batch)
