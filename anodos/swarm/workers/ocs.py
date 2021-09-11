@@ -1,6 +1,4 @@
 import time
-from lxml import etree
-
 import requests as r
 import json
 import urllib.parse
