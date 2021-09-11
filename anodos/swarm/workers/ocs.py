@@ -12,13 +12,13 @@ from swarm.workers.worker import Worker
 
 class Worker(Worker):
 
-    source_name = 'ocs.ru/b2b'
+    source_name = 'ocs.ru'
     name = 'OCS'
     login = None
     password = None
-    company = 'OCS'
     url = {'api': 'https://connector.b2b.ocs.ru/api/v2/',
-           'vendors': 'https://www.ocs.ru/Products/ByVendor/'}
+           'events': 'https://zubrit.ocs.ru/',
+           }
 
     def __init__(self):
         self.start_time = timezone.now()
@@ -42,22 +42,11 @@ class Worker(Worker):
         self.send(f'OCS run {command}')
 
         if command is None:
+            print('Без команды не работаю!')
+            pass
 
-            # Обновляем информации о логистике
-            self.update_shipment_cities()
-            self.update_stocks()
-            self.update_reserveplaces()
-
-            # Обновляем каталога
-            self.update_catalog_categories()
-            self.update_catalog_products()
-
-            # Удаляем устаревшие партии
-            Party.objects.filter(distributor=self.distributor,
-                                 created__lte=self.start_time).delete()
-
-            # Обновляем контент
-            self.update_content()
+        elif command == 'update_events':
+            self.update_events()
 
         elif command == 'update_stocks':
             # Обновляем информации о логистике
@@ -73,29 +62,16 @@ class Worker(Worker):
             Party.objects.filter(distributor=self.distributor,
                                  created__lte=self.start_time).delete()
 
+            self.send_info()
+
         elif command == 'update_content':
             self.update_content()
-
-        elif command == 'get_info':
-            pass
+            self.send_info()
 
         elif command == 'all_delete':
             self.distributor.delete()
 
-        count_products = Product.objects.filter(distributor=self.distributor).count()
-        count_parties = Party.objects.filter(distributor=self.distributor).count()
-        count_photos = ProductImage.objects.filter(product__distributor=self.distributor).count()
-        count_parameter_values = ParameterValue.objects.filter(distributor=self.distributor).count()
-        count_product_contents = Product.objects.filter(content__isnull=False).count()
-
-        self.send(f'OCS end {command}\n'
-                  f'count_products = {count_products}\n'
-                  f'count_parties = {count_parties}\n'
-                  f'count_photos = {count_photos}\n'
-                  f'count_parameter_values = {count_parameter_values}\n'
-                  f'count_product_contents = {count_product_contents}\n')
-
-    def get(self, command='', params=''):
+    def get_by_api(self, command='', params=''):
 
         if params:
             url = f"{self.url['api']}{command}?{params}"
@@ -111,7 +87,7 @@ class Worker(Worker):
             print(f'Error: {result.status_code} in URL {url}')
             return None
 
-    def post(self, command='', params=''):
+    def post_by_api(self, command='', params=''):
         url = f"{self.url['api']}{command}"
         headers = {'X-API-Key': self.token,
                    'accept': 'application/json',
@@ -130,10 +106,65 @@ class Worker(Worker):
         data = SourceData.objects.take(source=self.source, url=url)
         data.save_file(content)
 
+    def update_events(self):
+
+        # Заходим на первую страницу
+        tree = self.load(url=self.url['events'], result_type='html')
+
+        # Получаем все ссылки
+        items = tree.xpath('//div[@class="event-item"]')
+
+        for item in items:
+            event = item.xpath('.//div[@class="event-item-label"]/text()')[0]
+            event = self.fix_text(event)
+
+            vendor = item.xpath('.//div[@class="event-item-vendors"]/span/text()')[0]
+            vendor = self.fix_text(vendor)
+
+            name = item.xpath('.//a[@class="event-item-title"]/text()')[0]
+            name = self.fix_text(name)
+
+            url = item.xpath('.//a[@class="event-item-title"]/@href')[0]
+            if not url.startswith(self.url['events']):
+                url = '{}{}'.format(self.url['events'], url)
+
+            location = item.xpath('.//div[@class="event-item-location"]/text()')[0]
+            location = self.fix_text(location)
+
+            date = item.xpath('.//div[@class="event-item-date"]/text()')[0]
+            date = self.fix_text(date)
+
+            try:
+                SourceData.objects.get(source=self.source, url=url)
+            except SourceData.DoesNotExist:
+                content = f'<b>{event} {vendor}</b>\n' \
+                          f'<i>{date} {location}</i>\n\n' \
+                          f'<a href="{url}">{name}</a>'
+                self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
+
+                data = SourceData.objects.take(source=self.source, url=url)
+                data.content = content
+                data.save()
+                print(data)
+
+    def send_info(self):
+        count_products = Product.objects.filter(distributor=self.distributor).count()
+        count_parties = Party.objects.filter(distributor=self.distributor).count()
+        count_photos = ProductImage.objects.filter(product__distributor=self.distributor).count()
+        count_parameter_values = ParameterValue.objects.filter(distributor=self.distributor).count()
+        count_product_contents = Product.objects.filter(content__isnull=False).count()
+
+        self.send(f'OCS end {command}\n'
+                  f'count_products = {count_products}\n'
+                  f'count_parties = {count_parties}\n'
+                  f'count_photos = {count_photos}\n'
+                  f'count_parameter_values = {count_parameter_values}\n'
+                  f'count_product_contents = {count_product_contents}\n')
+
     def update_currencies_exchanges(self):
         command = 'account/currencies/exchanges'
         print(command)
-        data = self.get(command)
+        data = self.get_by_api(command)
 
         # TODO
         pass
@@ -141,7 +172,7 @@ class Worker(Worker):
     def update_contactpersons(self):
         command = 'account/contactpersons'
         print(command)
-        data = self.get(command)
+        data = self.get_by_api(command)
 
         # TODO
         pass
@@ -149,7 +180,7 @@ class Worker(Worker):
     def update_payers(self):
         command = 'account/payers'
         print(command)
-        data = self.get(command)
+        data = self.get_by_api(command)
 
         # TODO
         pass
@@ -157,7 +188,7 @@ class Worker(Worker):
     def update_consignees(self):
         command = 'account/consignees'
         print(command)
-        data = self.get(command)
+        data = self.get_by_api(command)
 
         # TODO
         pass
@@ -165,7 +196,7 @@ class Worker(Worker):
     def update_finances(self):
         command = 'account/finances'
         print(command)
-        data = self.get(command)
+        data = self.get_by_api(command)
 
         # TODO
         pass
@@ -173,7 +204,7 @@ class Worker(Worker):
     def update_shipment_cities(self):
         command = 'logistic/shipment/cities'
         print(command)
-        data = self.get(command)
+        data = self.get_by_api(command)
 
         self.cities = data
 
@@ -185,7 +216,7 @@ class Worker(Worker):
         print(command)
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
-            data = self.get(command, f'shipmentCity={city}')
+            data = self.get_by_api(command, f'shipmentCity={city}')
 
         # TODO
         pass
@@ -195,7 +226,7 @@ class Worker(Worker):
         print(command)
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
-            data = self.get(command, f'shipmentCity={city}')
+            data = self.get_by_api(command, f'shipmentCity={city}')
 
         # TODO
         pass
@@ -205,7 +236,7 @@ class Worker(Worker):
         print(command)
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
-            data = self.get(command, f'shipmentCity={city}')
+            data = self.get_by_api(command, f'shipmentCity={city}')
 
             self.stocks = self.stocks + data
 
@@ -217,7 +248,7 @@ class Worker(Worker):
         print(command)
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
-            data = self.get(command, f'shipmentCity={city}')
+            data = self.get_by_api(command, f'shipmentCity={city}')
 
             self.reserveplaces = self.reserveplaces + data
 
@@ -227,7 +258,7 @@ class Worker(Worker):
     def update_catalog_categories(self):
         command = 'catalog/categories'
         print(command)
-        data = self.get(command)
+        data = self.get_by_api(command)
 
         # Спарсить полученные данные
         self.parse_categories(data)
@@ -256,7 +287,7 @@ class Worker(Worker):
                 data = json.loads(data)
             else:
                 city = urllib.parse.quote_plus(city)
-                data = self.get(command,
+                data = self.get_by_api(command,
                                 f'shipmentCity={city}&&includesale=true&includeuncondition=true&includemissing=true')
 
             for n, item in enumerate(data['result']):
@@ -434,7 +465,7 @@ class Worker(Worker):
 
             print(batch)
 
-            data = self.post(command=command, params=batch)
+            data = self.post_by_api(command=command, params=batch)
 
             if data is not None:
                 print(f"Получил контент по {len(data['result'])} продуктам")
