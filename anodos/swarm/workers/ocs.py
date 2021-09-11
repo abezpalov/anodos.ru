@@ -147,6 +147,9 @@ class Worker(Worker):
                 data.save()
                 print(data)
 
+        # Отправляем отчёт
+        self.send(f'Нашёл {len(items)} мероприятий у {self.name}')
+
     def send_info(self):
         count_products = Product.objects.filter(distributor=self.distributor).count()
         count_parties = Party.objects.filter(distributor=self.distributor).count()
