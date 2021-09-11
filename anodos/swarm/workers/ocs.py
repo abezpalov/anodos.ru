@@ -46,7 +46,7 @@ class Worker(Worker):
 
         if command is None:
             print('Без команды не работаю!')
-            pass
+
         elif command == 'update_events':
             self.update_events()
 
@@ -57,12 +57,13 @@ class Worker(Worker):
             self.update_promo()
 
         elif command == 'update_stocks':
+
             # Обновляем информации о логистике
             self.update_shipment_cities()
             self.update_stocks()
             self.update_reserveplaces()
 
-            # Обновляем каталога
+            # Обновляем каталог
             self.update_catalog_categories()
             self.update_catalog_products()
 
@@ -402,7 +403,8 @@ class Worker(Worker):
             else:
                 city = urllib.parse.quote_plus(city)
                 data = self.get_by_api(command,
-                                f'shipmentCity={city}&&includesale=true&includeuncondition=true&includemissing=true')
+                                       f'shipmentCity={city}&&includesale=true'
+                                       f'&includeuncondition=true&includemissing=true')
 
             for n, item in enumerate(data['result']):
                 product = self.parse_product(item)
