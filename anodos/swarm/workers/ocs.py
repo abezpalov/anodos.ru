@@ -17,7 +17,8 @@ class Worker(Worker):
     login = None
     password = None
     url = {'api': 'https://connector.b2b.ocs.ru/api/v2/',
-           'events': 'https://zubrit.ocs.ru/',
+           'events': 'https://zubrit.ocs.ru',
+           'news': 'https://www.ocs.ru'
            }
 
     def __init__(self):
@@ -44,9 +45,11 @@ class Worker(Worker):
         if command is None:
             print('Без команды не работаю!')
             pass
-
         elif command == 'update_events':
             self.update_events()
+
+        elif command == 'update_news':
+            self.update_news()
 
         elif command == 'update_stocks':
             # Обновляем информации о логистике
@@ -126,7 +129,10 @@ class Worker(Worker):
 
             url = item.xpath('.//a[@class="event-item-title"]/@href')[0]
             if not url.startswith(self.url['events']):
-                url = '{}{}'.format(self.url['events'], url)
+                if url[0] == '/':
+                    url = '{}{}'.format(self.url['events'], url)
+                else:
+                    url = '{}/{}'.format(self.url['events'], url)
 
             location = item.xpath('.//div[@class="event-item-location"]/text()')[0]
             location = self.fix_text(location)
@@ -135,7 +141,7 @@ class Worker(Worker):
             date = self.fix_text(date)
 
             try:
-                SourceData.objects.get(source=self.source, url=url)
+                data = SourceData.objects.get(source=self.source, url=url)
             except SourceData.DoesNotExist:
                 content = f'<b>{event} {vendor}</b>\n' \
                           f'<i>{date} {location}</i>\n\n' \
@@ -145,10 +151,63 @@ class Worker(Worker):
                 data = SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
-                print(data)
+            print(data)
 
         # Отправляем отчёт
         self.send(f'Нашёл {len(items)} мероприятий у {self.name}')
+
+    def update_news(self):
+
+        # Заходим на первую страницу
+        tree = self.load(url=self.url['news'], result_type='html')
+
+        # Получаем все ссылки
+        items = tree.xpath('//div[@class="item item-news"]')
+
+        for item in items:
+            news_type = item.xpath('.//*[@class="header"]//a/text()')[0]
+            title = item.xpath('.//*[@class="topic"]//a/text()')[0]
+            url = item.xpath('.//*[@class="topic"]//a/@href')[0]
+            term = item.xpath('.//*[@class="header"]//em/text()')[0]
+            text = item.xpath('.//*[@class="body"]//text()')[0]
+            if not url.startswith(self.url['news']):
+                if url[0] == '/':
+                    url = '{}{}'.format(self.url['news'], url)
+                else:
+                    url = '{}/{}'.format(self.url['news'], url)
+
+            try:
+                data = SourceData.objects.get(source=self.source, url=url)
+            except SourceData.DoesNotExist:
+                content = f'<b>{news_type} {self.name}</b>\n<i>{term}</i>\n\n<a href="{url}">{title}</a>\n{text}\n'
+                self.send(content)
+                data = SourceData.objects.take(source=self.source, url=url)
+                data.content = content
+                data.save()
+            print(data)
+
+        items = tree.xpath('//div[@class="item item-pr"]')
+        for item in items:
+            news_type = item.xpath('.//*[@class="header"]//a/text()')[0]
+            title = item.xpath('.//*[@class="topic"]//a/text()')[0]
+            url = item.xpath('.//*[@class="topic"]//a/@href')[0]
+            term = item.xpath('.//*[@class="header"]//em/text()')[0]
+            text = item.xpath('.//*[@class="body"]//text()')[0]
+            if not url.startswith(self.url['news']):
+                if url[0] == '/':
+                    url = '{}{}'.format(self.url['news'], url)
+                else:
+                    url = '{}/{}'.format(self.url['news'], url)
+
+            try:
+                data = SourceData.objects.get(source=self.source, url=url)
+            except SourceData.DoesNotExist:
+                content = f'<b>{news_type} {self.name}</b>\n<i>{term}</i>\n\n<a href="{url}">{title}</a>\n{text}'
+                self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
+                data = SourceData.objects.take(source=self.source, url=url)
+                data.content = content
+                data.save()
+            print(data)
 
     def send_info(self):
         count_products = Product.objects.filter(distributor=self.distributor).count()
