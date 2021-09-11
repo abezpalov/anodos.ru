@@ -18,7 +18,9 @@ class Worker(Worker):
     password = None
     url = {'api': 'https://connector.b2b.ocs.ru/api/v2/',
            'events': 'https://zubrit.ocs.ru',
-           'news': 'https://www.ocs.ru'
+           'base': 'https://www.ocs.ru',
+           'news': 'https://www.ocs.ru',
+           'promo': 'https://www.ocs.ru/Promo'
            }
 
     def __init__(self):
@@ -50,6 +52,9 @@ class Worker(Worker):
 
         elif command == 'update_news':
             self.update_news()
+
+        elif command == 'update_promo':
+            self.update_promo()
 
         elif command == 'update_stocks':
             # Обновляем информации о логистике
@@ -172,19 +177,25 @@ class Worker(Worker):
             text = item.xpath('.//*[@class="body"]//text()')[0]
             if not url.startswith(self.url['news']):
                 if url[0] == '/':
-                    url = '{}{}'.format(self.url['news'], url)
+                    url = '{}{}'.format(self.url['base'], url)
                 else:
-                    url = '{}/{}'.format(self.url['news'], url)
+                    url = '{}/{}'.format(self.url['base'], url)
 
             try:
                 data = SourceData.objects.get(source=self.source, url=url)
             except SourceData.DoesNotExist:
-                content = f'<b>{news_type} {self.name}</b>\n<i>{term}</i>\n\n<a href="{url}">{title}</a>\n{text}\n'
+                content = f'<b>{news_type} {self.name}</b>\n' \
+                          f'<i>{term}</i>\n\n' \
+                          f'<a href="{url}">{title}</a>\n' \
+                          f'{text}\n'
                 self.send(content)
                 data = SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
             print(data)
+
+        # Отправляем отчёт
+        self.send(f'Нашёл {len(items)} новостей у {self.name}')
 
         items = tree.xpath('//div[@class="item item-pr"]')
         for item in items:
@@ -193,21 +204,62 @@ class Worker(Worker):
             url = item.xpath('.//*[@class="topic"]//a/@href')[0]
             term = item.xpath('.//*[@class="header"]//em/text()')[0]
             text = item.xpath('.//*[@class="body"]//text()')[0]
-            if not url.startswith(self.url['news']):
+            if not url.startswith(self.url['base']):
                 if url[0] == '/':
-                    url = '{}{}'.format(self.url['news'], url)
+                    url = '{}{}'.format(self.url['base'], url)
                 else:
-                    url = '{}/{}'.format(self.url['news'], url)
+                    url = '{}/{}'.format(self.url['base'], url)
 
             try:
                 data = SourceData.objects.get(source=self.source, url=url)
             except SourceData.DoesNotExist:
-                content = f'<b>{news_type} {self.name}</b>\n<i>{term}</i>\n\n<a href="{url}">{title}</a>\n{text}'
+                content = f'<b>{news_type} {self.name}</b>\n' \
+                          f'<i>{term}</i>\n\n' \
+                          f'<a href="{url}">{title}</a>\n' \
+                          f'{text}'
                 self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
                 data = SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
             print(data)
+
+        # Отправляем отчёт
+        self.send(f'Нашёл {len(items)} пресс-релизов у {self.name}')
+
+    def update_promo(self):
+
+        # Заходим на первую страницу
+        tree = self.load(url=self.url['promo'], result_type='html')
+
+        # Получаем все ссылки
+        items = tree.xpath('//div[@class="item"]')
+        for item in items:
+            vendor = item.xpath('.//*[@class="vendor"]//text()')[0]
+            term = item.xpath('.//*[@class="term"]//text()')[0]
+            title = item.xpath('.//h2//text()')[0]
+            text = item.xpath('.//div[@class="info"]/p//text()')[0]
+            url = item.xpath('.//h2/a/@href')[0]
+            if not url.startswith(self.url['base']):
+                if url[0] == '/':
+                    url = '{}{}'.format(self.url['base'], url)
+                else:
+                    url = '{}/{}'.format(self.url['base'], url)
+
+            try:
+                data = SourceData.objects.get(source=self.source, url=url)
+            except SourceData.DoesNotExist:
+                content = f'<b>Промо-акция {self.name} и {vendor}</b>\n' \
+                          f'<i>{term}</i>\n\n' \
+                          f'<a href="{url}">{title}</a>\n' \
+                          f'{text}'
+                self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
+                data = SourceData.objects.take(source=self.source, url=url)
+                data.content = content
+                data.save()
+            print(data)
+
+        # Отправляем отчёт
+        self.send(f'Нашёл {len(items)} промо у {self.name}')
 
     def send_info(self):
         count_products = Product.objects.filter(distributor=self.distributor).count()
@@ -216,7 +268,7 @@ class Worker(Worker):
         count_parameter_values = ParameterValue.objects.filter(distributor=self.distributor).count()
         count_product_contents = Product.objects.filter(content__isnull=False).count()
 
-        self.send(f'OCS end {command}\n'
+        self.send(f'OCS end\n'
                   f'count_products = {count_products}\n'
                   f'count_parties = {count_parties}\n'
                   f'count_photos = {count_photos}\n'
