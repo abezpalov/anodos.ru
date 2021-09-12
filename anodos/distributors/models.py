@@ -619,22 +619,19 @@ class ParameterGroup(models.Model):
 
 class ParameterManager(models.Manager):
 
-    def take(self, distributor, name, **kwargs):
+    def take(self, distributor, name, group=None, **kwargs):
         if not distributor or not name:
             return None
 
         need_save = False
 
         try:
-            o = self.get(distributor=distributor, name=name)
+            o = self.get(distributor=distributor, name=name, group=group)
 
         except Parameter.DoesNotExist:
             o = Parameter()
             o.name = name
-            need_save = True
-
-        group = kwargs.get('group', None)
-        if group is not None and o.group is None:
+            o.distributor = distributor
             o.group = group
             need_save = True
 

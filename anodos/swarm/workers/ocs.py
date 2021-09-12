@@ -75,7 +75,9 @@ class Worker(Worker):
         elif command == 'update_content':
             self.update_content()
 
-        elif command == 'drop_content':
+        elif command == 'drop_parameters':
+            Parameter.objects.filter(distributor=self.distributor).delete()
+            Parameter.objects.filter(distributor__isnull=True).delete()
             Product.objects.filter(distributor=self.distributor).update(content_loaded=None, content=None)
 
         elif command == 'all_delete':
