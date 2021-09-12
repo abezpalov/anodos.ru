@@ -71,11 +71,8 @@ class Worker(Worker):
             Party.objects.filter(distributor=self.distributor,
                                  created__lte=self.start_time).delete()
 
-            self.send_info()
-
         elif command == 'update_content':
             self.update_content()
-            self.send_info()
 
         elif command == 'all_delete':
             self.distributor.delete()
