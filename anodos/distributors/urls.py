@@ -4,6 +4,6 @@ from . import views
 
 urlpatterns = [
     path('', views.index),
-    path('product/stocks-<slug:distributor>/vendor-<slug:vendor>/article-<slug:article>',
+    path('product/<uuid:product_id>',
          views.product)
 ]

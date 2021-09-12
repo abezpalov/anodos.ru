@@ -432,8 +432,25 @@ class Product(models.Model):
 
     objects = ProductManager()
 
+    @property
+    def price(self):
+        parties = Party.objects.filter(product=self)
+        for party in parties:
+            if party.quantity:
+                return f'{party.price_in} {party.currency_in}'
+        return None
+
+    @property
+    def quantity(self):
+        quantity = 0
+        parties = Party.objects.filter(product=self)
+        for party in parties:
+            if party.quantity:
+                quantity += party.quantity
+        return quantity
+
     def __str__(self):
-        return f'{self.vendor.name} [{self.article}]'
+        return f'{self.vendor.name} [{self.article}] ({self.id}) '
 
     class Meta:
         ordering = ['vendor__name', 'article']
@@ -739,6 +756,8 @@ class ParameterValue(models.Model):
     unit = models.ForeignKey('ParameterUnit', null=True, default=None,
                              on_delete=models.CASCADE, related_name='+')
 
+    created = models.DateTimeField(default=timezone.now, db_index=True)
+
     objects = ParameterValueManager()
 
     def __str__(self):
@@ -746,6 +765,9 @@ class ParameterValue(models.Model):
             return f'{self.product}: {self.parameter} = {self.value} {self.unit}'
         else:
             return f'{self.product}: {self.parameter} = {self.value}'
+
+    class Meta:
+        ordering = ['created']
 
 
 class ProductImageManager(models.Manager):
@@ -777,6 +799,13 @@ class ProductImage(models.Model):
     file_name = models.TextField(null=True, default=None)
 
     objects = ProductImageManager()
+
+    @property
+    def url(self):
+        if self.file_name:
+            return self.file_name.replace(settings.MEDIA_ROOT, settings.MEDIA_URL)
+        else:
+            return None
 
     def download_file(self):
 

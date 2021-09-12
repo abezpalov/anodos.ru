@@ -25,6 +25,7 @@ class Worker(Worker):
 
     def __init__(self):
         self.start_time = timezone.now()
+        self.host = settings.HOST
         self.source = Source.objects.take(
             name=self.source_name,
             login=self.login,
@@ -73,6 +74,9 @@ class Worker(Worker):
 
         elif command == 'update_content':
             self.update_content()
+
+        elif command == 'drop_content':
+            Product.objects.filter(distributor=self.distributor).update(content_loaded=None, content=None)
 
         elif command == 'all_delete':
             self.distributor.delete()
@@ -638,4 +642,7 @@ class Worker(Worker):
             product.content = content
             product.save()
 
-            self.send(f'Content loaded: {product}')
+            url = f'{self.host}/distributors/product/{product.id}'
+            print(url)
+            self.send(f'<b>Content loaded</b>\n'
+                      f'<a href="{url}">{product}</a>')
