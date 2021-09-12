@@ -795,6 +795,8 @@ class ProductImage(models.Model):
     source_url = models.TextField(null=True, default=None, db_index=True)
     file_name = models.TextField(null=True, default=None)
 
+    created = models.DateTimeField(default=timezone.now, db_index=True)
+
     objects = ProductImageManager()
 
     @property
@@ -824,6 +826,9 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f'{self.product}: {self.source_url}'
+
+    class Meta:
+        ordering = ['created']
 
 
 def to_slug(name):
