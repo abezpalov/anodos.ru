@@ -782,6 +782,15 @@ class ProductImageManager(models.Manager):
             o.source_url = source_url
             o.save()
 
+        except ProductImage.MultipleObjectsReturned:
+            imgs = self.filter(product=product, source_url=source_url)
+            o = imgs[0]
+            for n, img in enumerate(imgs):
+                if n > 0:
+                    if img.file_name:
+                        os.remove(img.file_name)
+                    img.delete()
+
         if o.file_name is None:
             o.download_file()
 
