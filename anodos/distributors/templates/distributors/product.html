@@ -49,23 +49,33 @@
             </tr>
             <tr>
                 <td>Цена</td>
-                <td>{{ product.price }}</td>
+                <td>{% if product.price == None %}
+                    По запросу
+                    {% else %}
+                    <b>{{ product.price }}</b>
+                    {% endif %}
+                </td>
             </tr>
             </tbody>
         </table>
+        {% if product.quantity > 0 %}
         <div class="fluid ui animated primary fade button" tabindex="0">
             <div class="visible content">Купить</div>
             <div class="hidden content">или получить КП за час</div>
         </div>
+        {% else %}
+        <div class="fluid ui animated primary fade button" tabindex="0">
+            <div class="visible content">Купить на заказ</div>
+            <div class="hidden content">или подобрать аналог</div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
+<div class="ui grid"><div class="ui hidden divider"></div></div>
+
 <div>
     {# Поставить табы на описание, характеристики, документы, сертификаты, файлы для скачивания #}
-
-    {% if product.description %}
-    <p>{{ product.description }}</p>
-    {% endif %}
 
     {% if params|length > 0 %}
     <table class="ui celled table">
@@ -74,10 +84,20 @@
         </thead>
         <tbody>
         {% for param in params %}
+            {% if param.value != None %}
             <tr>
                 <td>{{ param.parameter.name }}</td>
-                <td>{{ param.value}}{% if param.unit %} {{ param.unit }}{% endif %}</td>
+                <td>
+                    {% if param.value == 'True' %}
+                    Есть
+                    {% elif param.value == 'False' %}
+                    Нет
+                    {% else %}
+                    {{ param.value }}{% if param.unit %} {{ param.unit }}{% endif %}
+                    {% endif %}
+                </td>
             </tr>
+            {% endif %}
         {% endfor %}
         </tbody>
     </table>
