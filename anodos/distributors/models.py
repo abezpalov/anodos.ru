@@ -43,21 +43,21 @@ class Distributor(models.Model):
 
 class CategoryManager(models.Manager):
 
-    def take(self, distributor, article=None, name=None, parent=None):
+    def take(self, distributor, key=None, name=None, parent=None):
         if not distributor:
             return None
-        if not article and not name:
+        if not key and not name:
             return None
 
         need_save = False
 
-        if article:
+        if key:
             try:
-                o = self.get(distributor=distributor, article=article)
+                o = self.get(distributor=distributor, key=key)
             except Category.DoesNotExist:
                 o = Category()
                 o.distributor = distributor
-                o.article = article
+                o.key = key
                 o.name = name
                 o.parent = parent
                 need_save = True
@@ -78,7 +78,7 @@ class CategoryManager(models.Manager):
                 need_save = True
 
             if o.name is None:
-                o.name = o.article
+                o.name = o.key
                 need_save = True
 
         else:
@@ -90,9 +90,9 @@ class CategoryManager(models.Manager):
 
         return o
 
-    def get_by_article(self, distributor, article):
+    def get_by_key(self, distributor, key):
         try:
-            o = self.get(distributor=distributor, name__contains=f'[{article}]')
+            o = self.get(distributor=distributor, name__contains=f'[{key}]')
         except Category.DoesNotExist:
             return None
         return o
@@ -102,7 +102,7 @@ class Category(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     distributor = models.ForeignKey('Distributor', null=True, default=None,
                                     on_delete=models.CASCADE, related_name='+')
-    article = models.TextField(db_index=True, null=True, default=None)
+    key = models.TextField(db_index=True, null=True, default=None)
     name = models.TextField(db_index=True)
 
     parent = models.ForeignKey('Category', null=True, default=None,
@@ -274,10 +274,10 @@ class ProductManager(models.Manager):
             o.product_key = product_key
             need_save = True
 
-        # article
-        article = kwargs.get('article', None)
-        if article is not None and article != o.article:
-            o.article = article
+        # part_number
+        part_number = kwargs.get('part_number', None)
+        if part_number is not None and part_number != o.part_number:
+            o.part_number = part_number
             need_save = True
 
         # name_rus
@@ -381,7 +381,7 @@ class ProductManager(models.Manager):
 
         return o
 
-    def take_by_article(self, distributor, vendor, article, **kwargs):
+    def take_by_part_number(self, distributor, vendor, part_number, **kwargs):
         pass
 
 
@@ -389,7 +389,7 @@ class Product(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product_key = models.TextField(null=True, default=None, db_index=True)
     party_key = models.TextField(null=True, default=None, db_index=True)
-    article = models.TextField(null=True, default=None, db_index=True)
+    part_number = models.TextField(null=True, default=None, db_index=True)
     distributor = models.ForeignKey('Distributor', null=True, default=None,
                                     on_delete=models.CASCADE, related_name='+')
     vendor = models.ForeignKey('Vendor', null=True, default=None,
@@ -450,10 +450,10 @@ class Product(models.Model):
         return quantity
 
     def __str__(self):
-        return f'{self.vendor.name} [{self.article}] ({self.id}) '
+        return f'{self.vendor.name} [{self.part_number}] ({self.id}) '
 
     class Meta:
-        ordering = ['vendor__name', 'article']
+        ordering = ['vendor__name', 'part_number']
 
 
 class CurrencyManager(models.Manager):

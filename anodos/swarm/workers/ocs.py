@@ -383,11 +383,11 @@ class Worker(Worker):
 
     def parse_categories(self, data, parent=None):
         for item in data:
-            article = item['category']
+            key = item['category']
             name = item['name']
             category = Category.objects.take(
                 distributor=self.distributor,
-                article=article,
+                key=key,
                 name=name,
                 parent=parent)
             print(category)
@@ -417,13 +417,13 @@ class Worker(Worker):
         vendor = Vendor.objects.take(distributor=self.distributor,
                                      name=item['product']['producer'])
         category = Category.objects.take(distributor=self.distributor,
-                                         article=item['product']['category'])
+                                         key=item['product']['category'])
         condition = Condition.objects.take(distributor=self.distributor,
                                            name=item['product']['condition'])
 
         product_key = item['product'].get('itemId', None)
         party_key = item['product'].get('productKey', None)
-        article = item['product'].get('partNumber', None)
+        part_number = item['product'].get('partNumber', None)
         short_name = item['product'].get('productName', None)
         name_rus = item['product'].get('itemNameRus', None)
         name_other = item['product'].get('itemName', None)
@@ -453,7 +453,7 @@ class Worker(Worker):
                                                     category=category,
                                                     condition=condition,
                                                     product_key=product_key,
-                                                    article=article,
+                                                    part_number=part_number,
                                                     short_name=short_name,
                                                     name_rus=name_rus,
                                                     name_other=name_other,
