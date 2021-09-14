@@ -481,6 +481,7 @@ class Worker(Worker):
         try:
             price_in = item['price']['order']['value']
             currency_in = item['price']['order']['currency']
+            currency_in = currency_in.replace('RUR', 'RUB')
             currency_in = Currency.objects.take(key=currency_in)
         except KeyError:
             price_in = None
@@ -489,6 +490,7 @@ class Worker(Worker):
         try:
             price_out = item['price']['endUser']['value']
             currency_out = item['price']['endUser']['currency']
+            currency_out = currency_out.replace('RUR', 'RUB')
             currency_out = Currency.objects.take(key=currency_out)
         except KeyError:
             price_out = None
@@ -497,6 +499,7 @@ class Worker(Worker):
         try:
             price_out_open = item['price']['endUserWeb']['value']
             currency_out_open = item['price']['endUserWeb']['currency']
+            currency_out_open = currency_out_open.replace('RUR', 'RUB')
             currency_out_open = Currency.objects.take(key=currency_out_open)
         except KeyError:
             price_out_open = None
