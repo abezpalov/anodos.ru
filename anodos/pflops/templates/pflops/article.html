@@ -1,0 +1,9 @@
+{% extends "main.html" %}
+
+{% block title %}{{ item.title }}{% endblock %}
+
+{% block content %}
+
+{% autoescape off %}{{ item.content }}{% endautoescape %}
+
+{% endblock %}

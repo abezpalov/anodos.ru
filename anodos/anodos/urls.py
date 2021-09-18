@@ -16,9 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from . import views
+import pflops.views
 
 urlpatterns = [
-    path('distributors/', include('distributors.urls')),
     path('admin/', admin.site.urls),
-    path('', views.index, name='index'),
+    path('distributors/', include('distributors.urls')),
+    path('', views.index),
+    path('<slug:slug>/', pflops.views.article),
 ]
