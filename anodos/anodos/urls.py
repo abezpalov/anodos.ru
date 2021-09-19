@@ -15,12 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from . import views
+import anodos.views
 import pflops.views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('distributors/', include('distributors.urls')),
-    path('', views.index),
+
+    path('', anodos.views.index),
+    path('ajax/login/', anodos.views.ajax_login),
+    path('ajax/logout/', anodos.views.ajax_logout),
+
     path('<slug:slug>/', pflops.views.article),
 ]

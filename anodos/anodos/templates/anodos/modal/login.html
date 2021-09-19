@@ -1,0 +1,28 @@
+<div class="ui modal" id="modal-user-login">
+    <i class="close icon"></i>
+    <div class="header">Авторизоваться</div>
+    <div class="content">
+        <form class="ui form">
+            <div class="field">
+                <label>Имя пользователя</label>
+                <input id="login-username" name="username" type="text" placeholder="login" />
+            </div>
+            <div class="field">
+                <label>Пароль</label>
+                <input id="login-password" name="password" type="password" placeholder="password" />
+            </div>
+            <div class="ui message">
+                <div class="header">Также можно:</div>
+                <ul class="list">
+                    <li><a href="#" data-do="open-password-recovery">Восстановить пароль</a></li>
+                    <li><a href="#" data-do="open-register">Зарегистрироваться</a></li>
+                </ul>
+            </div>
+        </form>
+        <div id="modal-login-alert"></div>
+    </div>
+    <div class="actions">
+        <div data-do="apply-login" class="ui positive button">Войти</div>
+        <div class="ui black deny button">Отмена</div>
+    </div>
+</div>
