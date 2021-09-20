@@ -4,6 +4,7 @@ import requests as r
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.contrib.postgres.indexes import GinIndex
 
 
 class DistributorManager(models.Manager):
@@ -551,6 +552,7 @@ class Party(models.Model):
                                     on_delete=models.CASCADE, related_name='+')
     product = models.ForeignKey('Product', null=True, default=None,
                                 on_delete=models.CASCADE, related_name='+')
+    search = models.TextField(null=True, default=None)
 
     # Цены
     price_in = models.DecimalField(max_digits=18, decimal_places=2, null=True, default=None)
@@ -581,8 +583,16 @@ class Party(models.Model):
     def __str__(self):
         return f'{self.product} | {self.quantity} = {self.price_in} {self.currency_in}'
 
+    def save(self, *args, **kwargs):
+        self.save = f'{self.product.name.lower()} ' \
+                    f'{self.product.part_number.lower()}' \
+                    f'{self.product.vendor.name.lower()}'
+        super().save(*args, **kwargs)
+
     class Meta:
         ordering = ['created']
+        indexes = [GinIndex(fields=['search'],
+                            name='party_search_idx')]
 
 
 class ParameterGroupManager(models.Manager):
