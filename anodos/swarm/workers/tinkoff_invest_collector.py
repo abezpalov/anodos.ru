@@ -286,7 +286,8 @@ class Worker(W):
         except KeyError:
             return False
 
-    def datetime_to_str(self, x):
+    @staticmethod
+    def datetime_to_str(x):
         x = str(x)
         x = x.split('.')[0]
         x = x.replace(' ', 'T')

@@ -2,6 +2,7 @@ import time
 import requests as r
 import json
 import urllib.parse
+from datetime import datetime, timedelta
 
 from django.utils import timezone
 
@@ -72,8 +73,21 @@ class Worker(Worker):
             Party.objects.filter(distributor=self.distributor,
                                  created__lte=self.start_time).delete()
 
-        elif command == 'update_content':
-            self.update_content()
+        elif command == 'update_content_all':
+            ids = self.get_ids_for_update_content('all')
+            self.update_content(ids)
+
+        elif command == 'update_content_clear':
+            ids = self.get_ids_for_update_content('clear')
+            self.update_content(ids)
+
+        elif command == 'update_content_changes':
+            ids = self.get_ids_for_update_content('changes')
+            self.update_content(ids)
+
+        elif command == 'update_content_changes_month':
+            ids = self.get_ids_for_update_content('changes_month')
+            self.update_content(ids)
 
         elif command == 'drop_parameters':
             Parameter.objects.filter(distributor=self.distributor).delete()
@@ -565,20 +579,56 @@ class Worker(Worker):
 
         return product
 
-    def update_content(self):
+    def get_ids_for_update_content(self, mode=None):
+
+        if mode == 'all':
+            ids_ = Product.objects.filter(distributor=self.distributor).values('product_key')
+            ids = []
+            for id_ in ids_:
+                ids.append(id_['product_key'])
+            return ids
+
+        elif mode == 'clear':
+            ids_ = Product.objects.filter(distributor=self.distributor,
+                                          content__isnull=True).values('product_key')
+            ids = []
+            for id_ in ids_:
+                ids.append(id_['product_key'])
+            return ids
+
+        elif mode == 'changes':
+            command = 'content/changes'
+            print(command)
+
+            start = datetime.utcnow() - timedelta(days=1)
+            start = self.datetime_to_str(x=start)
+
+            ids_ = self.get_by_api(command=command, params=f'from={start}')
+            print(ids_)
+            ids = []
+            for id_ in ids_:
+                ids.append(id_['itemId'])
+            return ids
+
+        elif mode == 'changes_month':
+            command = 'content/changes'
+            print(command)
+
+            start = datetime.utcnow() - timedelta(days=31)
+            start = self.datetime_to_str(x=start)
+
+            ids_ = self.get_by_api(command=command, params=f'from={start}')
+            print(ids_)
+            ids = []
+            for id_ in ids_:
+                ids.append(id_['itemId'])
+            return ids
+
+    def update_content(self, ids):
         command = 'content/batch'
         print(command)
 
         batch_size = settings.OCS_BATCH_SIZE
-
-        # Получаем идентификаторы продуктов, которые нуждаются в обновлении контента
-        ids_ = Product.objects.filter(distributor=self.distributor, content__isnull=True).values('product_key')
-
-        ids = []
-        for id_ in ids_:
-            ids.append(id_['product_key'])
-
-        # random.shuffle(ids)
 
         # Расчитываем количество партий
         batches_count = len(ids) // batch_size
@@ -656,3 +706,11 @@ class Worker(Worker):
             print(url)
             self.send(f'<b>Content loaded</b>\n'
                       f'<a href="{url}">{product}</a>')
+
+    @staticmethod
+    def datetime_to_str(x):
+        x = str(x)
+        x = x.split('.')[0]
+        x = x.replace(' ', 'T')
+        x = f'{x}.000000%2B00%3A00'
+        return x
