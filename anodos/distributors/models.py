@@ -123,18 +123,17 @@ class Category(models.Model):
 
 class VendorManager(models.Manager):
 
-    def take(self, distributor, name, **kwargs):
-        if not distributor or not name:
+    def take(self, name, **kwargs):
+        if not name:
             return None
 
         need_save = False
 
         try:
-            o = self.get(distributor=distributor, name=name)
+            o = self.get(name=name)
 
         except Vendor.DoesNotExist:
             o = Vendor()
-            o.distributor = distributor
             o.name = name
             need_save = True
 
@@ -147,8 +146,7 @@ class VendorManager(models.Manager):
 class Vendor(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.TextField(db_index=True)
-    distributor = models.ForeignKey('Distributor', null=True, default=None,
-                                    on_delete=models.CASCADE, related_name='+')
+
     objects = VendorManager()
 
     def __str__(self):
@@ -552,7 +550,7 @@ class Party(models.Model):
                                     on_delete=models.CASCADE, related_name='+')
     product = models.ForeignKey('Product', null=True, default=None,
                                 on_delete=models.CASCADE, related_name='+')
-    search = models.TextField(null=True, default=None)
+    search = models.TextField(null=True, default=None, db_index=True)
 
     # Цены
     price_in = models.DecimalField(max_digits=18, decimal_places=2, null=True, default=None)
@@ -584,9 +582,9 @@ class Party(models.Model):
         return f'{self.product} | {self.quantity} = {self.price_in} {self.currency_in}'
 
     def save(self, *args, **kwargs):
-        self.save = f'{self.product.name.lower()} ' \
-                    f'{self.product.part_number.lower()}' \
-                    f'{self.product.vendor.name.lower()}'
+        self.search = f'{self.product.name.lower()} ' \
+                      f'{self.product.part_number.lower()} ' \
+                      f'{self.product.vendor.name.lower()}'
         super().save(*args, **kwargs)
 
     class Meta:

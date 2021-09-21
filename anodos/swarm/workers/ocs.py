@@ -80,6 +80,11 @@ class Worker(Worker):
             Parameter.objects.filter(distributor__isnull=True).delete()
             Product.objects.filter(distributor=self.distributor).update(content_loaded=None, content=None)
 
+        elif command == 'test':
+            for party in Party.objects.all():
+                print(party, party.search)
+
+
         elif command == 'all_delete':
             self.distributor.delete()
 
@@ -192,7 +197,7 @@ class Worker(Worker):
                           f'<i>{term}</i>\n\n' \
                           f'<a href="{url}">{title}</a>\n' \
                           f'{text}\n'
-                self.send(content)
+                self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
                 data = SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
@@ -414,8 +419,7 @@ class Worker(Worker):
                 print(f"{n + 1} of {len(data['result'])} {product}")
 
     def parse_product(self, item):
-        vendor = Vendor.objects.take(distributor=self.distributor,
-                                     name=item['product']['producer'])
+        vendor = Vendor.objects.take(name=item['product']['producer'])
         category = Category.objects.take(distributor=self.distributor,
                                          key=item['product']['category'])
         condition = Condition.objects.take(distributor=self.distributor,
@@ -534,6 +538,7 @@ class Worker(Worker):
                                          location=location,
                                          quantity=quantity,
                                          quantity_great_than=quantity_great_than,
+                                         unit=unit,
                                          can_reserve=can_reserve,
                                          is_available_for_order=is_available_for_order)
 
