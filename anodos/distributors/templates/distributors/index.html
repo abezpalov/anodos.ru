@@ -3,18 +3,52 @@
 {% block title %}Anodos: Поиск по складам поставщиков{% endblock %}
 
 {% block content %}
+<form method="post" action="/distributors/" id="form_distributors_search">
+    <div class="ui fluid action input">
+        <input name="search" type="text" value="{{ search }}"
+               placeholder="Артикул, название, производитель...">
+        <div class="ui button" data-do="apply-distributors-search">Найти</div>
+    </div>
+    <input name="csrfmiddlewaretoken" type="hidden" value="{{ csrf_token }}">
+</form>
 
-<div class="ui fluid action input">
-    <input type="text" placeholder="Артикул, название, производитель...">
+<div class="ui hidden divider"></div>
 
-    <!--
-    <select class="ui compact selection dropdown">
-        <option value="all">All</option>
-        <option selected="" value="articles">Articles</option>
-        <option value="products">Products</option>
-    </select>
-    -->
-    <div class="ui button">Найти</div>
-</div>
+{% for party in parties %}
+{% if forloop.first %}
+<table class="ui striped table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Производитель</th>
+            <th>Артикул</th>
+            <th>Наименование</th>
+            <th>Количество</th>
+            <th>Цена</th>
+        </tr>
+    </thead>
+    <tbody>
+{% endif %}
+    <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ party.product.vendor.name }}</td>
+        <td>{{ party.product.part_number }}</td>
+        <td>
+            <a href="/distributors/product/{{ party.product.id }}/">{{ party.product.name }}</a></td>
+        <td>{{ party.quantity }} {{ party.unit.name }}</td>
+        <td>{{ party.price }}</td>
+    </tr>
+
+{% if forloop.last %}
+    </tbody>
+</table>
+{% endif %}
+{% endfor %}
+
+{% endblock %}
+
+
+{% block js %}
+{% include "distributors/js/search.js" %}
 
 {% endblock %}

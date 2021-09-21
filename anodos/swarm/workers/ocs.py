@@ -652,7 +652,7 @@ class Worker(Worker):
             product.content = content
             product.save()
 
-            url = f'{self.host}/distributors/product/{product.id}'
+            url = f'{self.host}/distributors/product/{product.id}/'
             print(url)
             self.send(f'<b>Content loaded</b>\n'
                       f'<a href="{url}">{product}</a>')
