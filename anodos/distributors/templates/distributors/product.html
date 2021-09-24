@@ -46,7 +46,12 @@
             </tr>
             <tr>
                 <td>В наличии</td>
-                <td>{{ product.quantity }}</td>
+                <td>{% if product.quantity == None %}
+                    0
+                    {% else %}
+                    {{ product.quantity }}
+                    {% endif %}
+                </td>
             </tr>
             <tr>
                 <td>Цена</td>

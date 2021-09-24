@@ -225,6 +225,69 @@ class Unit(models.Model):
         ordering = ['key']
 
 
+class CurrencyManager(models.Manager):
+
+    def take(self, key, **kwargs):
+        if not key:
+            return None
+
+        try:
+            o = self.get(key=key)
+
+        except Currency.DoesNotExist:
+            o = Currency()
+            o.key = key[:32]
+            o.save()
+
+        if o.name is None:
+            o.name = key
+            o.save()
+
+        return o
+
+
+class Currency(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    key = models.CharField(max_length=32, unique=True)
+
+    name = models.TextField(null=True, default=None, db_index=True)
+    print_name = models.TextField(null=True, default=None, db_index=True)
+
+    objects = CurrencyManager()
+
+    def __str__(self):
+        return f'{self.key}'
+
+    class Meta:
+        ordering = ['key']
+
+
+class PriceManager(models.Manager):
+
+    pass
+
+
+class Price(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    value = models.DecimalField(max_digits=18, decimal_places=2, null=True, default=None)
+    currency = models.ForeignKey('Currency', null=True, default=None,
+                                 on_delete=models.CASCADE, related_name='+')
+
+    created = models.DateTimeField(default=timezone.now)
+
+    objects = PriceManager()
+
+    def __str__(self):
+        return f'{self.value} {self.currency}'
+
+    @property
+    def html(self):
+        return f'{self.value}&nbsp;{self.currency}'
+
+    class Meta:
+        ordering = ['created']
+
+
 class ProductManager(models.Manager):
 
     def take_by_party_key(self, distributor, party_key, name, **kwargs):
@@ -435,8 +498,11 @@ class Product(models.Model):
     def price(self):
         parties = Party.objects.filter(product=self)
         for party in parties:
-            if party.quantity:
-                return f'{party.price_in} {party.currency_in}'
+            if party.quantity and party.price:
+                return party.price
+        for party in parties:
+            if party.price:
+                return party.price
         return None
 
     @property
@@ -453,43 +519,6 @@ class Product(models.Model):
 
     class Meta:
         ordering = ['vendor__name', 'part_number']
-
-
-class CurrencyManager(models.Manager):
-
-    def take(self, key, **kwargs):
-        if not key:
-            return None
-
-        try:
-            o = self.get(key=key)
-
-        except Currency.DoesNotExist:
-            o = Currency()
-            o.key = key[:32]
-            o.save()
-
-        if o.name is None:
-            o.name = key
-            o.save()
-
-        return o
-
-
-class Currency(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    key = models.CharField(max_length=32, unique=True)
-
-    name = models.TextField(null=True, default=None, db_index=True)
-    print_name = models.TextField(null=True, default=None, db_index=True)
-
-    objects = CurrencyManager()
-
-    def __str__(self):
-        return f'{self.key}'
-
-    class Meta:
-        ordering = ['key']
 
 
 class LocationManager(models.Manager):
@@ -541,7 +570,66 @@ class Location(models.Model):
 
 class PartyManager(models.Manager):
 
-    pass
+    def create(self, product=None, distributor=None, **kwargs):
+
+        if product is None or distributor is None:
+            return None
+
+        # price_in
+        price_in = kwargs.get('price_in', None)
+        currency_in = kwargs.get('currency_in', None)
+        if price_in and currency_in:
+            price_in = Price.objects.create(value=price_in, currency=currency_in)
+
+        # price_out
+        price_out = kwargs.get('price_out', None)
+        currency_out = kwargs.get('currency_out', None)
+        if price_out and currency_out:
+            price_out = Price.objects.create(value=price_out, currency=currency_out)
+
+        # price_out_open
+        price_out_open = kwargs.get('price_out_open', None)
+        currency_out_open = kwargs.get('currency_out_open', None)
+        if price_out_open and currency_out_open:
+            price_out_open = Price.objects.create(value=price_out_open, currency=currency_out_open)
+
+        # price
+        if price_out_open:
+            price = Price.objects.create(value=price_out_open.value,
+                                         currency=price_out_open.currency)
+        elif price_out:
+            price = Price.objects.create(value=price_out.value,
+                                         currency=price_out.currency)
+        elif price_in:
+            price = Price.objects.create(value=price_in.value*settings.MARGIN,
+                                         currency=price_in.currency)
+        else:
+            price = None
+
+        # TODO сделать перевод в рубли
+
+        must_keep_end_user_price = kwargs.get('must_keep_end_user_price', None)
+        location = kwargs.get('location', None)
+        quantity = kwargs.get('quantity', None)
+        quantity_great_than = kwargs.get('quantity_great_than', None)
+        unit = kwargs.get('unit', None)
+        can_reserve = kwargs.get('can_reserve', None)
+        is_available_for_order = kwargs.get('is_available_for_order', None)
+
+        o = super().create(distributor=distributor,
+                           product=product,
+                           price=price,
+                           price_in=price_in,
+                           price_out=price_out,
+                           price_out_open=price_out_open,
+                           must_keep_end_user_price=must_keep_end_user_price,
+                           location=location,
+                           quantity=quantity,
+                           quantity_great_than=quantity_great_than,
+                           unit=unit,
+                           can_reserve=can_reserve,
+                           is_available_for_order=is_available_for_order)
+        return o
 
 
 class Party(models.Model):
@@ -553,15 +641,14 @@ class Party(models.Model):
     search = models.TextField(null=True, default=None, db_index=True)
 
     # Цены
-    price_in = models.DecimalField(max_digits=18, decimal_places=2, null=True, default=None)
-    currency_in = models.ForeignKey('Currency', null=True, default=None,
-                                    on_delete=models.CASCADE, related_name='+')
-    price_out = models.DecimalField(max_digits=18, decimal_places=2, null=True, default=None)
-    currency_out = models.ForeignKey('Currency', null=True, default=None,
-                                     on_delete=models.CASCADE, related_name='+')
-    price_out_open = models.DecimalField(max_digits=18, decimal_places=2, null=True, default=None)
-    currency_out_open = models.ForeignKey('Currency', null=True, default=None,
-                                          on_delete=models.CASCADE, related_name='+')
+    price = models.ForeignKey('Price', null=True, default=None,
+                              on_delete=models.CASCADE, related_name='rel_party_price')
+    price_in = models.ForeignKey('Price', null=True, default=None,
+                                 on_delete=models.CASCADE, related_name='rel_party_price_in')
+    price_out = models.ForeignKey('Price', null=True, default=None,
+                                  on_delete=models.CASCADE, related_name='rel_party_price_out')
+    price_out_open = models.ForeignKey('Price', null=True, default=None,
+                                       on_delete=models.CASCADE, related_name='rel_party_price_out_open')
     must_keep_end_user_price = models.BooleanField(null=True, default=None, db_index=True)
 
     # Доступность
@@ -579,7 +666,7 @@ class Party(models.Model):
     objects = PartyManager()
 
     def __str__(self):
-        return f'{self.product} | {self.quantity} = {self.price_in} {self.currency_in}'
+        return f'{self.product} | {self.quantity} on {self.location}'
 
     def save(self, *args, **kwargs):
         self.search = f'{self.product.name.lower()} ' \

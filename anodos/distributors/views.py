@@ -29,7 +29,7 @@ def index(request):
                 'parties': parties,
             }
 
-    return render(request, 'distributors/index.html', context)
+    return render(request, 'distributors/search.html', context)
 
 
 def product(request, product_id):

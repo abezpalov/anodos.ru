@@ -35,8 +35,22 @@
         <td>{{ party.product.part_number }}</td>
         <td>
             <a href="/distributors/product/{{ party.product.id }}/">{{ party.product.name }}</a></td>
-        <td>{{ party.quantity }} {{ party.unit.name }}</td>
-        <td>{{ party.price }}</td>
+        <td>
+            {% autoescape off %}
+            {% if quantity == None %}0
+            {% else %}{{ party.quantity }}&nbsp;{{ party.unit.name }}
+            {% endif %}
+            {% endautoescape %}
+        </td>
+        <td>
+            {% autoescape off %}
+            {% if party.price == None %}
+            По&nbsp;запросу
+            {% else %}
+            {{ party.price.html }}
+            {% endif %}
+            {% endautoescape %}
+        </td>
     </tr>
 
 {% if forloop.last %}
