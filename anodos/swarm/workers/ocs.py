@@ -98,7 +98,6 @@ class Worker(Worker):
             for party in Party.objects.all():
                 print(party, party.search)
 
-
         elif command == 'all_delete':
             self.distributor.delete()
 
@@ -555,7 +554,6 @@ class Worker(Worker):
                                          unit=unit,
                                          can_reserve=can_reserve,
                                          is_available_for_order=is_available_for_order)
-            print(party)
 
         if len(item['locations']) == 0:
             location = None
