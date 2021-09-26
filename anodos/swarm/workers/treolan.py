@@ -164,7 +164,8 @@ class Worker(Worker):
         self.parse_catalog(tree)
 
     def parse_catalog(self, tree):
-        print(tree)
+
+        # Проходим по всем категориям
         categories = tree.xpath('.//category')
         for category_element in categories:
             key = category_element.xpath('./@id')[0]
@@ -172,6 +173,8 @@ class Worker(Worker):
             category = Category.objects.get_by_key(distributor=self.distributor, key=key)
             print(key, name, category)
             products = category_element.xpath('./position')
+
+            # Проходим по всем продуктам
             for product_element in products:
 
                 # @id - Идентификатор позиции
@@ -196,8 +199,8 @@ class Worker(Worker):
 
                 # @vendor - Производитель.
                 vendor = product_element.xpath('./@vendor')[0]
-                vendos = self.fix_text(vendor)
-                vendor = Vendor.objects.take(vendor)
+                vendor = self.fix_text(vendor)
+                vendor = Vendor.objects.take(distributor=self.distributor, name=vendor)
                 print('vendor', vendor)
 
                 # @vendor-id - Идентификатор производителя.

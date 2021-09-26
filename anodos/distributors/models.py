@@ -123,17 +123,18 @@ class Category(models.Model):
 
 class VendorManager(models.Manager):
 
-    def take(self, name, **kwargs):
-        if not name:
+    def take(self, distributor, name, **kwargs):
+        if not distributor or not name:
             return None
 
         need_save = False
 
         try:
-            o = self.get(name=name)
+            o = self.get(distributor=distributor, name=name)
 
         except Vendor.DoesNotExist:
             o = Vendor()
+            o.distributor = distributor
             o.name = name
             need_save = True
 
@@ -145,6 +146,8 @@ class VendorManager(models.Manager):
 
 class Vendor(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    distributor = models.ForeignKey('Distributor', null=True, default=None,
+                                    on_delete=models.CASCADE, related_name='+')
     name = models.TextField(db_index=True)
 
     objects = VendorManager()
@@ -322,6 +325,12 @@ class ProductManager(models.Manager):
             o.description = description
             need_save = True
 
+        # warranty
+        warranty = kwargs.get('warranty', None)
+        if warranty is not None and warranty != o.warranty:
+            o.warranty = warranty
+            need_save = True
+
         # ean_128
         ean_128 = kwargs.get('ean_128', None)
         if ean_128 is not None and ean_128 != o.ean_128:
@@ -437,6 +446,7 @@ class Product(models.Model):
     name_rus = models.TextField(null=True, default=None, db_index=True)
     name_other = models.TextField(null=True, default=None, db_index=True)
     description = models.TextField(null=True, default=None)
+    warranty = models.TextField(null=True, default=None)
 
     # Коды
     ean_128 = models.TextField(null=True, default=None, db_index=True)

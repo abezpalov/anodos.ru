@@ -403,7 +403,8 @@ class Worker(Worker):
                 self.count_products += 1
 
     def parse_product(self, item):
-        vendor = Vendor.objects.take(name=item['product']['producer'])
+        vendor = Vendor.objects.take(distributor=self.distributor,
+                                     name=item['product']['producer'])
         category = Category.objects.take(distributor=self.distributor,
                                          key=item['product']['category'])
 
