@@ -40,6 +40,12 @@ class Worker(Worker):
         self.stocks = []
         self.reserveplaces = []
 
+        self.count_products = 0
+        self.count_parties = 0
+        self.count_news = 0
+        self.count_promo = 0
+        self.count_events = 0
+
         super().__init__()
 
     def run(self, command=None):
@@ -49,14 +55,13 @@ class Worker(Worker):
         if command is None:
             print('Без команды не работаю!')
 
-        elif command == 'update_events':
-            self.update_events()
-
         elif command == 'update_news':
             self.update_news()
-
-        elif command == 'update_promo':
             self.update_promo()
+            self.update_events()
+
+            self.send(f'Обновил публикации OCS.\n'
+                      f'{self.count_news} новостей, {self.count_promo} промо и {self.count_events} событий.')
 
         elif command == 'update_stocks':
 
@@ -72,6 +77,9 @@ class Worker(Worker):
             # Удаляем устаревшие партии
             Party.objects.filter(distributor=self.distributor,
                                  created__lte=self.start_time).delete()
+
+            self.send(f'Закончил обновление информации о складах OCS.\n'
+                      f' Обновил {self.count_products} продуктов и {self.count_parties} партий.')
 
         elif command == 'update_content_all':
             ids = self.get_ids_for_update_content('all')
@@ -179,9 +187,7 @@ class Worker(Worker):
                 data.content = content
                 data.save()
             print(data)
-
-        # Отправляем отчёт
-        self.send(f'Нашёл {len(items)} мероприятий у {self.name}')
+            self.count_events += 1
 
     def update_news(self):
 
@@ -215,6 +221,7 @@ class Worker(Worker):
                 data.content = content
                 data.save()
             print(data)
+            self.count_news += 1
 
         # Отправляем отчёт
         self.send(f'Нашёл {len(items)} новостей у {self.name}')
@@ -244,9 +251,7 @@ class Worker(Worker):
                 data.content = content
                 data.save()
             print(data)
-
-        # Отправляем отчёт
-        self.send(f'Нашёл {len(items)} пресс-релизов у {self.name}')
+            self.count_news += 1
 
     def update_promo(self):
 
@@ -279,9 +284,7 @@ class Worker(Worker):
                 data.content = content
                 data.save()
             print(data)
-
-        # Отправляем отчёт
-        self.send(f'Нашёл {len(items)} промо у {self.name}')
+            self.count_promo += 1
 
     def send_info(self):
         count_products = Product.objects.filter(distributor=self.distributor).count()
@@ -341,11 +344,7 @@ class Worker(Worker):
         command = 'logistic/shipment/cities'
         print(command)
         data = self.get_by_api(command)
-
         self.cities = data
-
-        # TODO
-        pass
 
     def update_shipment_points(self):
         command = 'logistic/shipment/pickup-points'
@@ -354,9 +353,6 @@ class Worker(Worker):
             city = urllib.parse.quote_plus(city)
             data = self.get_by_api(command, f'shipmentCity={city}')
 
-        # TODO
-        pass
-
     def update_shipment_delivery_addresses(self):
         command = 'logistic/shipment/delivery-addresses'
         print(command)
@@ -364,20 +360,13 @@ class Worker(Worker):
             city = urllib.parse.quote_plus(city)
             data = self.get_by_api(command, f'shipmentCity={city}')
 
-        # TODO
-        pass
-
     def update_stocks(self):
         command = 'logistic/stocks/locations'
         print(command)
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
             data = self.get_by_api(command, f'shipmentCity={city}')
-
             self.stocks = self.stocks + data
-
-        # TODO
-        pass
 
     def update_reserveplaces(self):
         command = 'logistic/stocks/reserveplaces'
@@ -385,11 +374,7 @@ class Worker(Worker):
         for city in self.cities:
             city = urllib.parse.quote_plus(city)
             data = self.get_by_api(command, f'shipmentCity={city}')
-
             self.reserveplaces = self.reserveplaces + data
-
-        # TODO
-        pass
 
     def update_catalog_categories(self):
         command = 'catalog/categories'
@@ -430,6 +415,7 @@ class Worker(Worker):
             for n, item in enumerate(data['result']):
                 product = self.parse_product(item)
                 print(f"{n + 1} of {len(data['result'])} {product}")
+                self.count_products += 1
 
     def parse_product(self, item):
         vendor = Vendor.objects.take(name=item['product']['producer'])
@@ -585,7 +571,7 @@ class Worker(Worker):
                                          quantity_great_than=quantity_great_than,
                                          can_reserve=can_reserve,
                                          is_available_for_order=is_available_for_order)
-
+            self.count_parties += 1
         return product
 
     def get_ids_for_update_content(self, mode=None):
@@ -646,15 +632,11 @@ class Worker(Worker):
 
         for n in range(batches_count):
             print(f"{n+1} of {batches_count}")
-            self.send(f"{n+1} of {batches_count} batch load")
             batch = json.dumps(ids[n*batch_size:(n+1)*batch_size])
-
-            print(batch)
 
             data = self.post_by_api(command=command, params=batch)
 
             if data is not None:
-                print(f"Получил контент по {len(data['result'])} продуктам")
                 for content in data['result']:
                     self.parse_content(content)
 
@@ -666,8 +648,6 @@ class Worker(Worker):
         products = Product.objects.filter(distributor=self.distributor,
                                           product_key=content['itemId'])
         for product in products:
-
-            print(product)
 
             # description
             description = content.get('description', None)
@@ -712,7 +692,6 @@ class Worker(Worker):
             product.save()
 
             url = f'{self.host}/distributors/product/{product.id}/'
-            print(url)
             self.send(f'<b>Content loaded</b>\n'
                       f'<a href="{url}">{product}</a>')
 
