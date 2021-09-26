@@ -52,15 +52,12 @@ class Worker(Worker):
 
         self.send(f'OCS run {command}')
 
-        if command is None:
-            print('Без команды не работаю!')
-
-        elif command == 'update_news':
+        if command == 'update_news':
             self.update_news()
             self.update_promo()
             self.update_events()
 
-            self.send(f'Обновил публикации OCS.\n'
+            self.send(f'Обновил публикации {self.distributor}.\n'
                       f'{self.count_news} новостей, {self.count_promo} промо и {self.count_events} событий.')
 
         elif command == 'update_stocks':
@@ -108,6 +105,9 @@ class Worker(Worker):
 
         elif command == 'all_delete':
             self.distributor.delete()
+
+        else:
+            print('Неизвестная команда!')
 
     def get_by_api(self, command='', params=''):
 

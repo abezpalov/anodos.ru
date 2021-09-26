@@ -18,7 +18,14 @@ class Worker(Worker):
     name = 'Treolan'
     login = settings.TREOLAN_LOGIN
     password = settings.TREOLAN_PASSWORD
-    url = {'wsdl': 'https://api.treolan.ru/ws/service.asmx?wsdl',}
+    url = {'wsdl': 'https://api.treolan.ru/ws/service.asmx?wsdl',
+           'base': 'https://www.treolan.ru',
+           }
+    content_urls = {'Новость вендора': 'https://www.treolan.ru/vendor/news',
+                    'Промо': 'https://www.treolan.ru/vendor/marketing',
+                    'Новое поступление': 'https://www.treolan.ru/new_arrival',
+                    'Новость': 'https://www.treolan.ru/company/news',
+                    }
 
     def __init__(self):
         self.start_time = timezone.now()
@@ -28,33 +35,31 @@ class Worker(Worker):
             name=self.source_name,
             login=self.login,
             password=self.password)
-        self.distributor = Distributor.objects.take(
-            name=self.name
-        )
+        self.distributor = Distributor.objects.take(name=self.name)
 
-        # Инициализируем SOAP-клиента
-        settings_ = zeep.Settings(strict=False, xml_huge_tree=True)
-        self.client = zeep.Client(wsdl=self.url['wsdl'], settings=settings_)
+        self.count_products = 0
+        self.count_parties = 0
+        self.count_news = 0
+
+        self.client = None
 
         super().__init__()
 
     def run(self, command=None):
 
-        # self.send(f'Treolan run {command}')
+        self.send(f'Treolan run {command}')
 
-        if command is None:
-            print('Без команды не работаю!')
-
-        elif command == 'update_events':
-            pass
-
-        elif command == 'update_news':
-            pass
-
-        elif command == 'update_promo':
-            pass
+        if command == 'update_news':
+            self.update_news()
+            self.send(f'Обновил публикации {self.distributor}.\n'
+                      f'{self.count_news} новостей.')
 
         elif command == 'update_stocks':
+
+            # Инициализируем SOAP-клиента
+            settings_ = zeep.Settings(strict=False, xml_huge_tree=True)
+            self.client = zeep.Client(wsdl=self.url['wsdl'], settings=settings_)
+
             # self.update_categories()
             self.update_catalog()
 
@@ -70,6 +75,51 @@ class Worker(Worker):
 
         elif command == 'all_delete':
             self.distributor.delete()
+
+    def update_news(self):
+
+        for idx in self.content_urls:
+            content_type = idx
+            url = self.content_urls[idx]
+            tree = self.load(url=url, result_type='html')
+            self.parse_news(tree=tree, content_type=content_type)
+
+    def parse_news(self, tree, content_type):
+
+        items = tree.xpath('.//div[@class="news-preview col-3"]')
+        for item in items:
+            # title
+            title = item.xpath('.//*[@class="news-preview__title"]/a/text()')[0]
+            title = self.fix_text(title)
+
+            # url
+            url = item.xpath('.//*[@class="news-preview__title"]/a/@href')[0]
+
+            # date
+            date = item.xpath('.//*[@class="news-preview__date"]/text()')[0]
+            date = self.fix_text(date)
+
+            # description
+            try:
+                description = item.xpath('.//*[@class="news-preview__description"]/a/text()')[0]
+            except IndexError:
+                description = ''
+            description = self.fix_text(description)
+
+            try:
+                data = SourceData.objects.get(source=self.source, url=url)
+            except SourceData.DoesNotExist:
+                content = f'<b>{content_type} {self.distributor}</b>\n' \
+                          f'<i>{date}</i>\n' \
+                          f'<a href="{url}">{title}</a>\n' \
+                        f'{description}'
+                self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
+
+                data = SourceData.objects.take(source=self.source, url=url)
+                data.content = content
+                data.save()
+            print(data)
+            self.count_news += 1
 
     def update_categories(self):
         result = self.client.service.GetCategories(login=self.login,
