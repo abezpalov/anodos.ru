@@ -373,6 +373,12 @@ class ProductManager(models.Manager):
             o.sale = sale
             need_save = True
 
+        # promo
+        promo = kwargs.get('promo', False)
+        if promo != o.promo:
+            o.promo = promo
+            need_save = True
+
         # condition_description
         condition_description = kwargs.get('condition_description', None)
         if condition_description is not None and condition_description != o.condition_description:
@@ -453,6 +459,7 @@ class Product(models.Model):
     upc = models.TextField(null=True, default=None, db_index=True)
     pnc = models.TextField(null=True, default=None, db_index=True)
     hs_code = models.TextField(null=True, default=None, db_index=True)
+    gtin = models.TextField(null=True, default=None, db_index=True)
 
     # Прослеживаемый товар
     traceable = models.BooleanField(null=True, default=None, db_index=True)
@@ -460,6 +467,8 @@ class Product(models.Model):
     # Кондиционность и распродажа
     unconditional = models.BooleanField(default=False, db_index=True)
     sale = models.BooleanField(default=False, db_index=True)
+    promo = models.BooleanField(default=False, db_index=True)
+    outoftrade = models.BooleanField(default=False, db_index=True)
     condition_description = models.TextField(null=True, default=None)
 
     # Характеристики упаковки
