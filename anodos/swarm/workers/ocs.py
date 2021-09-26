@@ -102,8 +102,7 @@ class Worker(Worker):
             Product.objects.filter(distributor=self.distributor).update(content_loaded=None, content=None)
 
         elif command == 'test':
-            for party in Party.objects.all():
-                print(party, party.search)
+            Vendor.objects.all().update(distributor=self.distributor)
 
         elif command == 'all_delete':
             self.distributor.delete()
