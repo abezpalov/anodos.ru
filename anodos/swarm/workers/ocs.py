@@ -50,15 +50,16 @@ class Worker(Worker):
 
     def run(self, command=None):
 
-        self.send(f'OCS run {command}')
+        self.send(f'{self.distributor}: {command} start')
 
         if command == 'update_news':
             self.update_news()
             self.update_promo()
             self.update_events()
-
-            self.send(f'Обновил публикации {self.distributor}.\n'
-                      f'{self.count_news} новостей, {self.count_promo} промо и {self.count_events} событий.')
+            self.send(f'{self.distributor}: {command} finish.'
+                      f'- {self.count_news} новостей;'
+                      f'- {self.count_promo} промо;'
+                      f'- {self.count_events} событий.')
 
         elif command == 'update_stocks':
 
@@ -75,8 +76,9 @@ class Worker(Worker):
             Party.objects.filter(distributor=self.distributor,
                                  created__lte=self.start_time).delete()
 
-            self.send(f'Закончил обновление информации о складах OCS.\n'
-                      f' Обновил {self.count_products} продуктов и {self.count_parties} партий.')
+            self.send(f'{self.distributor}: {command} finish.'
+                      f'- {self.count_products} продуктов;'
+                      f'- {self.count_parties} партий.')
 
         elif command == 'update_content_all':
             ids = self.get_ids_for_update_content('all')
@@ -283,20 +285,6 @@ class Worker(Worker):
             print(data)
             self.count_promo += 1
 
-    def send_info(self):
-        count_products = Product.objects.filter(distributor=self.distributor).count()
-        count_parties = Party.objects.filter(distributor=self.distributor).count()
-        count_photos = ProductImage.objects.filter(product__distributor=self.distributor).count()
-        count_parameter_values = ParameterValue.objects.filter(distributor=self.distributor).count()
-        count_product_contents = Product.objects.filter(content__isnull=False).count()
-
-        self.send(f'OCS end\n'
-                  f'count_products = {count_products}\n'
-                  f'count_parties = {count_parties}\n'
-                  f'count_photos = {count_photos}\n'
-                  f'count_parameter_values = {count_parameter_values}\n'
-                  f'count_product_contents = {count_product_contents}\n')
-
     def update_currencies_exchanges(self):
         command = 'account/currencies/exchanges'
         print(command)
@@ -427,6 +415,7 @@ class Worker(Worker):
         name_other = item['product'].get('itemName', None)
         name = f"{name_rus} {name_other}"
         description = item['product'].get('productDescription', None)
+        warranty = item['product'].get('warranty', None)
 
         ean_128 = item['product'].get('eaN128', None)
         upc = item['product'].get('upc', None)
@@ -480,7 +469,8 @@ class Worker(Worker):
                                                     depth=depth,
                                                     volume=volume,
                                                     multiplicity=multiplicity,
-                                                    unit=unit)
+                                                    unit=unit,
+                                                    warranty=warranty)
 
         # Удаляем имеющиеся партии товара
         Party.objects.filter(product=product).delete()

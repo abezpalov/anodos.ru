@@ -47,12 +47,12 @@ class Worker(Worker):
 
     def run(self, command=None):
 
-        self.send(f'Treolan run {command}')
+        self.send(f'{self.distributor}: {command} start')
 
         if command == 'update_news':
             self.update_news()
-            self.send(f'Обновил публикации {self.distributor}.\n'
-                      f'{self.count_news} новостей.')
+            self.send(f'{self.distributor}: {command} finish:'
+                      f' - {self.count_news} новостей.')
 
         elif command == 'update_stocks':
 
@@ -196,6 +196,8 @@ class Worker(Worker):
 
                 # @vendor - Производитель.
                 vendor = product_element.xpath('./@vendor')[0]
+                vendos = self.fix_text(vendor)
+                vendor = Vendor.objects.take(vendor)
                 print('vendor', vendor)
 
                 # @vendor-id - Идентификатор производителя.
