@@ -156,38 +156,6 @@ class Vendor(models.Model):
         ordering = ['name']
 
 
-class ConditionManager(models.Manager):
-
-    def take(self, distributor, name, **kwargs):
-        if not distributor or not name:
-            return None
-
-        try:
-            o = self.get(distributor=distributor, name=name)
-
-        except Condition.DoesNotExist:
-            o = Condition()
-            o.distributor = distributor
-            o.name = name
-            o.save()
-
-        return o
-
-
-class Condition(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.TextField(db_index=True)
-    distributor = models.ForeignKey('Distributor', null=True, default=None,
-                                    on_delete=models.CASCADE, related_name='+')
-    objects = ConditionManager()
-
-    def __str__(self):
-        return f'{self.name}'
-
-    class Meta:
-        ordering = ['name']
-
-
 class UnitManager(models.Manager):
 
     def take(self, key, **kwargs):
@@ -473,9 +441,9 @@ class Product(models.Model):
     # Прослеживаемый товар
     traceable = models.BooleanField(null=True, default=None, db_index=True)
 
-    # Кондиционность
-    condition = models.ForeignKey('Condition', null=True, default=None,
-                                  on_delete=models.CASCADE, related_name='+')
+    # Кондиционность и распродажа
+    unconditional = models.BooleanField(default=False, db_index=True)
+    sale = models.BooleanField(default=False, db_index=True)
     condition_description = models.TextField(null=True, default=None)
 
     # Характеристики упаковки

@@ -5,7 +5,7 @@ import urllib.parse
 from datetime import datetime, timedelta
 
 from django.utils import timezone
-
+from django.conf import settings
 from swarm.models import *
 from distributors.models import *
 from swarm.workers.worker import Worker
@@ -435,8 +435,6 @@ class Worker(Worker):
         vendor = Vendor.objects.take(name=item['product']['producer'])
         category = Category.objects.take(distributor=self.distributor,
                                          key=item['product']['category'])
-        condition = Condition.objects.take(distributor=self.distributor,
-                                           name=item['product']['condition'])
 
         product_key = item['product'].get('itemId', None)
         party_key = item['product'].get('productKey', None)
@@ -453,6 +451,17 @@ class Worker(Worker):
         hs_code = item['product'].get('hsCode', None)
 
         traceable = item['product'].get('traceable', None)
+
+        if item['product']['condition'] == 'Regular':
+            unconditional = False
+            sale = False
+        elif item['product']['condition'] == 'Sale':
+            unconditional = False
+            sale = True
+        elif item['product']['condition'] == 'Unconditional':
+            unconditional = True
+            sale = False
+
         condition_description = item['product'].get('conditionDescription', None)
 
         weight = item['packageInformation'].get('weight', None)
