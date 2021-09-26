@@ -223,9 +223,6 @@ class Worker(Worker):
             print(data)
             self.count_news += 1
 
-        # Отправляем отчёт
-        self.send(f'Нашёл {len(items)} новостей у {self.name}')
-
         items = tree.xpath('//div[@class="item item-pr"]')
         for item in items:
             news_type = item.xpath('.//*[@class="header"]//a/text()')[0]
