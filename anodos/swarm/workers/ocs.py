@@ -178,7 +178,7 @@ class Worker(Worker):
             try:
                 data = SourceData.objects.get(source=self.source, url=url)
             except SourceData.DoesNotExist:
-                content = f'<b>{event} {vendor}</b>\n' \
+                content = f'<b>{self.name}: {event} {vendor}</b>\n' \
                           f'<i>{date} {location}</i>\n\n' \
                           f'<a href="{url}">{name}</a>'
                 self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
@@ -212,7 +212,7 @@ class Worker(Worker):
             try:
                 data = SourceData.objects.get(source=self.source, url=url)
             except SourceData.DoesNotExist:
-                content = f'<b>{news_type} {self.name}</b>\n' \
+                content = f'<b>{self.name}: {news_type}</b>\n' \
                           f'<i>{term}</i>\n\n' \
                           f'<a href="{url}">{title}</a>\n' \
                           f'{text}\n'
@@ -242,7 +242,7 @@ class Worker(Worker):
             try:
                 data = SourceData.objects.get(source=self.source, url=url)
             except SourceData.DoesNotExist:
-                content = f'<b>{news_type} {self.name}</b>\n' \
+                content = f'<b>{self.name}: {news_type}</b>\n' \
                           f'<i>{term}</i>\n\n' \
                           f'<a href="{url}">{title}</a>\n' \
                           f'{text}'
@@ -275,7 +275,7 @@ class Worker(Worker):
             try:
                 data = SourceData.objects.get(source=self.source, url=url)
             except SourceData.DoesNotExist:
-                content = f'<b>Промо-акция {self.name} и {vendor}</b>\n' \
+                content = f'<b>{self.name}: Промо-акция {vendor}</b>\n' \
                           f'<i>{term}</i>\n\n' \
                           f'<a href="{url}">{title}</a>\n' \
                           f'{text}'

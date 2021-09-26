@@ -109,7 +109,7 @@ class Worker(Worker):
             try:
                 data = SourceData.objects.get(source=self.source, url=url)
             except SourceData.DoesNotExist:
-                content = f'<b>{content_type} {self.distributor}</b>\n' \
+                content = f'<b>{self.distributor}: {content_type}</b>\n' \
                           f'<i>{date}</i>\n' \
                           f'<a href="{url}">{title}</a>\n' \
                         f'{description}'
