@@ -292,12 +292,6 @@ class ProductManager(models.Manager):
             o.category = category
             need_save = True
 
-        # condition
-        condition = kwargs.get('condition', None)
-        if condition is not None and condition != o.condition:
-            o.condition = condition
-            need_save = True
-
         # product_key
         product_key = kwargs.get('product_key', None)
         if product_key is not None and product_key != o.product_key:
@@ -356,6 +350,18 @@ class ProductManager(models.Manager):
         traceable = kwargs.get('traceable', None)
         if traceable is not None and traceable != o.traceable:
             o.traceable = traceable
+            need_save = True
+
+        # unconditional
+        unconditional = kwargs.get('unconditional', False)
+        if unconditional != o.unconditional:
+            o.unconditional = unconditional
+            need_save = True
+
+        # sale
+        sale = kwargs.get('sale', False)
+        if sale != o.sale:
+            o.sale = sale
             need_save = True
 
         # condition_description

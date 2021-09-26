@@ -477,7 +477,6 @@ class Worker(Worker):
                                                     name=name,
                                                     vendor=vendor,
                                                     category=category,
-                                                    condition=condition,
                                                     product_key=product_key,
                                                     part_number=part_number,
                                                     short_name=short_name,
@@ -489,6 +488,8 @@ class Worker(Worker):
                                                     pnc=pnc,
                                                     hs_code=hs_code,
                                                     traceable=traceable,
+                                                    unconditional=unconditional,
+                                                    sale=sale,
                                                     condition_description=condition_description,
                                                     weight=weight,
                                                     width=width,
@@ -499,7 +500,7 @@ class Worker(Worker):
                                                     unit=unit)
 
         # Удаляем имеющиеся партии товара
-        Party.objects.filter(distributor=self.distributor, product=product).delete()
+        Party.objects.filter(product=product).delete()
 
         # Получаем актуальную информацию по партиям товара
         is_available_for_order = item.get('isAvailableForOrder', None)
