@@ -56,10 +56,10 @@ class Worker(Worker):
             self.update_news()
             self.update_promo()
             self.update_events()
-            self.send(f'{self.distributor}: {command} finish.'
-                      f'- {self.count_news} новостей;'
-                      f'- {self.count_promo} промо;'
-                      f'- {self.count_events} событий.')
+            self.send(f'{self.distributor} {command} finish:\n'
+                      f'- новостей: {self.count_news};\n'
+                      f'- промо: {self.count_promo}\n;'
+                      f'- событий: {self.count_events}.')
 
         elif command == 'update_stocks':
 
@@ -76,9 +76,10 @@ class Worker(Worker):
             Party.objects.filter(distributor=self.distributor,
                                  created__lte=self.start_time).delete()
 
-            self.send(f'{self.distributor}: {command} finish.'
-                      f'- {self.count_products} продуктов;'
-                      f'- {self.count_parties} партий.')
+            # Отправляем оповещение об успешном завершении
+            self.send(f'{self.distributor} {command} finish:\n'
+                      f'- продуктов: {self.count_products};\n'
+                      f'- партий: {self.count_parties}.')
 
         elif command == 'update_content_all':
             ids = self.get_ids_for_update_content('all')
@@ -519,7 +520,8 @@ class Worker(Worker):
 
             can_reserve = location.get('canReserve', None)
 
-            location = Location.objects.take(key=key,
+            location = Location.objects.take(distributor=self.distributor,
+                                             key=key,
                                              description=description)
 
             party = Party.objects.create(distributor=self.distributor,

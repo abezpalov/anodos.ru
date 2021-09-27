@@ -264,7 +264,6 @@ class ProductManager(models.Manager):
     def take_by_party_key(self, distributor, party_key, name, **kwargs):
 
         if not distributor or not party_key or not name:
-            exit()
             return None
 
         need_save = False
@@ -278,9 +277,16 @@ class ProductManager(models.Manager):
             o.name = name
             need_save = True
 
-        # name
-        if name is not None and name != o.name:
-            o.name = name
+        # product_key
+        product_key = kwargs.get('product_key', None)
+        if product_key is not None and product_key != o.product_key:
+            o.product_key = product_key
+            need_save = True
+
+        # part_number
+        part_number = kwargs.get('part_number', None)
+        if part_number is not None and part_number != o.part_number:
+            o.part_number = part_number
             need_save = True
 
         # vendor
@@ -295,16 +301,9 @@ class ProductManager(models.Manager):
             o.category = category
             need_save = True
 
-        # product_key
-        product_key = kwargs.get('product_key', None)
-        if product_key is not None and product_key != o.product_key:
-            o.product_key = product_key
-            need_save = True
-
-        # part_number
-        part_number = kwargs.get('part_number', None)
-        if part_number is not None and part_number != o.part_number:
-            o.part_number = part_number
+        # name
+        if name is not None and name != o.name:
+            o.name = name
             need_save = True
 
         # name_rus
@@ -355,6 +354,18 @@ class ProductManager(models.Manager):
             o.hs_code = hs_code
             need_save = True
 
+        # gtin
+        gtin = kwargs.get('gtin', None)
+        if gtin is not None and gtin != o.gtin:
+            o.gtin = gtin
+            need_save = True
+
+        # tnved
+        tnved = kwargs.get('tnved', None)
+        if tnved is not None and tnved != o.tnved:
+            o.tnved = tnved
+            need_save = True
+
         # traceable
         traceable = kwargs.get('traceable', None)
         if traceable is not None and traceable != o.traceable:
@@ -379,6 +390,12 @@ class ProductManager(models.Manager):
             o.promo = promo
             need_save = True
 
+        # outoftrade
+        outoftrade = kwargs.get('outoftrade', False)
+        if outoftrade != o.outoftrade:
+            o.outoftrade = outoftrade
+            need_save = True
+
         # condition_description
         condition_description = kwargs.get('condition_description', None)
         if condition_description is not None and condition_description != o.condition_description:
@@ -393,25 +410,25 @@ class ProductManager(models.Manager):
 
         # width
         width = kwargs.get('width', None)
-        if width is not None and width != o.width:
+        if need_new_decimal_value(old=o.width, new=width):
             o.width = width
             need_save = True
 
         # height
         height = kwargs.get('height', None)
-        if height is not None and height != o.height:
+        if need_new_decimal_value(old=o.height, new=height):
             o.height = height
             need_save = True
 
         # depth
         depth = kwargs.get('depth', None)
-        if depth is not None and depth != o.depth:
+        if need_new_decimal_value(old=o.depth, new=depth):
             o.depth = depth
             need_save = True
 
         # volume
         volume = kwargs.get('volume', None)
-        if volume is not None and volume != o.volume:
+        if need_new_decimal_value(old=o.volume, new=volume):
             o.volume = volume
             need_save = True
 
@@ -460,6 +477,7 @@ class Product(models.Model):
     pnc = models.TextField(null=True, default=None, db_index=True)
     hs_code = models.TextField(null=True, default=None, db_index=True)
     gtin = models.TextField(null=True, default=None, db_index=True)
+    tnved = models.TextField(null=True, default=None, db_index=True)
 
     # Прослеживаемый товар
     traceable = models.BooleanField(null=True, default=None, db_index=True)
@@ -485,6 +503,8 @@ class Product(models.Model):
     content = models.TextField(null=True, default=None)
     content_loaded = models.DateTimeField(null=True, default=None)
 
+    created = models.DateTimeField(default=timezone.now)
+
     objects = ProductManager()
 
     @property
@@ -508,7 +528,10 @@ class Product(models.Model):
         return quantity
 
     def __str__(self):
-        return f'{self.vendor.name} [{self.part_number}] ({self.id}) '
+        if self.vendor is None:
+            return f'None [{self.part_number}] ({self.id})'
+        else:
+            return f'{self.vendor.name} [{self.part_number}] ({self.id})'
 
     class Meta:
         ordering = ['vendor__name', 'part_number']
@@ -516,17 +539,18 @@ class Product(models.Model):
 
 class LocationManager(models.Manager):
 
-    def take(self, key, **kwargs):
-        if not key:
+    def take(self, distributor, key, **kwargs):
+        if not distributor or not key:
             return None
 
         need_save = False
 
         try:
-            o = self.get(key=key)
+            o = self.get(distributor=distributor, key=key)
 
         except Location.DoesNotExist:
             o = Location()
+            o.distributor = distributor
             o.key = key[:128]
             need_save = True
 
@@ -547,6 +571,8 @@ class LocationManager(models.Manager):
 
 class Location(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    distributor = models.ForeignKey('Distributor', null=True, default=None,
+                                    on_delete=models.CASCADE, related_name='+')
     key = models.CharField(max_length=128, unique=True)
 
     name = models.TextField(null=True, default=None, db_index=True)
@@ -662,9 +688,13 @@ class Party(models.Model):
         return f'{self.product} | {self.quantity} on {self.location}'
 
     def save(self, *args, **kwargs):
-        self.search = f'{self.product.name.lower()} ' \
-                      f'{self.product.part_number.lower()} ' \
-                      f'{self.product.vendor.name.lower()}'
+        if self.product.vendor:
+            self.search = f'{self.product.name.lower()} ' \
+                          f'{self.product.part_number.lower()} ' \
+                          f'{self.product.vendor.name.lower()}'
+        else:
+            self.search = f'{self.product.name.lower()} ' \
+                          f'{self.product.part_number.lower()}'
         super().save(*args, **kwargs)
 
     class Meta:
@@ -929,6 +959,8 @@ class ProductImage(models.Model):
 
 
 def to_slug(name):
+    """ Переводит строку в Slug """
+
     name = name.lower()
     name = name.strip()
     dictionary = {'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'e',
@@ -956,3 +988,22 @@ def to_slug(name):
         name = name[:-1]
 
     return name
+
+
+def need_new_decimal_value(old, new, delta=0.001):
+    """ Определяет приблизительным сравнением, необходимо ли записывать новое значение в базу."""
+
+    if new is None:
+        return False
+    elif old is None:
+        return True
+
+    old = float(old)
+    new = float(new)
+    delta = float(delta)
+    try:
+        if old - new / new < delta:
+            return False
+    except ZeroDivisionError:
+        return False
+    return True

@@ -37,11 +37,18 @@ class Worker(Worker):
             password=self.password)
         self.distributor = Distributor.objects.take(name=self.name)
 
+        self.stock = Location.objects.take(distributor=self.distributor,
+                                           key='Склад')
+        self.transit = Location.objects.take(distributor=self.distributor,
+                                             key='Транзит')
+
         self.count_products = 0
         self.count_parties = 0
         self.count_news = 0
 
         self.client = None
+
+        self.test = set()
 
         super().__init__()
 
@@ -51,8 +58,8 @@ class Worker(Worker):
 
         if command == 'update_news':
             self.update_news()
-            self.send(f'{self.distributor}: {command} finish:'
-                      f' - {self.count_news} новостей.')
+            self.send(f'{self.distributor} {command} finish:'
+                      f'- новостей: {self.count_news}.')
 
         elif command == 'update_stocks':
 
@@ -66,6 +73,13 @@ class Worker(Worker):
             # Удаляем устаревшие партии
             Party.objects.filter(distributor=self.distributor,
                                  created__lte=self.start_time).delete()
+
+            # Отправляем оповещение об успешном завершении
+            self.send(f'{self.distributor} {command} finish:\n'
+                      f'- продуктов: {self.count_products};\n'
+                      f'- партий: {self.count_parties}.')
+
+            print(self.test)
 
         elif command == 'update_content_all':
             pass
@@ -124,7 +138,6 @@ class Worker(Worker):
     def update_categories(self):
         result = self.client.service.GetCategories(login=self.login,
                                                    password=self.password)
-        print(result['Result'])
         tree = lxml.etree.fromstring(result['Result'])
         self.parse_categories(tree)
 
@@ -163,135 +176,220 @@ class Worker(Worker):
         tree = lxml.etree.fromstring(result['Result'])
         self.parse_catalog(tree)
 
-    def parse_catalog(self, tree):
+    def parse_catalog(self, tree, parent=None):
 
         # Проходим по всем категориям
-        categories = tree.xpath('.//category')
-        for category_element in categories:
-            key = category_element.xpath('./@id')[0]
-            name = category_element.xpath('./@name')[0]
-            category = Category.objects.get_by_key(distributor=self.distributor, key=key)
-            print(key, name, category)
-            products = category_element.xpath('./position')
+        categories = tree.xpath('./category')
+        for category_ in categories:
+            key = category_.xpath('./@id')[0]
+            name = category_.xpath('./@name')[0]
+            category = Category.objects.take(distributor=self.distributor,
+                                             key=key,
+                                             name=name,
+                                             parent=parent)
+            print(category)
+            self.parse_catalog(tree=category_, parent=category)
+
+            products = category_.xpath('./position')
 
             # Проходим по всем продуктам
-            for product_element in products:
+            for item in products:
 
                 # @id - Идентификатор позиции
-                product_key = product_element.xpath('./@id')[0]
-                print('product_key', product_key)
+                product_key = item.xpath('./@id')[0]
 
                 # @prid - Внутренний идентификатор позиции.
-                party_key = product_element.xpath('./@prid')[0]
-                print('party_key', party_key)
+                party_key = item.xpath('./@prid')[0]
 
                 # @articul - Артикул.
-                part_number = product_element.xpath('./@articul')[0]
-                print('part_number', part_number)
+                part_number = item.xpath('./@articul')[0]
 
                 # @name - Наименование.
-                name = product_element.xpath('./@name')[0]
-                print('name', name)
+                name = item.xpath('./@name')[0]
 
                 # @rusDescr - Русское описание.
-                description = product_element.xpath('./@rusDescr')[0]
-                print('description', description)
+                description = item.xpath('./@rusDescr')[0]
 
                 # @vendor - Производитель.
-                vendor = product_element.xpath('./@vendor')[0]
+                vendor = item.xpath('./@vendor')[0]
                 vendor = self.fix_text(vendor)
                 vendor = Vendor.objects.take(distributor=self.distributor, name=vendor)
-                print('vendor', vendor)
 
                 # @vendor-id - Идентификатор производителя.
-                vendor_id = product_element.xpath('./@vendor-id')[0]
-                print('vendor_id', vendor_id)
+                vendor_id = item.xpath('./@vendor-id')[0]
 
                 # @gp - Срок гарантийного обслуживания.
                 try:
-                    gp = product_element.xpath('./@gp')[0]
+                    warranty = item.xpath('./@gp')[0]
                 except IndexError:
-                    gp = None
-                print('gp', gp)
+                    warranty = None
 
                 # @price - Цена.
-                price = product_element.xpath('./@price')[0]
-                print('price', price)
+                price_out = item.xpath('./@price')[0]
 
                 # @dprice - Цена c учетом скидки.
-                dprice = product_element.xpath('./@dprice')[0]
-                print('dprice', dprice)
+                price_in = item.xpath('./@dprice')[0]
 
                 # @currency - Валюта, в которой указана стоимость товара.
                 # Значением является международный код валюты из трёх латинских символов(RUB, USD и тд.).
-                currency = product_element.xpath('./@currency')[0]
-                print('currency', currency)
+                currency = item.xpath('./@currency')[0]
+                currency = Currency.objects.take(key=currency)
 
                 # @discount - Размер скидки.
                 try:
-                    discount = product_element.xpath('./@discount')[0]
+                    discount = item.xpath('./@discount')[0]
                 except IndexError:
                     discount = None
-                print('discount', discount)
 
                 # @outoftrade - Не закупается на склад (X - снимается).
-                outoftrade = product_element.xpath('./@outoftrade')[0]
-                print('outoftrade', outoftrade)
+                outoftrade = item.xpath('./@outoftrade')[0]
+                if outoftrade == 'X':
+                    outoftrade = True
+                else:
+                    outoftrade = False
 
                 # @uchmark - Участие в маркетинговых программах(0 – не участвует, 2 – участвует).
-                uchmark = product_element.xpath('./@uchmark')[0]
-                print('uchmark', uchmark)
+                promo = item.xpath('./@uchmark')[0]
+                if promo == '2':
+                    promo = True
+                else:
+                    promo = False
 
                 # @sale - Участие в распродажах некондиции(0 – не участвует, 1 – участвует).
-                sale = product_element.xpath('./@sale')[0]
-                print('sale', sale)
+                sale = item.xpath('./@sale')[0]
 
                 # @freenom - Свободно на складе.
-                freenom = product_element.xpath('./@freenom')[0]
-                print('freenom', freenom)
+                quantity_on_stock = item.xpath('./@freenom')[0]
+                self.test.add(quantity_on_stock)
 
                 # @freeptrans - Свободнов транзите.
-                freeptrans = product_element.xpath('./@freeptrans')[0]
-                print('freeptrans', freeptrans)
+                quantity_on_transit = item.xpath('./@freeptrans')[0]
+                self.test.add(quantity_on_transit)
 
                 # @ntdate - Дата ближайшего транзита.
-                ntdate = product_element.xpath('./@ntdate')[0]
-                print('ntdate', ntdate)
+                incoming_date = item.xpath('./@ntdate')[0]
 
                 # @ntstatus - Статус ближайшего транзита.
-                ntstatus = product_element.xpath('./@ntstatus')[0]
-                print('ntstatus', ntstatus)
+                ntstatus = item.xpath('./@ntstatus')[0]
 
                 # @width - Ширина, см.
-                width = product_element.xpath('./@width')[0]
-                print('width', width)
+                depth = item.xpath('./@width')[0]
+                depth = float(depth) / 100.0
 
                 # @length - Длина, см.
-                length = product_element.xpath('./@length')[0]
-                print('length', length)
+                width = item.xpath('./@length')[0]
+                width = float(width) / 100.0
 
                 # @height - Высота, см.
-                height = product_element.xpath('./@height')[0]
-                print('height', height)
+                height = item.xpath('./@height')[0]
+                height = float(height) / 100.0
 
                 # @brutto - Вес в упаковке, кг.
-                brutto = product_element.xpath('./@brutto')[0]
-                print('brutto', brutto)
+                weight = item.xpath('./@brutto')[0]
 
                 # @GTIN - Код GTIN (используется Dictionary.Ean).
-                GTIN = product_element.xpath('./@GTIN')[0]
-                print('GTIN', GTIN)
+                gtin = item.xpath('./@GTIN')[0]
 
+                # @isTraceable - Признак прослеживаемости (0 – нет, 1 – да).
+                traceable = item.xpath('./@codeTNVED')[0]
+                if traceable == '1':
+                    traceable = True
+                else:
+                    traceable = False
 
-                print()
-                print()
-                print()
+                #@codeTNVED- код ТН ВЭД
+                tnved = item.xpath('./@codeTNVED')[0]
 
+                product = Product.objects.take_by_party_key(distributor=self.distributor,
+                                                            product_key=product_key,
+                                                            party_key=party_key,
+                                                            part_number=part_number,
+                                                            vendor=vendor,
+                                                            category=category,
+                                                            name=name,
+                                                            description=description,
+                                                            warranty=warranty,
+                                                            gtin=gtin,
+                                                            tnved=tnved,
+                                                            traceable=traceable,
+                                                            unconditional=sale,
+                                                            sale=sale,
+                                                            promo=promo,
+                                                            outoftrade=outoftrade,
+                                                            weight=weight,
+                                                            width=width,
+                                                            height=height,
+                                                            depth=depth,
+                                                            volume=width*height*depth)
 
-    @staticmethod
-    def datetime_to_str(x):
-        x = str(x)
-        x = x.split('.')[0]
-        x = x.replace(' ', 'T')
-        x = f'{x}.000000%2B00%3A00'
-        return x
+                if product is not None:
+                    self.count_products += 1
+                    print(product)
+
+                    # Чистим количество
+                    quantity_on_stock, great_than_on_stock = self.fix_quantity(quantity=quantity_on_stock)
+                    quantity_on_transit, great_than_on_transit = self.fix_quantity(quantity=quantity_on_transit)
+
+                    if quantity_on_stock or (not quantity_on_stock and not quantity_on_transit):
+                        if quantity_on_stock > 0:
+                            can_reserve, is_available_for_order = True, True
+                        else:
+                            can_reserve, is_available_for_order = False, False
+                        party = Party.objects.create(distributor=self.distributor,
+                                                     product=product,
+                                                     price_in=price_in,
+                                                     currency_in=currency,
+                                                     price_out=price_out,
+                                                     currency_out=currency,
+                                                     location=self.stock,
+                                                     quantity=quantity_on_stock,
+                                                     quantity_great_than=great_than_on_stock,
+                                                     can_reserve=can_reserve,
+                                                     is_available_for_order=is_available_for_order)
+                        self.count_parties += 1
+                        print(party)
+
+                    if quantity_on_transit:
+                        if quantity_on_transit > 0:
+                            can_reserve, is_available_for_order = True, True
+                        else:
+                            can_reserve, is_available_for_order = False, False
+                        party = Party.objects.create(distributor=self.distributor,
+                                                     product=product,
+                                                     price_in=price_in,
+                                                     currency_in=currency,
+                                                     price_out=price_out,
+                                                     currency_out=currency,
+                                                     location=self.transit,
+                                                     quantity=quantity_on_transit,
+                                                     quantity_great_than=great_than_on_transit,
+                                                     can_reserve=can_reserve,
+                                                     is_available_for_order=is_available_for_order)
+                        self.count_parties += 1
+                        print(party)
+
+    def fix_quantity(self, quantity):
+
+        # Насильно превращаем в строку
+        quantity = str(quantity)
+
+        if '+' in quantity or '>' in quantity:
+            quantity_great_than = True
+        else:
+            quantity_great_than = False
+
+        if 'много' in quantity:
+            quantity = '10'
+            quantity_great_than = True
+
+        if '<' in quantity:
+            quantity = quantity.replace('<', '')
+            quantity = str(int(int(quantity) / 2))
+
+        quantity = quantity.replace('+', '')
+
+        dictionary = {'+': '', '>': '', '*': ''}
+        for key in dictionary:
+            quantity = quantity.replace(key, dictionary[key])
+
+        return int(quantity), quantity_great_than
