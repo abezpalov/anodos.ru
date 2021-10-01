@@ -202,7 +202,9 @@ class Worker(Worker):
         categories = tree.xpath('./category')
         for category_ in categories:
             key = category_.xpath('./@id')[0]
+            key = self.fix_text(key)
             name = category_.xpath('./@name')[0]
+            name = self.fix_text(name)
             category = Category.objects.take(distributor=self.distributor,
                                              key=key,
                                              name=name,
@@ -437,6 +439,7 @@ class Worker(Worker):
             parameter_name = self.fix_text(parameter_name)
             parameter = Parameter.objects.take(distributor=self.distributor, name=parameter_name)
             value = property_element.xpath('./@Value')[0]
+            value = self.fix_text(value)
             parameter_value = ParameterValue.objects.take(distributor=self.distributor,
                                                           product=product,
                                                           parameter=parameter,
