@@ -459,7 +459,7 @@ class Worker(Worker):
                   f'<a href="{url}">{product}</a>')
 
     @staticmethod
-    def fix_quantity(self, quantity):
+    def fix_quantity(quantity):
 
         # Насильно превращаем в строку
         quantity = str(quantity)
