@@ -82,13 +82,33 @@ class Worker(Worker):
             print(self.test)
 
         elif command == 'update_content_all':
-            pass
+
+            # Инициализируем SOAP-клиента
+            settings_ = zeep.Settings(strict=False, xml_huge_tree=True)
+            self.client = zeep.Client(wsdl=self.url['wsdl'], settings=settings_)
+
+            # Получаем ключи продуктов для запросов
+            keys = self.get_keys_for_update_content('all')
+            self.update_content(keys)
+
+        elif command == 'update_content_clear':
+
+            # Инициализируем SOAP-клиента
+            settings_ = zeep.Settings(strict=False, xml_huge_tree=True)
+            self.client = zeep.Client(wsdl=self.url['wsdl'], settings=settings_)
+
+            # Получаем ключи продуктов для запросов
+            keys = self.get_keys_for_update_content('clear')
+            self.update_content(keys)
 
         elif command == 'test':
             pass
 
         elif command == 'all_delete':
             self.distributor.delete()
+
+        else:
+            print('Неизвестная команда!')
 
     def update_news(self):
 
@@ -368,6 +388,77 @@ class Worker(Worker):
                         self.count_parties += 1
                         print(party)
 
+    def get_keys_for_update_content(self, mode=None):
+
+        if mode == 'all':
+            keys_ = Product.objects.filter(distributor=self.distributor).values('part_number')
+            keys = []
+            for key_ in keys_:
+                keys.append(key_['part_number'])
+            return keys
+
+        elif mode == 'clear':
+            keys_ = Product.objects.filter(distributor=self.distributor,
+                                           content_loaded__isnull=True).values('part_number')
+            keys = []
+            for key_ in keys_:
+                keys.append(key_['part_number'])
+            return keys
+
+    def update_content(self, keys):
+
+        for key in keys:
+            result = self.client.service.ProductInfoV2(Login=self.login,
+                                                       password=self.password,
+                                                       Articul=key)
+            print(result['Result'])
+            tree = lxml.etree.fromstring(result['Result'])
+
+            self.parse_content(tree=tree)
+
+    def parse_content(self, tree):
+
+        # Проходим по всем продуктам
+        product_elements = tree.xpath('.//Product')
+        if len(product_elements) > 1:
+            print('Количество продуктов больше 1!')
+            exit()
+
+        # Получаем экземпляр продукта
+        product_element = product_elements[0]
+        part_number = product_element.xpath('./@Articul')[0]
+        product = Product.objects.get(distributor=self.distributor, part_number=part_number)
+        print(product)
+
+        # Проходим по всем характеристикам
+        property_elements = product_element.xpath('.//Property')
+        for property_element in property_elements:
+            parameter_name = property_element.xpath('./@Name')[0]
+            parameter_name = self.fix_text(parameter_name)
+            parameter = Parameter.objects.take(distributor=self.distributor, name=parameter_name)
+            value = property_element.xpath('./@Value')[0]
+            parameter_value = ParameterValue.objects.take(distributor=self.distributor,
+                                                          product=product,
+                                                          parameter=parameter,
+                                                          value=value)
+            print(parameter_value)
+
+        # Проходим по всех изображениям
+        image_elements = tree.xpath('.//PictureLink/row')
+        for image_element in image_elements:
+            url = image_element.xpath('./@Link')[0]
+            ext = image_element.xpath('./@ImageType')[0].lower()
+            image = ProductImage.objects.take(product=product, source_url=url, ext=ext)
+            print(image)
+
+        product.content_loaded = timezone.now()
+        product.save()
+
+        url = f'{self.host}/distributors/product/{product.id}/'
+        self.send(f'<b>Content loaded</b>\n'
+                  f'<a href="{url}">{product}</a>')
+
+    @staticmethod
     def fix_quantity(self, quantity):
 
         # Насильно превращаем в строку

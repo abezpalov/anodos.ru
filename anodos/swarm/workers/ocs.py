@@ -58,7 +58,7 @@ class Worker(Worker):
             self.update_events()
             self.send(f'{self.distributor} {command} finish:\n'
                       f'- новостей: {self.count_news};\n'
-                      f'- промо: {self.count_promo}\n;'
+                      f'- промо: {self.count_promo};\n'
                       f'- событий: {self.count_events}.')
 
         elif command == 'update_stocks':

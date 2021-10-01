@@ -891,6 +891,8 @@ class ProductImageManager(models.Manager):
         if not product or not source_url:
             return None
 
+        need_save = False
+
         try:
             o = self.get(product=product, source_url=source_url)
 
@@ -898,7 +900,7 @@ class ProductImageManager(models.Manager):
             o = ProductImage()
             o.product = product
             o.source_url = source_url
-            o.save()
+            need_save = True
 
         except ProductImage.MultipleObjectsReturned:
             imgs = self.filter(product=product, source_url=source_url)
@@ -908,6 +910,14 @@ class ProductImageManager(models.Manager):
                     if img.file_name:
                         os.remove(img.file_name)
                     img.delete()
+
+        ext = kwargs.get('ext', None)
+        if ext and ext != o.ext:
+            o.ext = ext
+            need_save = True
+
+        if need_save:
+            o.save()
 
         if o.file_name is None:
             o.download_file()
@@ -921,6 +931,7 @@ class ProductImage(models.Model):
                                 on_delete=models.CASCADE, related_name='+')
     source_url = models.TextField(null=True, default=None, db_index=True)
     file_name = models.TextField(null=True, default=None)
+    ext = models.TextField(null=True, default=None)
 
     created = models.DateTimeField(default=timezone.now, db_index=True)
 
@@ -936,8 +947,9 @@ class ProductImage(models.Model):
     def download_file(self):
 
         # Определяем имя файла
-        ext = self.source_url.rpartition('.')[2]
-        self.file_name = f'{settings.MEDIA_ROOT}distributors/products/photos/{self.id}.{ext}'
+        if self.ext is None:
+            self.ext = self.source_url.rpartition('.')[2]
+        self.file_name = f'{settings.MEDIA_ROOT}distributors/products/photos/{self.id}.{self.ext}'
 
         # Загружаем фотографию
         result = r.get(self.source_url)
