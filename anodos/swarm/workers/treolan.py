@@ -418,6 +418,8 @@ class Worker(Worker):
 
     def parse_content(self, tree):
 
+        count = 0
+
         # Получаем экземпляр продукта
         product_elements = tree.xpath('.//Product')
         product_element = product_elements[0]
@@ -438,6 +440,7 @@ class Worker(Worker):
                                                           parameter=parameter,
                                                           value=value)
             print(parameter_value)
+            count += 1
 
         # Проходим по всех изображениям
         image_elements = tree.xpath('.//PictureLink/row')
@@ -446,13 +449,15 @@ class Worker(Worker):
             ext = image_element.xpath('./@ImageType')[0].lower()
             image = ProductImage.objects.take(product=product, source_url=url, ext=ext)
             print(image)
+            count += 1
 
         product.content_loaded = timezone.now()
         product.save()
 
-        url = f'{self.host}/distributors/product/{product.id}/'
-        self.send(f'<b>Content loaded</b>\n'
-                  f'<a href="{url}">{product}</a>')
+        if count:
+            url = f'{self.host}/distributors/product/{product.id}/'
+            self.send(f'<b>Content loaded</b>\n'
+                      f'<a href="{url}">{product}</a>')
 
     @staticmethod
     def fix_quantity(quantity):
