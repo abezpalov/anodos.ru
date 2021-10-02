@@ -413,20 +413,13 @@ class Worker(Worker):
             result = self.client.service.ProductInfoV2(Login=self.login,
                                                        password=self.password,
                                                        Articul=key)
-            print(result['Result'])
             tree = lxml.etree.fromstring(result['Result'])
-
             self.parse_content(tree=tree)
 
     def parse_content(self, tree):
 
-        # Проходим по всем продуктам
-        product_elements = tree.xpath('.//Product')
-        if len(product_elements) > 1:
-            print('Количество продуктов больше 1!')
-            exit()
-
         # Получаем экземпляр продукта
+        product_elements = tree.xpath('.//Product')
         product_element = product_elements[0]
         part_number = product_element.xpath('./@Articul')[0]
         product = Product.objects.get(distributor=self.distributor, part_number=part_number)
