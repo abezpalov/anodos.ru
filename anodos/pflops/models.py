@@ -6,35 +6,17 @@ from django.conf import settings
 from django.utils import timezone
 
 
-class CategoryManager(models.Manager):
-
-    pass
-
-
-class Category(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
-    name = models.TextField(db_index=True)
-    description = models.TextField(default='')
-    number = models.BigIntegerField(null=True, default=0)
-
-    objects = CategoryManager()
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        ordering = ['number', 'name']
-
-
 class ArticleManager(models.Manager):
     pass
 
 
 class Article(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    Article = models.ForeignKey('Article', null=True, default=None,
+                                on_delete=models.SET_NULL, related_name='+')
     title = models.TextField(db_index=True)
     slug = models.TextField(db_index=True, null=True, default=None)
+    path = models.TextField(db_index=True, null=True, default=None)
     content = models.TextField(null=True, default=None)
     description = models.TextField(null=True, default=None)
 

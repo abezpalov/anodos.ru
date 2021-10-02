@@ -1,10 +1,5 @@
 from django.contrib import admin
-from pflops.models import Category, Article
-
-
-@admin.register(Category)
-class AdminCategory(admin.ModelAdmin):
-    pass
+from pflops.models import Article
 
 
 @admin.register(Article)
