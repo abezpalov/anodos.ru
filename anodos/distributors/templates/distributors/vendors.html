@@ -1,0 +1,62 @@
+{% extends "main.html" %}
+
+{% block title %}Производители{% endblock %}
+
+{% block content %}
+<h2>Производители</h2>
+
+<div class="ui grid"><div class="ui hidden divider"></div></div>
+
+<div>
+    <table class="ui celled table">
+        <thead>
+            <tr>
+                <th>Как у поставщика</th>
+                <th>Действия</th>
+                <th>Как у нас</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ item.distributor.name }} | {{ item.name }}</td>
+            <td>
+                <button class="ui basic button"
+                data-do="do-vendor-as-is"
+                data-id="{{ item.id }}">
+                    <i class="share icon"></i>
+                    Как у поставщика
+                </button>
+                <button class="ui basic button"
+                data-do="open-vendor-list"
+                data-id="{{ item.id }}">
+                    <i class="list icon"></i>
+                    Выбрать из списка
+                </button>
+                <button class="ui negative basic button"
+                data-do="erase-vendor-link"
+                data-id="{{ item.id }}">
+                    <i class="eraser icon"></i>
+                    Отвязать
+                </button>
+            </td>
+            <td id="{{ item.id }}-pflops-vendor">
+                {% if item.pflops_vendor == None %}
+                -
+                {% else %}
+                {{ item.pflops_vendor }}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block js %}
+{% include "distributors/js/vendors.js" %}
+
+
+
+{% endblock %}

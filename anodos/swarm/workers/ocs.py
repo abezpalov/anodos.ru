@@ -15,8 +15,6 @@ class Worker(Worker):
 
     source_name = 'ocs.ru'
     name = 'OCS'
-    login = None
-    password = None
     url = {'api': 'https://connector.b2b.ocs.ru/api/v2/',
            'events': 'https://zubrit.ocs.ru',
            'base': 'https://www.ocs.ru',
@@ -28,9 +26,7 @@ class Worker(Worker):
         self.start_time = timezone.now()
         self.host = settings.HOST
         self.source = Source.objects.take(
-            name=self.source_name,
-            login=self.login,
-            password=self.password)
+            name=self.source_name)
         self.distributor = Distributor.objects.take(
             name=self.name
         )
@@ -103,7 +99,7 @@ class Worker(Worker):
             Product.objects.filter(distributor=self.distributor).update(content_loaded=None, content=None)
 
         elif command == 'test':
-            print()
+            Vendor.objects.filter(distributor__isnull=True).update(distributor=self.distributor)
 
         elif command == 'all_delete':
             self.distributor.delete()

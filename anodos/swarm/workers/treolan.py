@@ -1,8 +1,4 @@
-import time
-import requests as r
 import lxml
-import urllib.parse
-from datetime import datetime, timedelta
 import zeep
 
 from django.utils import timezone
@@ -451,10 +447,9 @@ class Worker(Worker):
             print(image)
             count += 1
 
-        product.content_loaded = timezone.now()
-        product.save()
-
         if count:
+            product.content_loaded = timezone.now()
+            product.save()
             url = f'{self.host}/distributors/product/{product.id}/'
             self.send(f'<b>Content loaded</b>\n'
                       f'<a href="{url}">{product}</a>')

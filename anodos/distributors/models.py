@@ -148,6 +148,8 @@ class Vendor(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     distributor = models.ForeignKey('Distributor', null=True, default=None,
                                     on_delete=models.CASCADE, related_name='+')
+    pflops_vendor = models.ForeignKey('pflops.Vendor', null=True, default=None,
+                                      on_delete=models.SET_NULL, related_name='+')
     name = models.TextField(db_index=True)
 
     objects = VendorManager()
@@ -185,7 +187,6 @@ class Unit(models.Model):
     key = models.CharField(max_length=32, unique=True)
 
     name = models.TextField(null=True, default=None, db_index=True)
-    print_name = models.TextField(null=True, default=None, db_index=True)
 
     objects = UnitManager()
 
