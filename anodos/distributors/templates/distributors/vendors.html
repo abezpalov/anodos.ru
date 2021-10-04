@@ -40,11 +40,11 @@
                     Отвязать
                 </button>
             </td>
-            <td id="{{ item.id }}-pflops-vendor">
-                {% if item.pflops_vendor == None %}
+            <td id="{{ item.id }}-to-pflops">
+                {% if item.to_pflops == None %}
                 -
                 {% else %}
-                {{ item.pflops_vendor }}
+                {{ item.to_pflops }}
                 {% endif %}
             </td>
         </tr>

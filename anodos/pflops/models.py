@@ -127,7 +127,6 @@ class PriceManager(models.Manager):
 
     pass
 
-
 class Price(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     value = models.DecimalField(max_digits=18, decimal_places=2, null=True, default=None)
@@ -151,7 +150,199 @@ class Price(models.Model):
 
 class ProductManager(models.Manager):
 
-    pass
+    def take(self, vendor, part_number, **kwargs):
+
+        if not vendor or not part_number:
+            return None
+
+        need_save = False
+
+        try:
+            o = self.get(vendor=vendor, part_number=part_number)
+        except Product.DoesNotExist:
+            o = Product()
+            o.vendor = vendor
+            o.part_number = part_number
+            need_save = True
+
+        # category
+        category = kwargs.get('category', None)
+        if category is not None and category != o.category:
+            o.category = category
+            need_save = True
+
+        # name
+        name = kwargs.get('name', None)
+        name = fix_text(name)
+        if name is not None and name != o.name:
+            o.name = name
+            need_save = True
+
+        # short_name
+        short_name = kwargs.get('short_name', None)
+        short_name = fix_text(short_name)
+        if short_name is not None and short_name != o.short_name:
+            o.short_name = short_name
+            need_save = True
+
+        # name_rus
+        name_rus = kwargs.get('name_rus', None)
+        name_rus = fix_text(name_rus)
+        if name_rus is not None and name_rus != o.name_rus:
+            o.name_rus = name_rus
+            need_save = True
+
+        # name_other
+        name_other = kwargs.get('name_other', None)
+        name_other = fix_text(name_other)
+        if name_other is not None and name_other != o.name_other:
+            o.name_other = name_other
+            need_save = True
+
+        # description
+        description = kwargs.get('description', None)
+        description = fix_text(description)
+        if description is not None and description != o.description:
+            o.description = description
+            need_save = True
+
+        # warranty
+        warranty = kwargs.get('warranty', None)
+        warranty = fix_text(warranty)
+        if warranty is not None and warranty != o.warranty:
+            o.warranty = warranty
+            need_save = True
+
+        # ean_128
+        ean_128 = kwargs.get('ean_128', None)
+        if ean_128 is not None and ean_128 != o.ean_128:
+            o.ean_128 = ean_128
+            need_save = True
+
+        # upc
+        upc = kwargs.get('upc', None)
+        if upc is not None and upc != o.upc:
+            o.upc = upc
+            need_save = True
+
+        # pnc
+        pnc = kwargs.get('pnc', None)
+        if pnc is not None and pnc != o.pnc:
+            o.pnc = pnc
+            need_save = True
+
+        # hs_code
+        hs_code = kwargs.get('hs_code', None)
+        if hs_code is not None and hs_code != o.hs_code:
+            o.hs_code = hs_code
+            need_save = True
+
+        # gtin
+        category = kwargs.get('category', None)
+        if category is not None and category != o.category:
+            o.category = category
+            need_save = True
+
+        # tnved
+        tnved = kwargs.get('tnved', None)
+        if tnved is not None and tnved != o.tnved:
+            o.tnved = tnved
+            need_save = True
+
+        # traceable
+        traceable = kwargs.get('traceable', None)
+        if traceable is not None and traceable != o.traceable:
+            o.traceable = traceable
+            need_save = True
+
+        # unconditional
+        unconditional = kwargs.get('unconditional', None)
+        if unconditional is not None and unconditional != o.unconditional:
+            o.unconditional = unconditional
+            need_save = True
+
+        # sale
+        sale = kwargs.get('sale', None)
+        if sale is not None and sale != o.sale:
+            o.sale = sale
+            need_save = True
+
+        # promo
+        promo = kwargs.get('promo', None)
+        if promo is not None and promo != o.promo:
+            o.promo = promo
+            need_save = True
+
+        # outoftrade
+        outoftrade = kwargs.get('outoftrade', None)
+        if outoftrade is not None and outoftrade != o.outoftrade:
+            o.outoftrade = outoftrade
+            need_save = True
+
+        # condition_description
+        condition_description = kwargs.get('condition_description', None)
+        if condition_description is not None and condition_description != o.condition_description:
+            o.condition_description = condition_description
+            need_save = True
+
+        # weight
+        weight = kwargs.get('weight', None)
+        if weight is not None and weight != o.weight:
+            o.weight = weight
+            need_save = True
+
+        # width
+        width = kwargs.get('width', None)
+        if width is not None and width != o.width:
+            o.width = width
+            need_save = True
+
+        # height
+        height = kwargs.get('height', None)
+        if height is not None and height != o.height:
+            o.height = height
+            need_save = True
+
+        # depth
+        depth = kwargs.get('depth', None)
+        if depth is not None and depth != o.depth:
+            o.depth = depth
+            need_save = True
+
+        # volume
+        volume = kwargs.get('volume', None)
+        if volume is not None and volume != o.volume:
+            o.volume = volume
+            need_save = True
+
+        # multiplicity
+        multiplicity = kwargs.get('multiplicity', None)
+        if multiplicity is not None and multiplicity != o.multiplicity:
+            o.multiplicity = multiplicity
+            need_save = True
+
+        # unit
+        unit = kwargs.get('unit', None)
+        if unit is not None and unit != o.unit:
+            o.unit = unit
+            need_save = True
+
+        # content
+        content = kwargs.get('content', None)
+        if content is not None and content != o.content:
+            o.content = content
+            need_save = True
+
+        # content_loaded
+        content_loaded = kwargs.get('content_loaded', None)
+        if content_loaded is not None and content_loaded != o.content_loaded:
+            o.content_loaded = content_loaded
+            need_save = True
+
+        if need_save:
+            o.save()
+
+        return o
 
 
 class Product(models.Model):
@@ -162,6 +353,7 @@ class Product(models.Model):
     category = models.ForeignKey('Category', null=True, default=None,
                                  on_delete=models.SET_NULL, related_name='+')
     search = models.TextField(null=True, default=None, db_index=True)
+    slug = models.TextField(db_index=True, null=True, default=None)
 
     name = models.TextField(null=True, default=None, db_index=True)
     short_name = models.TextField(null=True, default=None, db_index=True)
@@ -225,9 +417,11 @@ class Product(models.Model):
             self.search = f'{self.name.lower()} ' \
                           f'{self.part_number.lower()} ' \
                           f'{self.vendor.name.lower()}'
+            self.slug = to_slug(f'{self.vendor.name} {self.part_number}')
         else:
             self.search = f'{self.name.lower()} ' \
                           f'{self.part_number.lower()}'
+            self.slug = to_slug(f'{self.part_number}')
         super().save(*args, **kwargs)
 
     class Meta:
@@ -445,3 +639,20 @@ def to_slug(name):
         name = name[:-1]
 
     return name
+
+
+def fix_text(text):
+
+    if text is None:
+        return None
+
+    dictionary = {'™': ' '}
+    for key in dictionary:
+        text = text.replace(key, dictionary[key])
+
+    while '  ' in text:
+        text = text.replace('  ', ' ')
+
+    text = text.strip()
+
+    return text

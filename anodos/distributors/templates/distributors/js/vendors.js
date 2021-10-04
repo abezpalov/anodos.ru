@@ -7,7 +7,7 @@ $("body").delegate("[data-do*='do-vendor-as-is']", "click", function(e){
     },
     function(data) {
         if ('success' == data.status){
-            td_id = '#' + id + '-pflops-vendor';
+            td_id = '#' + id + '-to-pflops';
             $(td_id).text(data.name);
         }
     }, "json");
@@ -23,7 +23,7 @@ $("body").delegate("[data-do*='erase-vendor-link']", "click", function(e){
     },
     function(data) {
         if ('success' == data.status){
-            td_id = '#' + id + '-pflops-vendor';
+            td_id = '#' + id + '-to-pflops';
             $(td_id).text('-');
         }
     }, "json");

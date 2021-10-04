@@ -423,6 +423,11 @@ class Worker(Worker):
         product = Product.objects.get(distributor=self.distributor, part_number=part_number)
         print(product)
 
+        description = product_element.xpath('./@RusDescr')[0]
+        if product.description is None:
+            product.description = description
+            product.save()
+
         # Проходим по всем характеристикам
         property_elements = product_element.xpath('.//Property')
         for property_element in property_elements:

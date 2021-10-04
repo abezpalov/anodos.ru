@@ -67,27 +67,24 @@ def ajax_vendor_as_is(request):
         return HttpResponse(status=403)
 
     # Получаем экземпляр производителя у дистрибьюторов
-    distributors_vendor_id = request.POST.get('id', None)
+    id_ = request.POST.get('id', None)
     try:
-        distributors_vendor = distributors.models.Vendor.objects.get(
-            id=distributors_vendor_id)
+        vendor_ = distributors.models.Vendor.objects.get(id=id_)
     except distributors.models.Vendor.DoesNotExist:
         return HttpResponse(status=404)
 
     # Привязываем к нашему производителю
     try:
-        pflops_vendor = pflops.models.Vendor.objects.get(
-            name=distributors_vendor.name)
+        vendor = pflops.models.Vendor.objects.get(name=vendor_.name)
     except pflops.models.Vendor.DoesNotExist:
-        pflops_vendor = pflops.models.Vendor.objects.create(
-            name=distributors_vendor.name)
-    distributors_vendor.pflops_vendor = pflops_vendor
-    distributors_vendor.save()
+        vendor = pflops.models.Vendor.objects.create(name=vendor_.name)
+    vendor_.pflops_vendor = vendor
+    vendor_.save()
 
     # Готовим ответ
     result = {'status': 'success',
-              'id': str(pflops_vendor.id),
-              'name': str(pflops_vendor.name)}
+              'id': str(vendor.id),
+              'name': str(vendor.name)}
 
     # Возмращаем результат
     return HttpResponse(json.dumps(result), 'application/javascript')
@@ -104,16 +101,15 @@ def ajax_erase_vendor_link(request):
         return HttpResponse(status=403)
 
     # Получаем экземпляр производителя у дистрибьюторов
-    distributors_vendor_id = request.POST.get('id', None)
+    id_ = request.POST.get('id', None)
     try:
-        distributors_vendor = distributors.models.Vendor.objects.get(
-            id=distributors_vendor_id)
+        vendor_ = distributors.models.Vendor.objects.get(id=id_)
     except distributors.models.Vendor.DoesNotExist:
         return HttpResponse(status=404)
 
     # Отвязываем от нашего производителя
-    distributors_vendor.pflops_vendor = None
-    distributors_vendor.save()
+    vendor_.pflops_vendor = None
+    vendor_.save()
 
     # Готовим ответ
     result = {'status': 'success'}
