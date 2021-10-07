@@ -78,12 +78,13 @@ def ajax_vendor_as_is(request):
         vendor = pflops.models.Vendor.objects.get(name=vendor_.name)
     except pflops.models.Vendor.DoesNotExist:
         vendor = pflops.models.Vendor.objects.create(name=vendor_.name)
-    vendor_.pflops_vendor = vendor
+    vendor_.to_pflops = vendor
     vendor_.save()
 
     # Готовим ответ
     result = {'status': 'success',
-              'id': str(vendor.id),
+              'vendor_': str(vendor_.id),
+              'vendor': str(vendor.id),
               'name': str(vendor.name)}
 
     # Возмращаем результат
@@ -108,11 +109,12 @@ def ajax_erase_vendor_link(request):
         return HttpResponse(status=404)
 
     # Отвязываем от нашего производителя
-    vendor_.pflops_vendor = None
+    vendor_.to_pflops = None
     vendor_.save()
 
     # Готовим ответ
-    result = {'status': 'success'}
+    result = {'status': 'success',
+              'vendor_': str(vendor_.id)}
 
     # Возмращаем результат
     return HttpResponse(json.dumps(result), 'application/javascript')
