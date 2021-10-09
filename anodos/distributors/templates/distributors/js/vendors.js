@@ -1,5 +1,5 @@
 // Привязать вендора как есть
-$("body").delegate("[data-do*='do-vendor-as-is']", "click", function(e){
+$("body").delegate("[data-do='do-vendor-as-is']", "click", function(e){
     $.post('/distributors/ajax/do-vendor-as-is/', {
         vendor_: $(this).data('vendor_'),
         csrfmiddlewaretoken: '{{ csrf_token }}'
@@ -14,7 +14,7 @@ $("body").delegate("[data-do*='do-vendor-as-is']", "click", function(e){
 });
 
 // Отвязать вендора
-$("body").delegate("[data-do*='erase-vendor-link']", "click", function(e){
+$("body").delegate("[data-do='erase-vendor-link']", "click", function(e){
     $.post('/distributors/ajax/erase-vendor-link/', {
         vendor_: $(this).data('vendor_'),
         csrfmiddlewaretoken: '{{ csrf_token }}'
@@ -29,7 +29,7 @@ $("body").delegate("[data-do*='erase-vendor-link']", "click", function(e){
 });
 
 // Открыть диалоговое окно выбора вендора open-vendor-list
-$("body").delegate("[data-do*='open-vendor-list']", "click", function(e){
+$("body").delegate("[data-do='open-vendor-list']", "click", function(e){
     $('#modal-vendor-list-vendor_').val($(this).data('vendor_'))
     $('#modal-vendor-list-vendor').val('');
     $('#modal-vendor-list').find('div.text').text('');
@@ -40,7 +40,7 @@ $("body").delegate("[data-do*='open-vendor-list']", "click", function(e){
 });
 
 // Привязать вендора к выбранному в диалоговом окне
-$("body").delegate("[data-do*='apply-link-vendor']", "click", function(e){
+$("body").delegate("[data-do='apply-link-vendor']", "click", function(e){
     $.post('/distributors/ajax/link-vendor/', {
         vendor_: $('#modal-vendor-list-vendor_').val(),
         vendor: $('#modal-vendor-list-vendor').val(),
@@ -56,7 +56,7 @@ $("body").delegate("[data-do*='apply-link-vendor']", "click", function(e){
 });
 
 // Открыть диалоговое окно редактирования вендора
-$("body").delegate("[data-do*='open-vendor-editor']", "click", function(e){
+$("body").delegate("[data-do='open-vendor-editor']", "click", function(e){
     $('#modal-vendor-editor-id').val($(this).data('vendor'));
     $('#modal-vendor-editor-name').val($(this).data('name'));
     $('#modal-vendor-editor').modal('show');
@@ -64,7 +64,7 @@ $("body").delegate("[data-do*='open-vendor-editor']", "click", function(e){
 });
 
 // Сохранить изменеия при редактировании вендора
-$("body").delegate("[data-do*='save-vendor']", "click", function(e){
+$("body").delegate("[data-do='save-vendor']", "click", function(e){
     $.post('/distributors/ajax/save-vendor/', {
         vendor: $('#modal-vendor-editor-id').val(),
         name: $('#modal-vendor-editor-name').val(),
@@ -72,8 +72,8 @@ $("body").delegate("[data-do*='save-vendor']", "click", function(e){
     },
     function(data) {
         if ('success' == data.status){
-            $('td[data-vendor*="' + data.id + '"]').text(data.name);
-            $('button[data-vendor*="' + data.id + '"]').data('name', data.name);
+            $('td[data-vendor="' + data.id + '"]').text(data.name);
+            $('button[data-vendor="' + data.id + '"]').data('name', data.name);
         }
     }, "json");
     return false;
