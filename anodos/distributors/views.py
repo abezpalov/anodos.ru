@@ -79,7 +79,7 @@ def ajax_vendor_as_is(request):
     except pflops.models.Vendor.DoesNotExist:
         vendor = pflops.models.Vendor.objects.create(name=vendor_.name)
     except pflops.models.Vendor.MultipleObjectsReturned:
-        vendors = pflops.models.Vendor.objects.get(name__iexact=vendor_.name)
+        vendors = pflops.models.Vendor.objects.filter(name__iexact=vendor_.name)
         for n, v in enumerate(vendors):
             if n == 0:
                 vendor = v
