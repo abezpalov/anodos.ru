@@ -11,47 +11,62 @@
     <table class="ui celled table">
         <thead>
             <tr>
-                <th>Как у поставщика</th>
-                <th>Действия</th>
-                <th>Как у нас</th>
+                <th colspan="2">Как у поставщика</th>
+                <th colspan="2">Как у нас</th>
             </tr>
         </thead>
         <tbody>
-        {% for item in items %}
+        {% for vendor_ in vendors_ %}
         <tr>
-            <td>{{ item.distributor.name }} | {{ item.name }}</td>
+            <td>{{ vendor_.distributor.name }} | {{ vendor_.name }}</td>
             <td>
-                <button class="ui basic button"
-                data-do="do-vendor-as-is"
-                data-id="{{ item.id }}">
+                <button class="ui primary icon button"
+                     data-tooltip="Как у поставщика"
+                     data-do="do-vendor-as-is"
+                     data-vendor_="{{ vendor_.id }}">
                     <i class="share icon"></i>
-                    Как у поставщика
                 </button>
-                <button class="ui basic button"
-                data-do="open-vendor-list"
-                data-id="{{ item.id }}">
+                <button class="ui positive icon button"
+                     data-tooltip="Выбрать из списка"
+                     data-do="open-vendor-list"
+                     data-vendor_="{{ vendor_.id }}">
                     <i class="list icon"></i>
-                    Выбрать из списка
                 </button>
-                <button class="ui negative basic button"
-                data-do="erase-vendor-link"
-                data-id="{{ item.id }}">
-                    <i class="eraser icon"></i>
-                    Отвязать
+                <button class="ui negative icon button"
+                     data-tooltip="Отвязать"
+                     data-do="erase-vendor-link"
+                     data-vendor_="{{ vendor_.id }}">
+                    <i class="unlink icon"></i>
                 </button>
             </td>
-            <td id="{{ item.id }}-to-pflops">
-                {% if item.to_pflops == None %}
+            <td id="{{ vendor_.id }}-to-pflops"
+                data-vendor="{{ vendor_.to_pflops.id }}">
+                {% if vendor_.to_pflops == None %}
                 -
                 {% else %}
-                {{ item.to_pflops }}
+                {{ vendor_.to_pflops }}
                 {% endif %}
+            </td>
+            <td>
+                <button class="ui icon button"
+                     id="{{ vendor_.id }}-open-vendor-editor-button"
+                     data-tooltip="Редактирвать"
+                     data-do="open-vendor-editor"
+                     data-vendor_="{{ vendor_.id }}"
+                     data-vendor="{{ vendor_.to_pflops.id }}"
+                     data-name="{{ vendor_.to_pflops.name }}">
+                    <i class="edit icon"></i>
+                </button>
             </td>
         </tr>
         {% endfor %}
         </tbody>
     </table>
 </div>
+
+
+{% include "distributors/modal/vendors.html" %}
+
 {% endblock %}
 
 {% block js %}
