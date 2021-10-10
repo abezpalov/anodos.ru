@@ -17,6 +17,10 @@ class Worker(Worker):
 
     def run(self, command=None):
 
+        if command == 'sos':
+            distributors.models.Parameter.objects.all().delete()
+            exit()
+
         # Тесты
         print(pflops.models.Product.objects.all().count())
         print(distributors.models.Product.objects.filter(to_pflops__isnull=True).count())
