@@ -456,8 +456,8 @@ class Worker(Worker):
             product.content_loaded = timezone.now()
             product.save()
             url = f'{self.host}/distributors/product/{product.id}/'
-            self.send(f'<b>Content loaded</b>\n'
-                      f'<a href="{url}">{product}</a>')
+            #self.send(f'<b>Content loaded</b>\n'
+            #          f'<a href="{url}">{product}</a>')
 
     @staticmethod
     def fix_quantity(quantity):

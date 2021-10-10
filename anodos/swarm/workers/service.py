@@ -22,9 +22,25 @@ class Worker(Worker):
 
     def run(self, command=None):
 
-        self.update_products()
+        # Тесты
+        # print(pflops.models.Product.objects.all().count())
+        # print(distributors.models.Product.objects.filter(to_pflops__isnull=True).count())
+        # print(distributors.models.Product.objects.filter(to_pflops__isnull=False).count())
+
+        # Продукты
+        # self.update_products()
+
+        # Характеристики
+        self.update_parameters()
+
+        # Изображения
+
+        # Количество
+
+        # Цены
 
     def update_products(self):
+        """ Переносит сущность продукт в чистовик """
 
         ids_ = distributors.models.Product.objects.filter(vendor__to_pflops__isnull=False).values('id')
         for n, id_ in enumerate(ids_):
@@ -70,15 +86,54 @@ class Worker(Worker):
                                                          unit=unit,
                                                          content=product_.content,
                                                          content_loaded=product_.content_loaded)
-            print(f'{n+1} of {len(ids_)} {product}')
+            if product_.to_pflops != product:
+                product_.to_pflops = product
+                product_.save()
+            print(f'{n + 1} of {len(ids_)} {product}')
+
+    def update_parameters(self):
+
+        # Удаляем мусор
+        distributors.models.Parameter.objects.filter(distributor__isnull=True).delete()
+
+        # Удаляем дубли и кривой текст
+        parameters = distributors.models.Parameter.objects.all()
+        for n, parameter in enumerate(parameters):
+            print(f'{n+1} of {len(parameters)} {parameter}')
+
+            if self.fix_text(parameter.name) != parameter.name:
+                parameter.delete()
+                continue
+
+            parameters_ = distributors.models.Parameter.objects.filter(distributor=parameter.distributor,
+                                                                       name=parameter.name)
+            for m, parameter_ in enumerate(parameters_):
+                if m > 0:
+                    parameter_.delete()
+
+        # Проходим по все продуктам
+        ids_ = pflops.models.Product.objects.all().values('id')
+        for n, id_ in enumerate(ids_):
+            product = pflops.models.Product.objects.get(id=id_['id'])
+
+            # Выбираем источник для переноса параметоров в чистовик
+            max_parameters_count = -1
+            product_ = None
+            for p_ in distributors.models.Product.objects.filter(to_pflops=product):
+                parameters_count = distributors.models.ParameterValue.filter(product=p_).count()
+                if parameters_count > max_parameters_count:
+                    product_ = p_
+
+            # Получаем ID текущих значений характеристик (чтобы потом удалить необновленные)
+            parameter_values_ids_ = pflops.models.ParameterValue.filter(product=product_).values('id')
+            parameter_values_ids = set()
+            for parameter_values_id_ in parameter_values_ids_:
+                parameter_values_ids.add(parameter_values_id_['id'])
+
+            # Переносим параметры
+            parameter_values_ = distributors.models.ParameterValue.filter(product=product_)
 
 
-            # quantity
 
-            # price
-
-            # properties
-
-            # images
 
 

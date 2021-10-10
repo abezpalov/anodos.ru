@@ -535,7 +535,35 @@ class Parameter(models.Model):
 
 class ParameterValueManager(models.Manager):
 
-    pass
+    def take(self, product, parameter, **kwargs):
+        if not product or not parameter:
+            return None
+
+        need_save = False
+
+        try:
+            o = self.get(product=product, parameter=parameter)
+
+        except ParameterValue.DoesNotExist:
+            o = ParameterValue()
+            o.product = product
+            o.parameter = parameter
+            need_save = True
+
+        value = kwargs.get('value', None)
+        if value and value != o.value:
+            o.value = value
+            need_save = True
+
+        unit = kwargs.get('unit', None)
+        if unit and unit != o.unit:
+            o.unit = unit
+            need_save = True
+
+        if need_save:
+            o.save()
+
+        return o
 
 
 class ParameterValue(models.Model):

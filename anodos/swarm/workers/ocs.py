@@ -639,18 +639,13 @@ class Worker(Worker):
 
             # properties
             for parameter in content['properties']:
-                group = parameter.get('group', None)
                 name = parameter.get('name', None)
                 description = parameter.get('description', None)
                 value = parameter.get('value', None)
                 unit = parameter.get('unit', None)
 
-                if group:
-                    group = ParameterGroup.objects.take(distributor=self.distributor, name=group)
-
                 if name:
                     parameter = Parameter.objects.take(distributor=self.distributor,
-                                                       group=group,
                                                        name=name,
                                                        description=description)
                 else:
@@ -677,8 +672,8 @@ class Worker(Worker):
             product.save()
 
             url = f'{self.host}/distributors/product/{product.id}/'
-            self.send(f'<b>Content loaded</b>\n'
-                      f'<a href="{url}">{product}</a>')
+            #self.send(f'<b>Content loaded</b>\n'
+            #          f'<a href="{url}">{product}</a>')
 
     @staticmethod
     def datetime_to_str(x):

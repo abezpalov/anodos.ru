@@ -132,7 +132,7 @@ class VendorManager(models.Manager):
         need_save = False
 
         try:
-            o = self.get(distributor=distributor, name=name)
+            o = self.get(distributor=distributor, name__iexact=name)
 
         except Vendor.DoesNotExist:
             o = Vendor()
@@ -208,7 +208,7 @@ class CurrencyManager(models.Manager):
             return None
 
         try:
-            o = self.get(key=key)
+            o = self.get(key__iexact=key)
 
         except Currency.DoesNotExist:
             o = Currency()
@@ -712,55 +712,32 @@ class Party(models.Model):
                             name='party_search_idx')]
 
 
-class ParameterGroupManager(models.Manager):
-
-    def take(self, name, **kwargs):
-        if not name:
-            return None
-
-        try:
-            o = self.get(name=name)
-
-        except ParameterGroup.DoesNotExist:
-            o = ParameterGroup()
-            o.name = name
-            o.save()
-
-        return o
-
-
-class ParameterGroup(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    distributor = models.ForeignKey('Distributor', null=True, default=None,
-                                    on_delete=models.CASCADE, related_name='+')
-    name = models.TextField(null=True, default=None, db_index=True)
-
-    objects = ParameterGroupManager()
-
-    def __str__(self):
-        return f'{self.name}'
-
-    class Meta:
-        ordering = ['name']
-
-
 class ParameterManager(models.Manager):
 
-    def take(self, distributor, name, group=None, **kwargs):
+    def take(self, distributor, name, **kwargs):
         if not distributor or not name:
             return None
 
         need_save = False
 
+        name = fix_text(name)
+
         try:
-            o = self.get(distributor=distributor, name=name, group=group)
+            o = self.get(distributor=distributor, name__iexact=name)
 
         except Parameter.DoesNotExist:
             o = Parameter()
             o.name = name
             o.distributor = distributor
-            o.group = group
             need_save = True
+
+        except Parameter.MultipleObjectsReturned:
+            os_ = self.filter(distributor=distributor, name=name)
+            for n, o_ in enumerate(os_):
+                if n == 0:
+                    o = o_
+                else:
+                    o_.delete()
 
         description = kwargs.get('description', None)
         if description is not None and o.description is None:
@@ -777,8 +754,10 @@ class Parameter(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     distributor = models.ForeignKey('Distributor', null=True, default=None,
                                     on_delete=models.CASCADE, related_name='+')
-    group = models.ForeignKey('ParameterGroup', null=True, default=None,
-                              on_delete=models.CASCADE, related_name='+')
+
+    to_pflops = models.ForeignKey('pflops.Parameter', null=True, default=None,
+                                  on_delete=models.SET_NULL, related_name='+')
+
     name = models.TextField(null=True, default=None, db_index=True)
     description = models.TextField(null=True, default=None)
 
@@ -789,6 +768,7 @@ class Parameter(models.Model):
 
     class Meta:
         ordering = ['name']
+        unique_together = ['distributor', 'name']
 
 
 class ParameterUnitManager(models.Manager):
@@ -1028,3 +1008,14 @@ def need_new_decimal_value(old, new, delta=0.001):
     except ZeroDivisionError:
         return False
     return True
+
+
+def fix_text(text):
+    while '  ' in text:
+        text = text.replace('  ', ' ')
+    while '/n/n' in text:
+        text = text.replace('/n/n', '/n')
+    text = text.replace(' : ', ': ')
+    text = text.replace(' - ', ' — ')
+    text = text.strip()
+    return text

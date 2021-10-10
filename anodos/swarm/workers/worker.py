@@ -20,9 +20,12 @@ class Worker:
         self.bot = telebot.TeleBot(settings.TELEGRAM_TOKEN)
 
     def send(self, content='test', chat_id=settings.TELEGRAM_LOG_CHAT, disable_web_page_preview=True):
-        self.bot.send_message(chat_id=chat_id, text=content, parse_mode='HTML',
-                              disable_web_page_preview=disable_web_page_preview)
-        time.sleep(1)
+        try:
+            self.bot.send_message(chat_id=chat_id, text=content, parse_mode='HTML',
+                                  disable_web_page_preview=disable_web_page_preview)
+            time.sleep(1)
+        except Exception:
+            return None
 
     def ftp_login(self, host):
         self.ftp = ftplib.FTP(host=host, timeout=30)
