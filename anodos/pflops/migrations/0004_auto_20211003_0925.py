@@ -5,6 +5,7 @@ from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
 import uuid
+from django.contrib.postgres.operations import BtreeGinExtension
 
 
 class Migration(migrations.Migration):
@@ -14,6 +15,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        BtreeGinExtension(),
         migrations.CreateModel(
             name='Category',
             fields=[
