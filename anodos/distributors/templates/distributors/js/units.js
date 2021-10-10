@@ -1,12 +1,12 @@
 // Привязать вендора как есть
-$("body").delegate("[data-do='do-parameter-as-is']", "click", function(e){
-    $.post('/distributors/ajax/do-parameter-as-is/', {
-        parameter_: $(this).data('parameter_'),
+$("body").delegate("[data-do='do-unit-as-is']", "click", function(e){
+    $.post('/distributors/ajax/do-unit-as-is/', {
+        unit_: $(this).data('unit_'),
         csrfmiddlewaretoken: '{{ csrf_token }}'
     },
     function(data) {
         if ('success' == data.status){
-            $('#' + data.parameter_ + '-to-pflops').text(data.name);
+            $('#' + data.unit_ + '-to-pflops').text(data.name);
             //TODO
         }
     }, "json");
@@ -14,41 +14,41 @@ $("body").delegate("[data-do='do-parameter-as-is']", "click", function(e){
 });
 
 // Отвязать вендора
-$("body").delegate("[data-do='erase-parameter-link']", "click", function(e){
-    $.post('/distributors/ajax/erase-parameter-link/', {
-        parameter_: $(this).data('parameter_'),
+$("body").delegate("[data-do='erase-unit-link']", "click", function(e){
+    $.post('/distributors/ajax/erase-unit-link/', {
+        unit_: $(this).data('unit_'),
         csrfmiddlewaretoken: '{{ csrf_token }}'
     },
     function(data) {
         if ('success' == data.status){
-            $('#' + data.parameter_ + '-to-pflops').text('-');
+            $('#' + data.unit_ + '-to-pflops').text('-');
             //TODO
         }
     }, "json");
     return false;
 });
 
-// Открыть диалоговое окно выбора вендора open-parameter-list
-$("body").delegate("[data-do='open-parameter-list']", "click", function(e){
-    $('#modal-parameter-list-parameter_').val($(this).data('parameter_'))
-    $('#modal-parameter-list-parameter').val('');
-    $('#modal-parameter-list').find('div.text').text('');
-    $('#modal-parameter-list').find('div.item').removeClass('active');
-    $('#modal-parameter-list').find('div.item').removeClass('selected');
-    $('#modal-parameter-list').modal('show');
+// Открыть диалоговое окно выбора вендора open-unit-list
+$("body").delegate("[data-do='open-unit-list']", "click", function(e){
+    $('#modal-unit-list-unit_').val($(this).data('unit_'))
+    $('#modal-unit-list-unit').val('');
+    $('#modal-unit-list').find('div.text').text('');
+    $('#modal-unit-list').find('div.item').removeClass('active');
+    $('#modal-unit-list').find('div.item').removeClass('selected');
+    $('#modal-unit-list').modal('show');
     return false;
 });
 
 // Привязать вендора к выбранному в диалоговом окне
-$("body").delegate("[data-do='apply-link-parameter']", "click", function(e){
-    $.post('/distributors/ajax/link-parameter/', {
-        parameter_: $('#modal-parameter-list-parameter_').val(),
-        parameter: $('#modal-parameter-list-parameter').val(),
+$("body").delegate("[data-do='apply-link-unit']", "click", function(e){
+    $.post('/distributors/ajax/link-unit/', {
+        unit_: $('#modal-unit-list-unit_').val(),
+        unit: $('#modal-unit-list-unit').val(),
         csrfmiddlewaretoken: '{{ csrf_token }}'
     },
     function(data) {
         if ('success' == data.status){
-            $('#' + data.parameter_ + '-to-pflops').text(data.name);
+            $('#' + data.unit_ + '-to-pflops').text(data.name);
             //TODO
         }
     }, "json");
@@ -56,24 +56,24 @@ $("body").delegate("[data-do='apply-link-parameter']", "click", function(e){
 });
 
 // Открыть диалоговое окно редактирования вендора
-$("body").delegate("[data-do='open-parameter-editor']", "click", function(e){
-    $('#modal-parameter-editor-id').val($(this).data('parameter'));
-    $('#modal-parameter-editor-name').val($(this).data('name'));
-    $('#modal-parameter-editor').modal('show');
+$("body").delegate("[data-do='open-unit-editor']", "click", function(e){
+    $('#modal-unit-editor-id').val($(this).data('unit'));
+    $('#modal-unit-editor-name').val($(this).data('name'));
+    $('#modal-unit-editor').modal('show');
     return false;
 });
 
 // Сохранить изменеия при редактировании вендора
-$("body").delegate("[data-do='save-parameter']", "click", function(e){
-    $.post('/distributors/ajax/save-parameter/', {
-        parameter: $('#modal-parameter-editor-id').val(),
-        name: $('#modal-parameter-editor-name').val(),
+$("body").delegate("[data-do='save-unit']", "click", function(e){
+    $.post('/distributors/ajax/save-unit/', {
+        unit: $('#modal-unit-editor-id').val(),
+        name: $('#modal-unit-editor-name').val(),
         csrfmiddlewaretoken: '{{ csrf_token }}'
     },
     function(data) {
         if ('success' == data.status){
-            $('td[data-parameter="' + data.id + '"]').text(data.name);
-            $('button[data-parameter="' + data.id + '"]').data('name', data.name);
+            $('td[data-unit="' + data.id + '"]').text(data.name);
+            $('button[data-unit="' + data.id + '"]').data('name', data.name);
         }
     }, "json");
     return false;

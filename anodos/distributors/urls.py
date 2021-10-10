@@ -8,6 +8,7 @@ urlpatterns = [
     path('vendors/', views.view_vendors),
     path('categories/', views.view_categories),
     path('parameters/', views.view_parameters),
+    path('units/', views.view_units),
 
     path('ajax/do-vendor-as-is/', views.ajax_vendor_as_is),
     path('ajax/erase-vendor-link/', views.ajax_erase_vendor_link),

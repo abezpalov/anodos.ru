@@ -801,6 +801,9 @@ class ParameterUnit(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     key = models.CharField(max_length=32, unique=True)
 
+    to_pflops = models.ForeignKey('pflops.Unit', null=True, default=None,
+                                  on_delete=models.SET_NULL, related_name='+')
+
     name = models.TextField(null=True, default=None, db_index=True)
     print_name = models.TextField(null=True, default=None, db_index=True)
 

@@ -85,7 +85,26 @@ class Vendor(models.Model):
 
 class UnitManager(models.Manager):
 
-    pass
+    def take(self, name, **kwargs):
+        if not name:
+            return None
+
+        name = fix_text(name)
+
+        need_save = False
+
+        try:
+            o = self.get(name=name)
+
+        except Unit.DoesNotExist:
+            o = Unit()
+            o.name = name
+            need_save = True
+
+        if need_save:
+            o.save()
+
+        return o
 
 
 class Unit(models.Model):
@@ -126,6 +145,7 @@ class Currency(models.Model):
 class PriceManager(models.Manager):
 
     pass
+
 
 class Price(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -398,6 +418,7 @@ class Product(models.Model):
     # Контент
     content = models.TextField(null=True, default=None)
     content_loaded = models.DateTimeField(null=True, default=None)
+    images_loaded = models.DateTimeField(null=True, default=None)
 
     # Служебное
     created = models.DateTimeField(default=timezone.now)
@@ -568,6 +589,8 @@ class ParameterValueManager(models.Manager):
 
 class ParameterValue(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    product = models.ForeignKey('Product', null=True, default=None,
+                                on_delete=models.CASCADE, related_name='+')
     parameter = models.ForeignKey('Parameter', null=True, default=None,
                                   on_delete=models.CASCADE, related_name='+')
 
@@ -591,7 +614,27 @@ class ParameterValue(models.Model):
 
 class ProductImageManager(models.Manager):
 
-    pass
+    def take(self, product, source_url, **kwargs):
+        if not product or not source_url:
+            return None
+
+        source_url = fix_text(source_url)
+
+        need_save = False
+
+        try:
+            o = self.get(product=product, source_url=source_url)
+
+        except ProductImage.DoesNotExist:
+            o = ProductImage()
+            o.product = product
+            o.source_url = source_url
+            need_save = True
+
+        if need_save:
+            o.save()
+
+        return o
 
 
 class ProductImage(models.Model):
@@ -600,11 +643,17 @@ class ProductImage(models.Model):
                                 on_delete=models.CASCADE, related_name='+')
     source_url = models.TextField(null=True, default=None, db_index=True)
     file_name = models.TextField(null=True, default=None)
-    ext = models.TextField(null=True, default=None)
 
     created = models.DateTimeField(default=timezone.now, db_index=True)
 
     objects = ProductImageManager()
+
+    def create_directory_for_file(self):
+        directory = '/'
+        for dir_ in self.file_name.split('/')[:-1]:
+            directory = '{}/{}'.format(directory, dir_)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
 
     @property
     def url(self):
@@ -613,27 +662,11 @@ class ProductImage(models.Model):
         else:
             return None
 
-    def download_file(self):
-
-        # Определяем имя файла
-        if self.ext is None:
-            self.ext = self.source_url.rpartition('.')[2]
-        self.file_name = f'{settings.MEDIA_ROOT}distributors/products/photos/{self.id}.{self.ext}'
-
-        # Загружаем фотографию
-        result = r.get(self.source_url)
-
-        directory = '/'
-        for dir_ in self.file_name.split('/')[:-1]:
-            directory = '{}/{}'.format(directory, dir_)
-            if not os.path.exists(directory):
-                os.makedirs(directory)
-        with open(self.file_name, "wb") as f:
-            f.write(result.content)
-        self.save()
-
     def __str__(self):
-        return f'{self.product}: {self.source_url}'
+        if self.file_name:
+            return f'{self.product}: {self.url}'
+        else:
+            return f'{self.product}: {self.source_url}'
 
     class Meta:
         ordering = ['created']

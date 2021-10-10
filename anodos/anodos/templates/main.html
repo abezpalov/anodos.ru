@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="yandex-verification" content="19051aed968ca235" />
+    {% block description %}
+    <meta name="description" content="Вычислительная техника и программное обеспечение из Самары с доставкой по России." />
+    {% endblock %}
     <title>{% block title %}Anodos{% endblock %}</title>
     <link rel="stylesheet" type="text/css" href="/static/semantic/semantic.min.css">
     <link rel="stylesheet" type="text/css" href="/static/main.css">
@@ -50,6 +52,7 @@
                 <a class="item" href="/distributors/vendors/">Производители</a>
                 <a class="item" href="/distributors/categories/">Категории</a>
                 <a class="item" href="/distributors/parameters/">Параметры</a>
+                <a class="item" href="/distributors/units/">Единицы измерения</a>
             </div>
         </div>
 
