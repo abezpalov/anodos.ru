@@ -372,7 +372,8 @@ class Product(models.Model):
                                on_delete=models.CASCADE, related_name='+')
     category = models.ForeignKey('Category', null=True, default=None,
                                  on_delete=models.SET_NULL, related_name='+')
-    search = models.TextField(null=True, default=None, db_index=True)
+    names_search = models.TextField(null=True, default=None, db_index=True)
+    parameters_search = models.TextField(null=True, default=None, db_index=True)
     slug = models.TextField(db_index=True, null=True, default=None)
 
     name = models.TextField(null=True, default=None, db_index=True)
@@ -435,19 +436,19 @@ class Product(models.Model):
 
     def save(self, *args, **kwargs):
         if self.vendor:
-            self.search = f'{self.name.lower()} ' \
+            self.names_search = f'{self.name.lower()} ' \
                           f'{self.part_number.lower()} ' \
                           f'{self.vendor.name.lower()}'
             self.slug = to_slug(f'{self.vendor.name} {self.part_number}')
         else:
-            self.search = f'{self.name.lower()} ' \
+            self.names_search = f'{self.name.lower()} ' \
                           f'{self.part_number.lower()}'
             self.slug = to_slug(f'{self.part_number}')
         super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['vendor', 'part_number']
-        indexes = [GinIndex(fields=['search'],
+        indexes = [GinIndex(fields=['names_search', 'parameters_search'],
                             name='product_search_idx')]
 
 
