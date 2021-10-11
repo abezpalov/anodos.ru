@@ -480,6 +480,9 @@ class Product(models.Model):
     description = models.TextField(null=True, default=None)
     warranty = models.TextField(null=True, default=None)
 
+    names_search = models.TextField(null=True, default=None, db_index=True)
+    parameters_search = models.TextField(null=True, default=None, db_index=True)
+
     # Коды
     ean_128 = models.TextField(null=True, default=None, db_index=True)
     upc = models.TextField(null=True, default=None, db_index=True)
@@ -544,6 +547,9 @@ class Product(models.Model):
 
     class Meta:
         ordering = ['vendor__name', 'part_number']
+        indexes = [GinIndex(fields=['names_search', 'parameters_search'],
+                            name='product_search_idx',
+                            )]
 
 
 class LocationManager(models.Manager):
@@ -709,7 +715,8 @@ class Party(models.Model):
     class Meta:
         ordering = ['created']
         indexes = [GinIndex(fields=['search'],
-                            name='party_search_idx')]
+                            name='party_search_idx',
+                            )]
 
 
 class ParameterManager(models.Manager):
