@@ -225,6 +225,9 @@ class Worker(Worker):
                     image = pflops.models.ProductImage.objects.take(product=product,
                                                                     source_url=image_.source_url)
 
+                    if image.file_name:
+                        continue
+
                     # Вычисляем размеры и координаты
                     size = max(im.size[0], im.size[1])
                     dx = (size - im.size[0]) // 2
