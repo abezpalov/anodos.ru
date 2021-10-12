@@ -46,8 +46,6 @@ class Worker(Worker):
 
     def run(self, command=None):
 
-        self.send(f'{self.distributor}: {command} start')
-
         if command == 'update_news':
             self.update_news()
             self.update_promo()

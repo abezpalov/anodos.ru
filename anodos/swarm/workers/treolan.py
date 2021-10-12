@@ -50,11 +50,9 @@ class Worker(Worker):
 
     def run(self, command=None):
 
-        self.send(f'{self.distributor}: {command} start')
-
         if command == 'update_news':
             self.update_news()
-            self.send(f'{self.distributor} {command} finish:'
+            self.send(f'{self.distributor} {command} finish:\n'
                       f'- новостей: {self.count_news}.')
 
         elif command == 'update_stocks':
@@ -456,8 +454,6 @@ class Worker(Worker):
             product.content_loaded = timezone.now()
             product.save()
             url = f'{self.host}/distributors/product/{product.id}/'
-            #self.send(f'<b>Content loaded</b>\n'
-            #          f'<a href="{url}">{product}</a>')
 
     @staticmethod
     def fix_quantity(quantity):
