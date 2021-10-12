@@ -50,7 +50,7 @@ class Worker(Worker):
             self.update_news()
             self.update_promo()
             self.update_events()
-            self.send(f'{self.distributor} {command} finish:\n'
+            self.send(f'{self.source} {command} finish:\n'
                       f'- новостей: {self.count_news};\n'
                       f'- промо: {self.count_promo};\n'
                       f'- событий: {self.count_events}.')
@@ -174,9 +174,9 @@ class Worker(Worker):
             try:
                 data = SourceData.objects.get(source=self.source, url=url)
             except SourceData.DoesNotExist:
-                content = f'<b>{self.name}: {event} {vendor}</b>\n' \
+                content = f'<b><a href="{url}">{name}</a></b>\n' \
                           f'<i>{date} {location}</i>\n\n' \
-                          f'<a href="{url}">{name}</a>'
+                          f'#{self.name} #{event} #{vendor}'
                 self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
 
                 data = SourceData.objects.take(source=self.source, url=url)
@@ -208,10 +208,10 @@ class Worker(Worker):
             try:
                 data = SourceData.objects.get(source=self.source, url=url)
             except SourceData.DoesNotExist:
-                content = f'<b>{self.name}: {news_type}</b>\n' \
+                content = f'<b><a href="{url}">{title}</a></b>\n' \
                           f'<i>{term}</i>\n\n' \
-                          f'<a href="{url}">{title}</a>\n' \
-                          f'{text}\n'
+                          f'{text}\n' \
+                          f'#{self.name} #{news_type}'
                 self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
                 data = SourceData.objects.take(source=self.source, url=url)
                 data.content = content
@@ -235,10 +235,14 @@ class Worker(Worker):
             try:
                 data = SourceData.objects.get(source=self.source, url=url)
             except SourceData.DoesNotExist:
-                content = f'<b>{self.name}: {news_type}</b>\n' \
+                content = f'<b><a href="{url}">{name}</a></b>\n' \
+                          f'<i>{date} {location}</i>\n\n' \
+                          f'#{self.name} #{event} #{vendor}'
+
+                content = f'<b><a href="{url}">{title}</a></b>\n' \
                           f'<i>{term}</i>\n\n' \
-                          f'<a href="{url}">{title}</a>\n' \
-                          f'{text}'
+                          f'{text}\n' \
+                          f'#{self.name} #{news_type}'
                 self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
                 data = SourceData.objects.take(source=self.source, url=url)
                 data.content = content
@@ -268,10 +272,10 @@ class Worker(Worker):
             try:
                 data = SourceData.objects.get(source=self.source, url=url)
             except SourceData.DoesNotExist:
-                content = f'<b>{self.name}: Промо-акция {vendor}</b>\n' \
+                content = f'<b><a href="{url}">{title}</a></b>\n' \
                           f'<i>{term}</i>\n\n' \
-                          f'<a href="{url}">{title}</a>\n' \
-                          f'{text}'
+                          f'{text}\n' \
+                          f'#{self.name} #промо #{vendor}'
                 self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
                 data = SourceData.objects.take(source=self.source, url=url)
                 data.content = content
@@ -670,8 +674,6 @@ class Worker(Worker):
             product.save()
 
             url = f'{self.host}/distributors/product/{product.id}/'
-            #self.send(f'<b>Content loaded</b>\n'
-            #          f'<a href="{url}">{product}</a>')
 
     @staticmethod
     def datetime_to_str(x):

@@ -52,7 +52,7 @@ class Worker(Worker):
 
         if command == 'update_news':
             self.update_news()
-            self.send(f'{self.distributor} {command} finish:\n'
+            self.send(f'{self.source} {command} finish:\n'
                       f'- новостей: {self.count_news}.')
 
         elif command == 'update_stocks':
@@ -69,7 +69,7 @@ class Worker(Worker):
                                  created__lte=self.start_time).delete()
 
             # Отправляем оповещение об успешном завершении
-            self.send(f'{self.distributor} {command} finish:\n'
+            self.send(f'{self.source} {command} finish:\n'
                       f'- продуктов: {self.count_products};\n'
                       f'- партий: {self.count_parties}.')
 
@@ -137,10 +137,10 @@ class Worker(Worker):
             try:
                 data = SourceData.objects.get(source=self.source, url=url)
             except SourceData.DoesNotExist:
-                content = f'<b>{self.distributor}: {content_type}</b>\n' \
-                          f'<i>{date}</i>\n' \
-                          f'<a href="{url}">{title}</a>\n' \
-                        f'{description}'
+                content = f'<b><a href="{url}">{title}</a></b>\n' \
+                          f'<i>{date}</i>\n\n' \
+                          f'{description}\n' \
+                          f'#{self.distributor} #{content_type}'
                 self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
 
                 data = SourceData.objects.take(source=self.source, url=url)
