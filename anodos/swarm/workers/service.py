@@ -17,13 +17,14 @@ class Worker(Worker):
 
     def run(self, command=None):
 
-        # Тесты
-        print(pflops.models.Product.objects.all().count())
-        print(distributors.models.Product.objects.filter(to_pflops__isnull=True).count())
-        print(distributors.models.Product.objects.filter(to_pflops__isnull=False).count())
-
         # Продукты
         self.update_products()
+        print('Продуктов в PFLOPS:',
+              pflops.models.Product.objects.all().count())
+        print('Продуктов не перенесено от дистрибьюторов:',
+              distributors.models.Product.objects.filter(to_pflops__isnull=True).count())
+        print('Продуктов перенесено от дистрибьюторов:',
+              distributors.models.Product.objects.filter(to_pflops__isnull=False).count())
 
         # Характеристики
         self.update_parameters()
@@ -80,8 +81,7 @@ class Worker(Worker):
                                                          volume=product_.volume,
                                                          multiplicity=product_.multiplicity,
                                                          unit=unit,
-                                                         content=product_.content,
-                                                         content_loaded=product_.content_loaded)
+                                                         content=product_.content)
             if product_.to_pflops != product:
                 product_.to_pflops = product
                 product_.save()
@@ -107,7 +107,7 @@ class Worker(Worker):
                 if m > 0:
                     parameter_.delete()
 
-        # Проходим по все продуктам
+        # Проходим по всем продуктам
         ids_ = pflops.models.Product.objects.all().values('id')
         for n, id_ in enumerate(ids_):
             product = pflops.models.Product.objects.get(id=id_['id'])
@@ -164,7 +164,7 @@ class Worker(Worker):
             product = pflops.models.Product.objects.get(id=id_['id'])
             print(f'{n + 1} of {len(ids_)} {product}')
 
-            # Проходим по всех исзодный продуктам
+            # Проходим по всех исходным продуктам
             for product_ in distributors.models.Product.objects.filter(to_pflops=product):
 
                 # Переносим изображения

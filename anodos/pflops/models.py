@@ -187,176 +187,170 @@ class ProductManager(models.Manager):
 
         # category
         category = kwargs.get('category', None)
-        if category is not None and category != o.category:
+        if category is not None and o.category is None:
             o.category = category
             need_save = True
 
         # name
         name = kwargs.get('name', None)
         name = fix_text(name)
-        if name is not None and name != o.name:
+        if name is not None and o.name is None:
             o.name = name
             need_save = True
 
         # short_name
         short_name = kwargs.get('short_name', None)
         short_name = fix_text(short_name)
-        if short_name is not None and short_name != o.short_name:
+        if short_name is not None and o.short_name is None:
             o.short_name = short_name
             need_save = True
 
         # name_rus
         name_rus = kwargs.get('name_rus', None)
         name_rus = fix_text(name_rus)
-        if name_rus is not None and name_rus != o.name_rus:
+        if name_rus is not None and o.name_rus is None:
             o.name_rus = name_rus
             need_save = True
 
         # name_other
         name_other = kwargs.get('name_other', None)
         name_other = fix_text(name_other)
-        if name_other is not None and name_other != o.name_other:
+        if name_other is not None and o.name_other is None:
             o.name_other = name_other
             need_save = True
 
         # description
         description = kwargs.get('description', None)
         description = fix_text(description)
-        if description is not None and description != o.description:
+        if description is not None and o.description is None:
             o.description = description
             need_save = True
 
         # warranty
         warranty = kwargs.get('warranty', None)
         warranty = fix_text(warranty)
-        if warranty is not None and warranty != o.warranty:
+        if warranty is not None and o.warranty is None:
             o.warranty = warranty
             need_save = True
 
         # ean_128
         ean_128 = kwargs.get('ean_128', None)
-        if ean_128 is not None and ean_128 != o.ean_128:
+        if ean_128 is not None and o.ean_128 is None:
             o.ean_128 = ean_128
             need_save = True
 
         # upc
         upc = kwargs.get('upc', None)
-        if upc is not None and upc != o.upc:
+        if upc is not None and o.upc is None:
             o.upc = upc
             need_save = True
 
         # pnc
         pnc = kwargs.get('pnc', None)
-        if pnc is not None and pnc != o.pnc:
+        if pnc is not None and o.pnc is None:
             o.pnc = pnc
             need_save = True
 
         # hs_code
         hs_code = kwargs.get('hs_code', None)
-        if hs_code is not None and hs_code != o.hs_code:
+        if hs_code is not None and o.hs_code is None:
             o.hs_code = hs_code
             need_save = True
 
         # gtin
-        category = kwargs.get('category', None)
-        if category is not None and category != o.category:
-            o.category = category
+        gtin = kwargs.get('gtin', None)
+        if gtin is not None and o.gtin is None:
+            o.gtin = gtin
             need_save = True
 
         # tnved
         tnved = kwargs.get('tnved', None)
-        if tnved is not None and tnved != o.tnved:
+        if tnved is not None and o.tnved is None:
             o.tnved = tnved
             need_save = True
 
         # traceable
         traceable = kwargs.get('traceable', None)
-        if traceable is not None and traceable != o.traceable:
+        if traceable is not None and o.traceable is None:
             o.traceable = traceable
             need_save = True
 
         # unconditional
         unconditional = kwargs.get('unconditional', None)
-        if unconditional is not None and unconditional != o.unconditional:
+        if unconditional is not None and o.unconditional is None:
             o.unconditional = unconditional
             need_save = True
 
         # sale
         sale = kwargs.get('sale', None)
-        if sale is not None and sale != o.sale:
+        if sale is not None and o.sale is None:
             o.sale = sale
             need_save = True
 
         # promo
         promo = kwargs.get('promo', None)
-        if promo is not None and promo != o.promo:
+        if promo is not None and o.promo is None:
             o.promo = promo
             need_save = True
 
         # outoftrade
         outoftrade = kwargs.get('outoftrade', None)
-        if outoftrade is not None and outoftrade != o.outoftrade:
+        if outoftrade is not None and o.outoftrade is None:
             o.outoftrade = outoftrade
             need_save = True
 
         # condition_description
         condition_description = kwargs.get('condition_description', None)
-        if condition_description is not None and condition_description != o.condition_description:
+        if condition_description is not None and o.condition_description is None:
             o.condition_description = condition_description
             need_save = True
 
         # weight
         weight = kwargs.get('weight', None)
-        if weight is not None and weight != o.weight:
+        if weight is not None and o.weight is None:
             o.weight = weight
             need_save = True
 
         # width
         width = kwargs.get('width', None)
-        if width is not None and width != o.width:
+        if width is not None and o.width is None:
             o.width = width
             need_save = True
 
         # height
         height = kwargs.get('height', None)
-        if height is not None and height != o.height:
+        if height is not None and o.height is None:
             o.height = height
             need_save = True
 
         # depth
         depth = kwargs.get('depth', None)
-        if depth is not None and depth != o.depth:
+        if depth is not None and o.depth is None:
             o.depth = depth
             need_save = True
 
         # volume
         volume = kwargs.get('volume', None)
-        if volume is not None and volume != o.volume:
+        if volume is not None and o.volume is None:
             o.volume = volume
             need_save = True
 
         # multiplicity
         multiplicity = kwargs.get('multiplicity', None)
-        if multiplicity is not None and multiplicity != o.multiplicity:
+        if multiplicity is not None and o.multiplicity is None:
             o.multiplicity = multiplicity
             need_save = True
 
         # unit
         unit = kwargs.get('unit', None)
-        if unit is not None and unit != o.unit:
+        if unit is not None and o.unit is None:
             o.unit = unit
             need_save = True
 
         # content
         content = kwargs.get('content', None)
-        if content is not None and content != o.content:
+        if content is not None and o.content is None:
             o.content = content
-            need_save = True
-
-        # content_loaded
-        content_loaded = kwargs.get('content_loaded', None)
-        if content_loaded is not None and content_loaded != o.content_loaded:
-            o.content_loaded = content_loaded
             need_save = True
 
         if need_save:
@@ -430,9 +424,9 @@ class Product(models.Model):
 
     def __str__(self):
         if self.vendor is None:
-            return f'None [{self.part_number}] ({self.id})'
+            return f'None [{self.part_number}] ({self.id}) {self.slug}'
         else:
-            return f'{self.vendor.name} [{self.part_number}] ({self.id})'
+            return f'{self.vendor.name} [{self.part_number}] ({self.id}) {self.slug}'
 
     def save(self, *args, **kwargs):
         if self.vendor:
