@@ -1,18 +1,30 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 
-from .models import Article, Vendor
+import pflops.models
 
 
 def article(request, slug):
-    item = Article.objects.get(slug=slug)
+    item = pflops.models.Article.objects.get(slug=slug)
 
     context = {'item': item}
-    return render(request, 'pflops/article.html', context)
+    return render(request, 'pflops/article.html', locals())
 
 
 def vendors(request):
-    items = Vendor.objects.all()
+    items = pflops.models.Vendor.objects.all()
 
     context = {'items': items}
-    return render(request, 'pflops/vendors.html', context)
+    return render(request, 'pflops/vendors.html', locals())
+
+
+def view_product(request, product_slug):
+
+    product = pflops.models.Product.objects.get(slug=product_slug)
+
+    params = pflops.models.ParameterValue.objects.filter(product=product)
+    images = pflops.models.ProductImage.objects.filter(product=product)
+
+    context = {'product': product, 'params': params, 'images': images}
+
+    return render(request, 'pflops/product.html', locals())

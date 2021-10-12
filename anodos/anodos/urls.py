@@ -22,6 +22,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('distributors/', include('distributors.urls')),
 
+    path('product/<slug:product_slug>/', pflops.views.view_product),
+
     path('', anodos.views.index),
     path('ajax/login/', anodos.views.ajax_login),
     path('ajax/logout/', anodos.views.ajax_logout),

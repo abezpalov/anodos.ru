@@ -1,3 +1,4 @@
+import numpy as np
 from PIL import Image
 
 from django.conf import settings
@@ -17,24 +18,38 @@ class Worker(Worker):
 
     def run(self, command=None):
 
-        # Продукты
-        self.update_products()
-        print('Продуктов в PFLOPS:',
-              pflops.models.Product.objects.all().count())
-        print('Продуктов не перенесено от дистрибьюторов:',
-              distributors.models.Product.objects.filter(to_pflops__isnull=True).count())
-        print('Продуктов перенесено от дистрибьюторов:',
-              distributors.models.Product.objects.filter(to_pflops__isnull=False).count())
+        if command == 'info':
+            print('Продуктов в PFLOPS:',
+                  pflops.models.Product.objects.all().count())
+            print('Продуктов не перенесено от дистрибьюторов:',
+                  distributors.models.Product.objects.filter(to_pflops__isnull=True).count())
+            print('Продуктов перенесено от дистрибьюторов:',
+                  distributors.models.Product.objects.filter(to_pflops__isnull=False).count())
 
-        # Характеристики
-        self.update_parameters()
+        elif command == 'update_products':
+            # Продукты
+            self.update_products()
 
-        # Изображения
-        self.update_images()
+        elif command == 'update_parameters':
+            # Характеристики
+            self.update_parameters()
 
-        # Количество
+        elif command == 'update_images':
 
-        # Цены
+            # Изображения
+            self.update_images()
+
+            # Количество
+
+            # Цены
+
+        elif command == 'fix':
+            ids_ = pflops.models.Product.objects.all().values('id')
+            for n, id_ in enumerate(ids_):
+                product = pflops.models.Product.objects.get(id=id_['id'])
+                print(f'{n + 1} of {len(ids_)} {product}')
+                product.save()
+
 
     def update_products(self):
         """ Переносит сущность продукт в чистовик """
@@ -156,7 +171,7 @@ class Worker(Worker):
 
     def update_images(self):
 
-        # Проходим по продуктам без изображений
+        # Проходим по всем продуктам
         ids_ = pflops.models.Product.objects.all().values('id')
         # ids_ = pflops.models.Product.objects.filter(images_loaded__isnull=True).values('id')
         for n, id_ in enumerate(ids_):
@@ -164,32 +179,75 @@ class Worker(Worker):
             product = pflops.models.Product.objects.get(id=id_['id'])
             print(f'{n + 1} of {len(ids_)} {product}')
 
-            # Проходим по всех исходным продуктам
+            # Получаем векторы для сравнения из базы имеющихся изображений
+            vs = []
+            images = pflops.models.ProductImage.objects.filter(product=product)
+            for image in images:
+
+                # Если изображение уже есть
+                if image.file_name:
+
+                    # Загружаем изображение
+                    try:
+                        im = Image.open(image.file_name)
+                    except FileNotFoundError:
+                        image.delete()
+                        continue
+
+                    # Сравниваем изображения с имеющимися
+                    copy = False
+                    thumbnail_ = im.resize((42, 42))
+                    v_ = np.array(thumbnail_).reshape(42 * 42 * 4)
+                    for v in vs:
+                        r = np.dot(v, v_) / (np.linalg.norm(v) * np.linalg.norm(v_))
+                        if r < 1.0e-12:
+                            copy = True
+
+                    # Если это копия
+                    if copy is True:
+                        image.delete()
+                    else:
+                        vs.append(v_)
+
+            # Проходим по всех исходным продуктам у дистрибьюторов
             for product_ in distributors.models.Product.objects.filter(to_pflops=product):
 
-                # Переносим изображения
+                # Проходим по всем изображениям
                 images_ = distributors.models.ProductImage.objects.filter(product=product_)
                 for image_ in images_:
 
-                    # Открываем исходное изображение
+                    # Открываем исходное изображение и проверяем, достаточный ли размер изображения
                     im = Image.open(image_.file_name)
                     if im.size[0] < 600 and im.size[1] < 600:
                         continue
 
-                    # Создаём сущность в базе
+                    # Берём сущность с базы
                     image = pflops.models.ProductImage.objects.take(product=product,
                                                                     source_url=image_.source_url)
-                    if image.file_name is None:
 
-                        # Вычисляем размеры и координаты
-                        size = max(im.size[0], im.size[1])
-                        dx = (size - im.size[0]) // 2
-                        dy = (size - im.size[1]) // 2
+                    # Вычисляем размеры и координаты
+                    size = max(im.size[0], im.size[1])
+                    dx = (size - im.size[0]) // 2
+                    dy = (size - im.size[1]) // 2
 
-                        # Создаём новое изображение и масштабируем его
-                        im_new = Image.new('RGBA', (size, size), '#00000000')
-                        im_new.paste(im, (dx, dy))
-                        im_new = im_new.resize((600, 600))
+                    # Создаём новое изображение и масштабируем его
+                    im_new = Image.new('RGBA', (size, size), '#00000000')
+                    im_new.paste(im, (dx, dy))
+                    im_new = im_new.resize((600, 600))
+
+                    # Сравниваем изображения с имеющимися
+                    copy = False
+                    thumbnail_ = im_new.resize((42, 42))
+                    v_ = np.array(thumbnail_).reshape(42*42*4)
+                    for v in vs:
+                        r = np.dot(v, v_) / (np.linalg.norm(v) * np.linalg.norm(v_))
+                        if r < 1.0e-12:
+                            copy = True
+
+                    if copy is True:
+                        image.delete()
+                    else:
+                        vs.append(v_)
 
                         image.file_name = f'{settings.MEDIA_ROOT}products/photos/{image.id}.png'
                         image.create_directory_for_file()

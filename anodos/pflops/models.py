@@ -650,6 +650,15 @@ class ProductImage(models.Model):
             if not os.path.exists(directory):
                 os.makedirs(directory)
 
+    def delete(self, *args, **kwargs):
+        try:
+            os.remove(self.file_name)
+        except FileNotFoundError:
+            pass
+        except TypeError:
+            pass
+        super().delete(*args, **kwargs)
+
     @property
     def url(self):
         if self.file_name:
@@ -680,7 +689,7 @@ def to_slug(name):
                   '=': '-', '+': '-', ':': '-', ';': '-', '<': '-', '>': '-', '\'': '-',
                   '"': '-', '\\': '-', '/': '-', '№': '-', '[': '-', ']': '-', '{': '-',
                   '}': '-', 'ґ': '-', 'ї': '-', 'є': '-', 'Ґ': 'g', 'Ї': 'i', 'Є': 'e',
-                  '—': '-'}
+                  '—': '-', '.': '-'}
 
     for key in dictionary:
         name = name.replace(key, dictionary[key])
