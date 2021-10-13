@@ -237,9 +237,12 @@ class Worker(Worker):
                     dy = (size - im.size[1]) // 2
 
                     # Создаём новое изображение и масштабируем его
-                    im_new = PIL.Image.new('RGBA', (size, size), '#00000000')
-                    im_new.paste(im, (dx, dy))
-                    im_new = im_new.resize((600, 600))
+                    try:
+                        im_new = PIL.Image.new('RGBA', (size, size), '#00000000')
+                        im_new.paste(im, (dx, dy))
+                        im_new = im_new.resize((600, 600))
+                    except SyntaxError:
+                        continue
 
                     # Сравниваем изображения с имеющимися
                     copy = False
