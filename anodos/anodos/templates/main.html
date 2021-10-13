@@ -11,32 +11,38 @@
 
 </head>
 <body>
-<main>
-<div class="ui container">
+<header class="ui container">
     <div class="ui grid"><div class="ui hidden divider"></div></div>
-    <div class="ui equal width grid">
-        <div class="column">
-            <h1 class="ui left floated header"><a href="/">Anodos</a></h1>
+    <div class="ui grid">
+        <div class="three wide center aligned column">
+            <h1 class="ui header"><a href="/">Anodos</a></h1>
+        </div>
+        <div class="ten wide column">
+            <div class="ui fluid action input">
+                <input name="search" type="text" value="{{ search }}"
+                       placeholder="Артикул, название, производитель, что угодно...">
+                <div class="ui positive button" data-do="apply-distributors-search">Найти</div>
+            </div>
             <p></p>
         </div>
-        <div class="right aligned column">
-            <p class="ui header"><a href="tel:+78469917885">+7 846 991 78 85</a></p>
-            <div class="ui list">
-                <div class="item">
-                    <div class="content">Самара, Врубеля, 17</div>
+        <div class="right aligned three wide column">
+            <button class="circular ui positive icon button" data-do="open-callback">
+                <i class="icon phone"></i>
+            </button>
+            <button class="ui circular linkedin icon button">
+                <i class="paper plane icon"></i>
+            </button>
+            <a href="mailto:info@anodos.ru">
+                <div class="circular ui icon button">
+                    <i class="icon mail"></i>
                 </div>
-                <div class="item">
-                    <div class="content">
-                        <a href="mailto:info@anodos.ru">info@anodos.ru</a>
-                    </div>
-                </div>
-            </div>
+            </a>
         </div>
     </div>
+    <div class="ui grid"><div class="ui hidden divider"></div></div>
     <div class="ui secondary menu">
-        <a class="active item">Новости</a>
         <div class="ui dropdown item">
-            Продукты и решения
+            Каталог
             <i class="dropdown icon"></i>
             <div class="menu">
                 <a class="item">Серверы</a>
@@ -44,6 +50,9 @@
                 <a class="item">Сетевое оборудование</a>
             </div>
         </div>
+        <a class="item">Автоподбор</a>
+        <a class="item">Новинки</a>
+        {% if perms.distributors.can_do_something %}
         <div class="ui dropdown item">
             Служебное
             <i class="dropdown icon"></i>
@@ -55,19 +64,21 @@
                 <a class="item" href="/distributors/units/">Единицы измерения</a>
             </div>
         </div>
+        {% endif %}
 
         <div class="right menu">
-            <div class="item">
-                <div class="ui icon input">
-                    <input type="text" placeholder="Найти...">
-                    <i class="search link icon"></i>
-                </div>
-            </div>
             {% if user.is_authenticated %}
-            <a class="item" data-do="open-user-profile">Профиль</a>
+            <a class="item" data-do="open-user-profile">
+                <i class="user secret icon"></i>
+            </a>
             {% else %}
-            <a class="item" data-do="open-user-login">Войти</a>
+            <a class="item" data-do="open-user-login">
+                <i class="user outline icon"></i>
+            </a>
             {% endif %}
+            <a class="item">
+                <i class="dolly icon"></i>Заказ
+            </a>
         </div>
     </div>
 
@@ -77,7 +88,37 @@
 
     {% endblock %}
 
-</div>
+</header>
+
+<main class="ui center aligned container">
+    #Карусель с новинками
+    <div class="ui hidden divider"></div>
+
+    <h3>Каталог</h3>
+    <div class="ui three cards">
+        <div class="ui card">Серверы</div>
+        <div class="ui card">Системы хранения данных</div>
+        <div class="ui card">Резервное копирование</div>
+        <div class="ui card">Ноутбуки</div>
+        <div class="ui card">Моноблоки</div>
+        <div class="ui card">Персональные компьютеры</div>
+        <div class="ui card">Информационная безопасность</div>
+        <div class="ui card">Активное сетевое оборудование</div>
+        <div class="ui card">Оргтехника</div>
+    </div>
+    <div class="ui hidden divider"></div>
+
+    <h3>Автоподбор</h3>
+    <div class="ui ui three cards">
+        <div class="ui card">Сервер для 1С</div>
+        <div class="ui card">Инфраструктура для SAP</div>
+        <div class="ui card">Файловый сервер</div>
+        <div class="ui card">Сервер для видеонаблюдения</div>
+        <div class="ui card">Рабочее место офисного сотрудника</div>
+        <div class="ui card">Принтеры и МФУ для офиса</div>
+    </div>
+
+
 </main>
 
 <footer>

@@ -220,7 +220,10 @@ class Worker(Worker):
                 for image_ in images_:
 
                     # Открываем исходное изображение и проверяем, достаточный ли размер изображения
-                    im = PIL.Image.open(image_.file_name)
+                    try:
+                        im = PIL.Image.open(image_.file_name)
+                    except ValueError:
+                        continue
                     if im.size[0] < 600 and im.size[1] < 600:
                         continue
 
