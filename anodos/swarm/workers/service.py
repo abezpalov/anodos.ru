@@ -1,5 +1,5 @@
+import PIL
 import numpy as np
-from PIL import Image
 
 from django.conf import settings
 
@@ -189,8 +189,11 @@ class Worker(Worker):
 
                     # Загружаем изображение
                     try:
-                        im = Image.open(image.file_name)
+                        im = PIL.Image.open(image.file_name)
                     except FileNotFoundError:
+                        image.delete()
+                        continue
+                    except PIL.UnidentifiedImageError:
                         image.delete()
                         continue
 
@@ -217,7 +220,7 @@ class Worker(Worker):
                 for image_ in images_:
 
                     # Открываем исходное изображение и проверяем, достаточный ли размер изображения
-                    im = Image.open(image_.file_name)
+                    im = PIL.Image.open(image_.file_name)
                     if im.size[0] < 600 and im.size[1] < 600:
                         continue
 
@@ -234,7 +237,7 @@ class Worker(Worker):
                     dy = (size - im.size[1]) // 2
 
                     # Создаём новое изображение и масштабируем его
-                    im_new = Image.new('RGBA', (size, size), '#00000000')
+                    im_new = PIL.Image.new('RGBA', (size, size), '#00000000')
                     im_new.paste(im, (dx, dy))
                     im_new = im_new.resize((600, 600))
 
