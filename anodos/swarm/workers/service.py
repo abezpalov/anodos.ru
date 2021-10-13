@@ -242,6 +242,7 @@ class Worker(Worker):
                         im_new.paste(im, (dx, dy))
                         im_new = im_new.resize((600, 600))
                     except SyntaxError:
+                        image.delete()
                         continue
 
                     # Сравниваем изображения с имеющимися
