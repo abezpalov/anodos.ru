@@ -24,13 +24,11 @@
             <td>
                 <div class="ui icon buttons">
                     <button class="ui primary icon button"
-                            data-tooltip="Как у поставщика"
                             data-do="do-parameter-as-is"
                             data-parameter_="{{ parameter_.id }}">
                         <i class="share icon"></i>
                     </button>
                     <button class="ui positive icon button"
-                            data-tooltip="Выбрать из списка"
                             data-do="open-parameter-list"
                             data-parameter_="{{ parameter_.id }}">
                         <i class="list icon"></i>
@@ -48,8 +46,7 @@
             <td>
                 <div class="ui icon buttons">
                     <button class="ui positive icon button"
-                            id="{{ parameter_.id }}-open-parameter-editor-button"
-                            data-tooltip="Редактирвать"
+                            id="{{ parameter_.id }}-open-parameter-editor-button"7
                             data-do="open-parameter-editor"
                             data-parameter_="{{ parameter_.id }}"
                             data-parameter="{{ parameter_.to_pflops.id }}"
@@ -57,7 +54,6 @@
                         <i class="edit icon"></i>
                     </button>
                     <button class="ui negative icon button"
-                            data-tooltip="Отвязать"
                             data-do="erase-parameter-link"
                             data-parameter_="{{ parameter_.id }}">
                         <i class="unlink icon"></i>

@@ -21,7 +21,7 @@ class Worker:
 
     def send(self, content='test', chat_id=settings.TELEGRAM_LOG_CHAT, disable_web_page_preview=True):
 
-        for n in range(42):
+        while True:
             try:
                 self.bot.send_message(chat_id=chat_id,
                                       text=content,
@@ -30,7 +30,7 @@ class Worker:
                 time.sleep(1)
                 break
             except Exception:
-                pass
+                time.sleep(60)
 
     def ftp_login(self, host):
         self.ftp = ftplib.FTP(host=host, timeout=30)

@@ -5,9 +5,14 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 
 
-def index(request):
+def view_index(request):
     context = {}
     return render(request, 'main.html', context)
+
+
+def view_login(request):
+    context = {}
+    return render(request, 'login.html', context)
 
 
 def ajax_login(request):

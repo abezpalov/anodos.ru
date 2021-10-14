@@ -96,7 +96,27 @@
 
     <h3>Каталог</h3>
     <div class="ui three cards">
-        <div class="ui card">Серверы</div>
+        <div class="ui card">
+            <div class="image">
+                <img src="">
+            </div>
+            <div class="content">
+                <a class="header">Серверы</a>
+                <div class="description">
+                    ...
+
+
+                </div>
+            </div>
+            {% if perms.pflops.can_do_something %}
+            <div class="extra content">
+                <a>
+                    <i class="user icon"></i>
+                    22 Friends
+                </a>
+            </div>
+            {% endif %}
+        </div>
         <div class="ui card">Системы хранения данных</div>
         <div class="ui card">Резервное копирование</div>
         <div class="ui card">Ноутбуки</div>
@@ -110,7 +130,22 @@
 
     <h3>Автоподбор</h3>
     <div class="ui ui three cards">
-        <div class="ui card">Сервер для 1С</div>
+        <div class="ui card">
+            <div class="image">
+                <img src="">
+            </div>
+            <div class="content">
+                <a class="header">Сервер для 1С</a>
+                <div class="meta">
+                    <span class="date">Обновлено 14 октября 2021 года</span>
+                </div>
+                <div class="description">
+                    ...
+
+
+                </div>
+            </div>
+        </div>
         <div class="ui card">Инфраструктура для SAP</div>
         <div class="ui card">Файловый сервер</div>
         <div class="ui card">Сервер для видеонаблюдения</div>
@@ -148,7 +183,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="/static/semantic/semantic.min.js"></script>
 <script>
-    $('.ui.dropdown').dropdown();
+    $('.ui.dropdown').dropdown({on: 'hover'});
     $('.ui.checkbox').checkbox();
 </script>
 <!-- /jQuery and Semantic -->

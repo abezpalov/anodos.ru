@@ -154,3 +154,88 @@ class Data(models.Model):
         ordering = ['created']
 
     objects = DataManager()
+
+
+class OrganisationManager(models.Manager):
+
+    def take(self, ogrn, **kwargs):
+        if not ogrn:
+            return None
+
+        try:
+            o = self.get(ogrn=ogrn)
+
+        except Organisation.DoesNotExist:
+            o = Organisation()
+            o.ogrn = ogrn
+            o.name = kwargs.get('name', None)
+            o.inn = kwargs.get('inn', None)
+            o.save()
+
+        return o
+
+
+class Organisation(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    ogrn = models.TextField(unique=True)
+    name = models.TextField(null=True, default=None)
+    inn = models.TextField(null=True, default=None)
+
+    created = models.DateTimeField(default=timezone.now)
+
+    objects = OrganisationManager()
+
+    def __str__(self):
+        return f"{self.ogrn} {self.name}"
+
+    class Meta:
+        ordering = ['-created']
+
+
+class ProductManager(models.Manager):
+
+    def take(self, register_number, **kwargs):
+        if not register_number:
+            return None
+
+        try:
+            o = self.get(register_number=register_number)
+            o.new = False
+
+        except Product.DoesNotExist:
+            o = Product()
+            o.register_number = register_number
+            o.organisation = kwargs.get('organisation', None)
+            o.name = kwargs.get('name', None)
+            o.okpd2 = kwargs.get('okpd2', None)
+            o.tnved = kwargs.get('tnved', None)
+            o.name_of_regulation = kwargs.get('name_of_regulation', None)
+            o.save()
+            o.new = True
+
+        return o
+
+
+class Product(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    register_number = models.TextField(unique=True)
+    organisation = models.ForeignKey('Organisation',
+                                     null=True,
+                                     default=None,
+                                     on_delete=models.CASCADE,
+                                     related_name='+')
+
+    name = models.TextField(null=True, default=None)
+    okpd2 = models.TextField(null=True, default=None)
+    tnved = models.TextField(null=True, default=None)
+    name_of_regulation = models.TextField(null=True, default=None)
+
+    created = models.DateTimeField(default=timezone.now)
+
+    objects = ProductManager()
+
+    def __str__(self):
+        return f"{self.register_number} {self.name}"
+
+    class Meta:
+        ordering = ['-created']

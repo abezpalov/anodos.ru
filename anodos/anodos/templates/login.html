@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% block description %}
+    <meta name="description" content="Форма авторизации" />
+    {% endblock %}
+    <title>{% block title %}Anodos{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="/static/semantic/semantic.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/main.css">
+    <style type="text/css">
+        body {background-color: #DADADA;}
+        body > .grid {height: 100%;}
+        .image {margin-top: -100px;}
+        .column {max-width: 450px;}
+    </style>
+</head>
+<body>
+<div class="ui middle aligned center aligned grid">
+    <div class="column">
+        <h1 class="ui header"><a href="/">Anodos</a></h1>
+        <form class="ui large form">
+            <div class="ui stacked segment">
+                <div class="field">
+                    <div class="ui left icon input">
+                        <i class="user icon"></i>
+                        <input type="text" name="email" placeholder="E-mail address">
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="ui left icon input">
+                        <i class="lock icon"></i>
+                        <input type="password" name="password" placeholder="Password">
+                    </div>
+                </div>
+                <div class="ui fluid large positive submit button">Login</div>
+            </div>
+            <div class="ui error message"></div>
+        </form>
+    </div>
+    </div>
+</div>
+
+
+
+<!-- jQuery and Semantic -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="/static/semantic/semantic.min.js"></script>
+<script>
+    $('.ui.dropdown').dropdown();
+    $('.ui.checkbox').checkbox();
+</script>
+<!-- /jQuery and Semantic -->
+
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript" >
+   (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+   m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+   (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+   ym(13190530, "init", {
+        clickmap:true,
+        trackLinks:true,
+        accurateTrackBounce:true,
+        trackHash:true
+   });
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/13190530" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+
+</body>
+</html>

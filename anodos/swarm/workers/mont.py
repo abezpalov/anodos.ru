@@ -5,7 +5,7 @@ from swarm.workers.worker import Worker
 
 class Worker(Worker):
 
-    name = 'mont.com/events'
+    name = 'mont.com'
     login = None
     password = None
     urls = {'base': 'https://www.mont.com',

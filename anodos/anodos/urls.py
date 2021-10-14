@@ -22,11 +22,13 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('distributors/', include('distributors.urls')),
 
-    path('product/<slug:product_slug>/', pflops.views.view_product),
+    path('', anodos.views.view_index),
+    path('login/', anodos.views.view_login),
 
-    path('', anodos.views.index),
     path('ajax/login/', anodos.views.ajax_login),
     path('ajax/logout/', anodos.views.ajax_logout),
+
+    path('product/<slug:product_slug>/', pflops.views.view_product),
 
     path('<slug:slug>/', pflops.views.article),
 ]
