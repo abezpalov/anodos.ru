@@ -224,6 +224,9 @@ class Worker(Worker):
                         im = PIL.Image.open(image_.file_name)
                     except ValueError:
                         continue
+                    except PIL.UnidentifiedImageError:
+                        continue
+
                     if im.size[0] < 600 and im.size[1] < 600:
                         continue
 
