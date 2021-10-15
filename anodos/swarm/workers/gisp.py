@@ -30,10 +30,10 @@ class Worker(Worker):
 
     def run(self, command=None):
 
-        #data = self.load(url=self.urls['719'], result_type='content')
-        #f = open(self.file_name, 'wb')
-        #f.write(data)
-        #f.close()
+        data = self.load(url=self.urls['719'], result_type='content')
+        f = open(self.file_name, 'wb')
+        f.write(data)
+        f.close()
 
         with open(self.file_name, 'r') as read_obj:
             # pass the file object to reader() to get the reader object
@@ -69,7 +69,8 @@ class Worker(Worker):
                                                name_of_regulation=name_of_regulation)
 
                 if product.new:
-                    content = f'{organisation.name}\n' \
+                    content = f'<b>{product.register_number}</b>\n' \
+                              f'{organisation.name}\n' \
                               f'<i>ОГРН: {organisation.ogrn}</i>\n' \
                               f'<i>ИНН: {organisation.inn}</i>\n\n' \
                               f'{product.name}\n' \

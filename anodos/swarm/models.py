@@ -186,7 +186,7 @@ class Organisation(models.Model):
     objects = OrganisationManager()
 
     def __str__(self):
-        return f"{self.ogrn} {self.name}"
+        return f"{self.name} ({self.ogrn} {self.inn})"
 
     class Meta:
         ordering = ['-created']

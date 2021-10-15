@@ -27,7 +27,7 @@ class Worker:
                                       text=content,
                                       parse_mode='HTML',
                                       disable_web_page_preview=disable_web_page_preview)
-                time.sleep(1)
+                time.sleep(5)
                 break
             except Exception:
                 time.sleep(60)
