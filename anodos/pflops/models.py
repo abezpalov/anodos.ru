@@ -123,20 +123,71 @@ class Unit(models.Model):
 
 class CurrencyManager(models.Manager):
 
-    pass
+    def take(self, key, **kwargs):
+        if key is None:
+            return None
+
+        key = fix_text(key)
+
+        need_save = False
+
+        try:
+            o = self.get(key__iexact=key)
+
+        except Currency.DoesNotExist:
+            o = Currency()
+            o.key = key
+            need_save = True
+
+        # key_digit
+        key_digit = kwargs.get('key_digit', None)
+        key_digit = fix_text(key_digit)
+        if key_digit is not None and o.key_digit is None:
+            o.key_digit = key_digit
+            need_save = True
+
+        # name
+        name = kwargs.get('name', None)
+        name = fix_text(name)
+        if name is not None and o.name is None:
+            o.name = name
+            need_save = True
+
+        # quantity
+        quantity = kwargs.get('quantity', None)
+        quantity = fix_float(quantity)
+        if quantity is not None and o.quantity != quantity:
+            o.quantity = quantity
+            need_save = True
+
+        # rate
+        rate = kwargs.get('rate', None)
+        rate = fix_float(rate)
+        if rate is not None and o.rate != rate:
+            o.rate = rate
+            need_save = True
+
+        if need_save:
+            o.save()
+
+        return o
 
 
 class Currency(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     key = models.CharField(max_length=32, unique=True)
+    key_digit = models.CharField(max_length=32, null=True, default=None, unique=True)
 
     name = models.TextField(null=True, default=None, db_index=True)
     full_name = models.TextField(null=True, default=None, db_index=True)
 
+    quantity = models.FloatField(null=True, default=None)
+    rate = models.FloatField(null=True, default=None)
+
     objects = CurrencyManager()
 
     def __str__(self):
-        return f'{self.key}'
+        return f'{self.key} = {self.rate} / {self.quantity}'
 
     class Meta:
         ordering = ['key']
@@ -721,3 +772,17 @@ def fix_text(text):
     text = text.strip()
 
     return text
+
+
+def fix_float(text):
+
+    if text is None:
+        return None
+
+    dictionary = {' ': '', ',': '.'}
+    for key in dictionary:
+        text = text.replace(key, dictionary[key])
+
+    text = text.strip()
+
+    return float(text)
