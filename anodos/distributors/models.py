@@ -1050,6 +1050,10 @@ def need_new_decimal_value(old, new, delta=0.001):
 
 
 def fix_text(text):
+
+    if text is None:
+        return None
+
     while '  ' in text:
         text = text.replace('  ', ' ')
     while '/n/n' in text:
