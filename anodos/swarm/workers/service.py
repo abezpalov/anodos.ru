@@ -50,7 +50,6 @@ class Worker(Worker):
                 print(f'{n + 1} of {len(ids_)} {product}')
                 product.save()
 
-
     def update_products(self):
         """ Переносит сущность продукт в чистовик """
 
@@ -223,11 +222,14 @@ class Worker(Worker):
                     try:
                         im = PIL.Image.open(image_.file_name)
                     except ValueError:
+                        del im
                         continue
                     except PIL.UnidentifiedImageError:
+                        del im
                         continue
 
                     if im.size[0] < 600 and im.size[1] < 600:
+                        del im
                         continue
 
                     # Берём сущность с базы
@@ -235,6 +237,7 @@ class Worker(Worker):
                                                                     source_url=image_.source_url)
 
                     if image.file_name:
+                        del im
                         continue
 
                     # Вычисляем размеры и координаты
@@ -248,6 +251,7 @@ class Worker(Worker):
                         im_new.paste(im, (dx, dy))
                         im_new = im_new.resize((600, 600))
                     except SyntaxError:
+                        del im, im_new
                         image.delete()
                         continue
 
@@ -261,6 +265,7 @@ class Worker(Worker):
                             copy = True
 
                     if copy is True:
+                        del im, im_new, v_
                         image.delete()
                     else:
                         vs.append(v_)
@@ -271,3 +276,5 @@ class Worker(Worker):
                         image.save()
 
                         print(image)
+
+                        del im, im_new, v_, image

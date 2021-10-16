@@ -441,7 +441,7 @@ class Product(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-        ordering = ['vendor', 'part_number']
+        ordering = ['-created']
         indexes = [GinIndex(fields=['names_search', 'parameters_search'],
                             name='product_search_idx')]
 
