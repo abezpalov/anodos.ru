@@ -27,7 +27,6 @@ class Worker(Worker):
                              'Nameofregulations': None}
         super().__init__()
 
-
     def run(self, command=None):
 
         data = self.load(url=self.urls['719'], result_type='content')
@@ -49,34 +48,36 @@ class Worker(Worker):
                     self.cell_numbers[cell] = m
 
             else:
-                organisation_name = row[self.cell_numbers['Nameoforg']]
-                ogrn = row[self.cell_numbers['OGRN']]
-                inn = row[self.cell_numbers['INN']]
-                organisation = Organisation.objects.take(ogrn=ogrn,
-                                                         name=organisation_name,
-                                                         inn=inn)
-
-                register_number = row[self.cell_numbers['Registernumber']]
-                product_name = row[self.cell_numbers['Productname']]
                 okpd2 = row[self.cell_numbers['OKPD2']]
-                tnved = row[self.cell_numbers['TNVED']]
-                name_of_regulation = row[self.cell_numbers['Nameofregulations']]
-                product = Product.objects.take(register_number=register_number,
-                                               organisation=organisation,
-                                               name=product_name,
-                                               okpd2=okpd2,
-                                               tnved=tnved,
-                                               name_of_regulation=name_of_regulation)
+                product = None
+                if okpd2.startswith('26.20'):
+                    organisation_name = row[self.cell_numbers['Nameoforg']]
+                    ogrn = row[self.cell_numbers['OGRN']]
+                    inn = row[self.cell_numbers['INN']]
+                    organisation = Organisation.objects.take(ogrn=ogrn,
+                                                             name=organisation_name,
+                                                             inn=inn)
 
-                if product.new:
-                    content = f'<b>{product.register_number}</b>\n' \
-                              f'{organisation.name}\n' \
-                              f'<i>ОГРН: {organisation.ogrn}</i>\n' \
-                              f'<i>ИНН: {organisation.inn}</i>\n\n' \
-                              f'{product.name}\n' \
-                              f'<i>ОКВЭД2: {product.okpd2}</i>\n' \
-                              f'<i>ТН ВЭД: {product.tnved}</i>\n' \
-                              f'<i>Регулирование: {product.name_of_regulation}</i>'
-                    self.send(content=content, chat_id=settings.TELEGRAM_GISP_CHAT)
-                    print(product)
+                    register_number = row[self.cell_numbers['Registernumber']]
+                    product_name = row[self.cell_numbers['Productname']]
 
+                    tnved = row[self.cell_numbers['TNVED']]
+                    name_of_regulation = row[self.cell_numbers['Nameofregulations']]
+                    product = Product.objects.take(register_number=register_number,
+                                                   organisation=organisation,
+                                                   name=product_name,
+                                                   okpd2=okpd2,
+                                                   tnved=tnved,
+                                                   name_of_regulation=name_of_regulation)
+
+                    if product.new:
+                        content = f'<b>{product.register_number}</b>\n' \
+                                  f'{organisation.name}\n' \
+                                  f'<i>ОГРН: {organisation.ogrn}</i>\n' \
+                                  f'<i>ИНН: {organisation.inn}</i>\n\n' \
+                                  f'{product.name}\n' \
+                                  f'<i>ОКВЭД2: {product.okpd2}</i>\n' \
+                                  f'<i>ТН ВЭД: {product.tnved}</i>\n' \
+                                  f'<i>Регулирование: {product.name_of_regulation}</i>'
+                        print(f'{n+1} of {len(list_of_rows)} {product}')
+                        self.send(content=content, chat_id=settings.TELEGRAM_GISP_CHAT)
