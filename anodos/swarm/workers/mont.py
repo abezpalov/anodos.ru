@@ -58,7 +58,10 @@ class Worker(Worker):
             try:
                 SourceData.objects.get(source=self.source, url=url)
             except SourceData.DoesNotExist:
-                content = f'<b>{news_type} {self.company}</b>\n<i>{term}</i>\n\n<a href="{url}">{title}</a>\n{text}\n'
+                content = f'<b><a href="{url}">{title}</a></b>\n' \
+                          f'<i>{term}</i>\n\n' \
+                          f'{text}\n' \
+                          f'#{news_type} #{self.company}'
                 print(content)
                 self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
                 data = SourceData.objects.take(source=self.source, url=url)
@@ -93,7 +96,10 @@ class Worker(Worker):
             try:
                 SourceData.objects.get(source=self.source, url=url)
             except SourceData.DoesNotExist:
-                content = f'<b>{news_type} {self.company}</b>\n<i>{term}</i>\n\n<a href="{url}">{title}</a>\n{text}\n'
+                content = f'<b><a href="{url}">{title}</a></b>\n' \
+                          f'<i>{term}</i>\n\n' \
+                          f'{text}\n' \
+                          f'#{news_type} #{self.company}'
                 print(content)
                 self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
                 data = SourceData.objects.take(source=self.source, url=url)
