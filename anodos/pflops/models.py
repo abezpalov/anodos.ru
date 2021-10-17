@@ -1,10 +1,11 @@
 import os
 import uuid
-import requests as r
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from django.contrib.postgres.indexes import GinIndex
+
+import anodos.fixers
 
 
 class ArticleManager(models.Manager):
@@ -75,7 +76,7 @@ class Vendor(models.Model):
         return f'{self.name}'
 
     def save(self, *args, **kwargs):
-        self.slug = to_slug(name=self.name)
+        self.slug = anodos.fixers.to_slug(name=self.name)
 
         super().save(*args, **kwargs)
 
@@ -89,7 +90,7 @@ class UnitManager(models.Manager):
         if not name:
             return None
 
-        name = fix_text(name)
+        name = anodos.fixers.fix_text(name)
 
         need_save = False
 
@@ -127,7 +128,7 @@ class CurrencyManager(models.Manager):
         if key is None:
             return None
 
-        key = fix_text(key)
+        key = anodos.fixers.fix_text(key)
 
         need_save = False
 
@@ -141,28 +142,28 @@ class CurrencyManager(models.Manager):
 
         # key_digit
         key_digit = kwargs.get('key_digit', None)
-        key_digit = fix_text(key_digit)
+        key_digit = anodos.fixers.fix_text(key_digit)
         if key_digit is not None and o.key_digit is None:
             o.key_digit = key_digit
             need_save = True
 
         # name
         name = kwargs.get('name', None)
-        name = fix_text(name)
+        name = anodos.fixers.fix_text(name)
         if name is not None and o.name is None:
             o.name = name
             need_save = True
 
         # quantity
         quantity = kwargs.get('quantity', None)
-        quantity = fix_float(quantity)
+        quantity = anodos.fixers.fix_float(quantity)
         if quantity is not None and o.quantity != quantity:
             o.quantity = quantity
             need_save = True
 
         # rate
         rate = kwargs.get('rate', None)
-        rate = fix_float(rate)
+        rate = anodos.fixers.fix_float(rate)
         if rate is not None and o.rate != rate:
             o.rate = rate
             need_save = True
@@ -244,42 +245,42 @@ class ProductManager(models.Manager):
 
         # name
         name = kwargs.get('name', None)
-        name = fix_text(name)
+        name = anodos.fixers.fix_text(name)
         if name is not None and o.name is None:
             o.name = name
             need_save = True
 
         # short_name
         short_name = kwargs.get('short_name', None)
-        short_name = fix_text(short_name)
+        short_name = anodos.fixers.fix_text(short_name)
         if short_name is not None and o.short_name is None:
             o.short_name = short_name
             need_save = True
 
         # name_rus
         name_rus = kwargs.get('name_rus', None)
-        name_rus = fix_text(name_rus)
+        name_rus = anodos.fixers.fix_text(name_rus)
         if name_rus is not None and o.name_rus is None:
             o.name_rus = name_rus
             need_save = True
 
         # name_other
         name_other = kwargs.get('name_other', None)
-        name_other = fix_text(name_other)
+        name_other = anodos.fixers.fix_text(name_other)
         if name_other is not None and o.name_other is None:
             o.name_other = name_other
             need_save = True
 
         # description
         description = kwargs.get('description', None)
-        description = fix_text(description)
+        description = anodos.fixers.fix_text(description)
         if description is not None and o.description is None:
             o.description = description
             need_save = True
 
         # warranty
         warranty = kwargs.get('warranty', None)
-        warranty = fix_text(warranty)
+        warranty = anodos.fixers.fix_text(warranty)
         if warranty is not None and o.warranty is None:
             o.warranty = warranty
             need_save = True
@@ -484,11 +485,11 @@ class Product(models.Model):
             self.names_search = f'{self.name.lower()} ' \
                           f'{self.part_number.lower()} ' \
                           f'{self.vendor.name.lower()}'
-            self.slug = to_slug(f'{self.vendor.name} {self.part_number}')
+            self.slug = anodos.fixers.to_slug(f'{self.vendor.name} {self.part_number}')
         else:
             self.names_search = f'{self.name.lower()} ' \
                           f'{self.part_number.lower()}'
-            self.slug = to_slug(f'{self.part_number}')
+            self.slug = anodos.fixers.to_slug(f'{self.part_number}')
         super().save(*args, **kwargs)
 
     class Meta:
@@ -664,7 +665,7 @@ class ProductImageManager(models.Manager):
         if not product or not source_url:
             return None
 
-        source_url = fix_text(source_url)
+        source_url = anodos.fixers.fix_text(source_url)
 
         need_save = False
 
@@ -725,64 +726,3 @@ class ProductImage(models.Model):
 
     class Meta:
         ordering = ['created']
-
-
-def to_slug(name):
-    name = name.lower()
-    name = name.strip()
-    dictionary = {'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'e',
-                  'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'i', 'к': 'k', 'л': 'l', 'м': 'm',
-                  'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
-                  'ф': 'f', 'х': 'h', 'ц': 'c', 'ч': 'cz', 'ш': 'sh', 'щ': 'scz',
-                  'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'u', 'я': 'ja',
-                  ',': '-', '?': '-', ' ': '-', '~': '-', '!': '-', '@': '-', '#': '-',
-                  '$': '-', '%': '-', '^': '-', '&': '-', '*': '-', '(': '-', ')': '-',
-                  '=': '-', '+': '-', ':': '-', ';': '-', '<': '-', '>': '-', '\'': '-',
-                  '"': '-', '\\': '-', '/': '-', '№': '-', '[': '-', ']': '-', '{': '-',
-                  '}': '-', 'ґ': '-', 'ї': '-', 'є': '-', 'Ґ': 'g', 'Ї': 'i', 'Є': 'e',
-                  '—': '-', '.': '-'}
-
-    for key in dictionary:
-        name = name.replace(key, dictionary[key])
-
-    while '--' in name:
-        name = name.replace('--', '-')
-
-    if name[0] == '-':
-        name = name[1:]
-
-    if name[-1] == '-':
-        name = name[:-1]
-
-    return name
-
-
-def fix_text(text):
-
-    if text is None:
-        return None
-
-    dictionary = {'™': ' '}
-    for key in dictionary:
-        text = text.replace(key, dictionary[key])
-
-    while '  ' in text:
-        text = text.replace('  ', ' ')
-
-    text = text.strip()
-
-    return text
-
-
-def fix_float(text):
-
-    if text is None:
-        return None
-
-    dictionary = {' ': '', ',': '.'}
-    for key in dictionary:
-        text = text.replace(key, dictionary[key])
-
-    text = text.strip()
-
-    return float(text)

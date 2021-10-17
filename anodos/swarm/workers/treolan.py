@@ -3,13 +3,12 @@ import zeep
 
 from django.utils import timezone
 from django.conf import settings
-from swarm.models import *
-from distributors.models import *
+import swarm.models
+import distributors.models
 from swarm.workers.worker import Worker
 
 
 class Worker(Worker):
-
     source_name = 'treolan.ru'
     name = 'Treolan'
     login = settings.TREOLAN_LOGIN
@@ -27,16 +26,16 @@ class Worker(Worker):
         self.start_time = timezone.now()
         self.host = settings.HOST
 
-        self.source = Source.objects.take(
+        self.source = swarm.models.Source.objects.take(
             name=self.source_name,
             login=self.login,
             password=self.password)
-        self.distributor = Distributor.objects.take(name=self.name)
+        self.distributor = distributors.models.Distributor.objects.take(name=self.name)
 
-        self.stock = Location.objects.take(distributor=self.distributor,
-                                           key='Склад')
-        self.transit = Location.objects.take(distributor=self.distributor,
-                                             key='Транзит')
+        self.stock = distributors.models.Location.objects.take(distributor=self.distributor,
+                                                               key='Склад')
+        self.transit = distributors.models.Location.objects.take(distributor=self.distributor,
+                                                                 key='Транзит')
 
         self.count_products = 0
         self.count_parties = 0
@@ -65,8 +64,8 @@ class Worker(Worker):
             self.update_catalog()
 
             # Удаляем устаревшие партии
-            Party.objects.filter(distributor=self.distributor,
-                                 created__lte=self.start_time).delete()
+            distributors.models.Party.objects.filter(distributor=self.distributor,
+                                                     created__lte=self.start_time).delete()
 
             # Отправляем оповещение об успешном завершении
             self.send(f'{self.source} {command} finish:\n'
@@ -135,15 +134,15 @@ class Worker(Worker):
             description = self.fix_text(description)
 
             try:
-                data = SourceData.objects.get(source=self.source, url=url)
-            except SourceData.DoesNotExist:
+                data = swarm.models.SourceData.objects.get(source=self.source, url=url)
+            except swarm.models.SourceData.DoesNotExist:
                 content = f'<b><a href="{url}">{title}</a></b>\n' \
                           f'<i>{date}</i>\n\n' \
                           f'{description}\n' \
                           f'#{self.distributor} #{content_type}'
                 self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
 
-                data = SourceData.objects.take(source=self.source, url=url)
+                data = swarm.models.SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
             print(data)
@@ -165,15 +164,15 @@ class Worker(Worker):
         key = element.xpath('.//@id')[0]
         parent_key = element.xpath('.//@parentid')[0]
         try:
-            parent = Category.objects.get(distributor=self.distributor, key=parent_key)
-        except Category.DoesNotExist:
+            parent = distributors.models.Category.objects.get(distributor=self.distributor, key=parent_key)
+        except distributors.models.Category.DoesNotExist:
             parent = None
         name = element.xpath('.//@name')[0]
         name = self.fix_text(name)
-        category = Category.objects.take(distributor=self.distributor,
-                                         key=key,
-                                         name=name,
-                                         parent=parent)
+        category = distributors.models.Category.objects.take(distributor=self.distributor,
+                                                             key=key,
+                                                             name=name,
+                                                             parent=parent)
         return category
 
     def update_catalog(self):
@@ -199,10 +198,10 @@ class Worker(Worker):
             key = self.fix_text(key)
             name = category_.xpath('./@name')[0]
             name = self.fix_text(name)
-            category = Category.objects.take(distributor=self.distributor,
-                                             key=key,
-                                             name=name,
-                                             parent=parent)
+            category = distributors.models.Category.objects.take(distributor=self.distributor,
+                                                                 key=key,
+                                                                 name=name,
+                                                                 parent=parent)
             print(category)
             self.parse_catalog(tree=category_, parent=category)
 
@@ -229,7 +228,7 @@ class Worker(Worker):
                 # @vendor - Производитель.
                 vendor = item.xpath('./@vendor')[0]
                 vendor = self.fix_text(vendor)
-                vendor = Vendor.objects.take(distributor=self.distributor, name=vendor)
+                vendor = distributors.models.Vendor.objects.take(distributor=self.distributor, name=vendor)
 
                 # @vendor-id - Идентификатор производителя.
                 vendor_id = item.xpath('./@vendor-id')[0]
@@ -249,7 +248,7 @@ class Worker(Worker):
                 # @currency - Валюта, в которой указана стоимость товара.
                 # Значением является международный код валюты из трёх латинских символов(RUB, USD и тд.).
                 currency = item.xpath('./@currency')[0]
-                currency = Currency.objects.take(key=currency)
+                currency = distributors.models.Currency.objects.take(key=currency)
 
                 # @discount - Размер скидки.
                 try:
@@ -313,30 +312,30 @@ class Worker(Worker):
                 else:
                     traceable = False
 
-                #@codeTNVED- код ТН ВЭД
+                # @codeTNVED- код ТН ВЭД
                 tnved = item.xpath('./@codeTNVED')[0]
 
-                product = Product.objects.take_by_party_key(distributor=self.distributor,
-                                                            product_key=product_key,
-                                                            party_key=party_key,
-                                                            part_number=part_number,
-                                                            vendor=vendor,
-                                                            category=category,
-                                                            name=name,
-                                                            description=description,
-                                                            warranty=warranty,
-                                                            gtin=gtin,
-                                                            tnved=tnved,
-                                                            traceable=traceable,
-                                                            unconditional=sale,
-                                                            sale=sale,
-                                                            promo=promo,
-                                                            outoftrade=outoftrade,
-                                                            weight=weight,
-                                                            width=width,
-                                                            height=height,
-                                                            depth=depth,
-                                                            volume=width*height*depth)
+                product = distributors.models.Product.objects.take_by_party_key(distributor=self.distributor,
+                                                                                product_key=product_key,
+                                                                                party_key=party_key,
+                                                                                part_number=part_number,
+                                                                                vendor=vendor,
+                                                                                category=category,
+                                                                                name=name,
+                                                                                description=description,
+                                                                                warranty=warranty,
+                                                                                gtin=gtin,
+                                                                                tnved=tnved,
+                                                                                traceable=traceable,
+                                                                                unconditional=sale,
+                                                                                sale=sale,
+                                                                                promo=promo,
+                                                                                outoftrade=outoftrade,
+                                                                                weight=weight,
+                                                                                width=width,
+                                                                                height=height,
+                                                                                depth=depth,
+                                                                                volume=width * height * depth)
 
                 if product is not None:
                     self.count_products += 1
@@ -351,17 +350,17 @@ class Worker(Worker):
                             can_reserve, is_available_for_order = True, True
                         else:
                             can_reserve, is_available_for_order = False, False
-                        party = Party.objects.create(distributor=self.distributor,
-                                                     product=product,
-                                                     price_in=price_in,
-                                                     currency_in=currency,
-                                                     price_out=price_out,
-                                                     currency_out=currency,
-                                                     location=self.stock,
-                                                     quantity=quantity_on_stock,
-                                                     quantity_great_than=great_than_on_stock,
-                                                     can_reserve=can_reserve,
-                                                     is_available_for_order=is_available_for_order)
+                        party = distributors.models.Party.objects.create(distributor=self.distributor,
+                                                                         product=product,
+                                                                         price_in=price_in,
+                                                                         currency_in=currency,
+                                                                         price_out=price_out,
+                                                                         currency_out=currency,
+                                                                         location=self.stock,
+                                                                         quantity=quantity_on_stock,
+                                                                         quantity_great_than=great_than_on_stock,
+                                                                         can_reserve=can_reserve,
+                                                                         is_available_for_order=is_available_for_order)
                         self.count_parties += 1
                         print(party)
 
@@ -370,32 +369,32 @@ class Worker(Worker):
                             can_reserve, is_available_for_order = True, True
                         else:
                             can_reserve, is_available_for_order = False, False
-                        party = Party.objects.create(distributor=self.distributor,
-                                                     product=product,
-                                                     price_in=price_in,
-                                                     currency_in=currency,
-                                                     price_out=price_out,
-                                                     currency_out=currency,
-                                                     location=self.transit,
-                                                     quantity=quantity_on_transit,
-                                                     quantity_great_than=great_than_on_transit,
-                                                     can_reserve=can_reserve,
-                                                     is_available_for_order=is_available_for_order)
+                        party = distributors.models.Party.objects.create(distributor=self.distributor,
+                                                                         product=product,
+                                                                         price_in=price_in,
+                                                                         currency_in=currency,
+                                                                         price_out=price_out,
+                                                                         currency_out=currency,
+                                                                         location=self.transit,
+                                                                         quantity=quantity_on_transit,
+                                                                         quantity_great_than=great_than_on_transit,
+                                                                         can_reserve=can_reserve,
+                                                                         is_available_for_order=is_available_for_order)
                         self.count_parties += 1
                         print(party)
 
     def get_keys_for_update_content(self, mode=None):
 
         if mode == 'all':
-            keys_ = Product.objects.filter(distributor=self.distributor).values('part_number')
+            keys_ = distributors.models.Product.objects.filter(distributor=self.distributor).values('part_number')
             keys = []
             for key_ in keys_:
                 keys.append(key_['part_number'])
             return keys
 
         elif mode == 'clear':
-            keys_ = Product.objects.filter(distributor=self.distributor,
-                                           content_loaded__isnull=True).values('part_number')
+            keys_ = distributors.models.Product.objects.filter(distributor=self.distributor,
+                                                               content_loaded__isnull=True).values('part_number')
             keys = []
             for key_ in keys_:
                 keys.append(key_['part_number'])
@@ -403,14 +402,14 @@ class Worker(Worker):
 
     def update_content(self, keys):
 
-        for key in keys:
+        for n, key in enumerate(keys):
             result = self.client.service.ProductInfoV2(Login=self.login,
                                                        password=self.password,
                                                        Articul=key)
             tree = lxml.etree.fromstring(result['Result'])
-            self.parse_content(tree=tree)
+            self.parse_content(tree=tree, n_key=n, len_keys=len(keys))
 
-    def parse_content(self, tree):
+    def parse_content(self, tree, n_key, len_keys):
 
         count = 0
 
@@ -418,8 +417,8 @@ class Worker(Worker):
         product_elements = tree.xpath('.//Product')
         product_element = product_elements[0]
         part_number = product_element.xpath('./@Articul')[0]
-        product = Product.objects.get(distributor=self.distributor, part_number=part_number)
-        print(product)
+        product = distributors.models.Product.objects.get(distributor=self.distributor, part_number=part_number)
+        print(f'{n_key} of {len_keys} {product}')
 
         description = product_element.xpath('./@RusDescr')[0]
         if product.description is None:
@@ -431,14 +430,13 @@ class Worker(Worker):
         for property_element in property_elements:
             parameter_name = property_element.xpath('./@Name')[0]
             parameter_name = self.fix_text(parameter_name)
-            parameter = Parameter.objects.take(distributor=self.distributor, name=parameter_name)
+            parameter = distributors.models.Parameter.objects.take(distributor=self.distributor, name=parameter_name)
             value = property_element.xpath('./@Value')[0]
             value = self.fix_text(value)
-            parameter_value = ParameterValue.objects.take(distributor=self.distributor,
-                                                          product=product,
-                                                          parameter=parameter,
-                                                          value=value)
-            print(parameter_value)
+            distributors.models.ParameterValue.objects.take(distributor=self.distributor,
+                                                            product=product,
+                                                            parameter=parameter,
+                                                            value=value)
             count += 1
 
         # Проходим по всех изображениям
@@ -446,8 +444,7 @@ class Worker(Worker):
         for image_element in image_elements:
             url = image_element.xpath('./@Link')[0]
             ext = image_element.xpath('./@ImageType')[0].lower()
-            image = ProductImage.objects.take(product=product, source_url=url, ext=ext)
-            print(image)
+            distributors.models.ProductImage.objects.take(product=product, source_url=url, ext=ext)
             count += 1
 
         if count:

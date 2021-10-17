@@ -6,6 +6,8 @@ from django.conf import settings
 from django.utils import timezone
 from django.contrib.postgres.indexes import GinIndex
 
+import anodos.fixers
+
 
 class DistributorManager(models.Manager):
 
@@ -207,7 +209,7 @@ class CurrencyManager(models.Manager):
         if key is None:
             return None
 
-        key = fix_text(key)
+        key = anodos.fixers.fix_text(key)
 
         need_save = False
 
@@ -221,28 +223,28 @@ class CurrencyManager(models.Manager):
 
         # key_digit
         key_digit = kwargs.get('key_digit', None)
-        key_digit = fix_text(key_digit)
+        key_digit = anodos.fixers.fix_text(key_digit)
         if key_digit is not None and o.key_digit is None:
             o.key_digit = key_digit
             need_save = True
 
         # name
         name = kwargs.get('name', None)
-        name = fix_text(name)
+        name = anodos.fixers.fix_text(name)
         if name is not None and o.name is None:
             o.name = name
             need_save = True
 
         # quantity
         quantity = kwargs.get('quantity', None)
-        quantity = fix_float(quantity)
+        quantity = anodos.fixers.fix_float(quantity)
         if quantity is not None and o.quantity != quantity:
             o.quantity = quantity
             need_save = True
 
         # rate
         rate = kwargs.get('rate', None)
-        rate = fix_float(rate)
+        rate = anodos.fixers.fix_float(rate)
         if rate is not None and o.rate != rate:
             o.rate = rate
             need_save = True
@@ -450,25 +452,25 @@ class ProductManager(models.Manager):
 
         # width
         width = kwargs.get('width', None)
-        if need_new_decimal_value(old=o.width, new=width):
+        if anodos.fixers.need_new_decimal_value(old=o.width, new=width):
             o.width = width
             need_save = True
 
         # height
         height = kwargs.get('height', None)
-        if need_new_decimal_value(old=o.height, new=height):
+        if anodos.fixers.need_new_decimal_value(old=o.height, new=height):
             o.height = height
             need_save = True
 
         # depth
         depth = kwargs.get('depth', None)
-        if need_new_decimal_value(old=o.depth, new=depth):
+        if anodos.fixers.need_new_decimal_value(old=o.depth, new=depth):
             o.depth = depth
             need_save = True
 
         # volume
         volume = kwargs.get('volume', None)
-        if need_new_decimal_value(old=o.volume, new=volume):
+        if anodos.fixers.need_new_decimal_value(old=o.volume, new=volume):
             o.volume = volume
             need_save = True
 
@@ -756,7 +758,7 @@ class ParameterManager(models.Manager):
 
         need_save = False
 
-        name = fix_text(name)
+        name = anodos.fixers.fix_text(name)
 
         try:
             o = self.get(distributor=distributor, name__iexact=name)
@@ -996,83 +998,3 @@ class ProductImage(models.Model):
 
     class Meta:
         ordering = ['created']
-
-
-def to_slug(name):
-    """ Переводит строку в Slug """
-
-    name = name.lower()
-    name = name.strip()
-    dictionary = {'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'e',
-                  'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'i', 'к': 'k', 'л': 'l', 'м': 'm',
-                  'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
-                  'ф': 'f', 'х': 'h', 'ц': 'c', 'ч': 'cz', 'ш': 'sh', 'щ': 'scz',
-                  'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'u', 'я': 'ja',
-                  ',': '-', '?': '-', ' ': '-', '~': '-', '!': '-', '@': '-', '#': '-',
-                  '$': '-', '%': '-', '^': '-', '&': '-', '*': '-', '(': '-', ')': '-',
-                  '=': '-', '+': '-', ':': '-', ';': '-', '<': '-', '>': '-', '\'': '-',
-                  '"': '-', '\\': '-', '/': '-', '№': '-', '[': '-', ']': '-', '{': '-',
-                  '}': '-', 'ґ': '-', 'ї': '-', 'є': '-', 'Ґ': 'g', 'Ї': 'i', 'Є': 'e',
-                  '—': '-'}
-
-    for key in dictionary:
-        name = name.replace(key, dictionary[key])
-
-    while '--' in name:
-        name = name.replace('--', '-')
-
-    if name[0] == '-':
-        name = name[1:]
-
-    if name[-1] == '-':
-        name = name[:-1]
-
-    return name
-
-
-def need_new_decimal_value(old, new, delta=0.001):
-    """ Определяет приблизительным сравнением, необходимо ли записывать новое значение в базу."""
-
-    if new is None:
-        return False
-    elif old is None:
-        return True
-
-    old = float(old)
-    new = float(new)
-    delta = float(delta)
-    try:
-        if old - new / new < delta:
-            return False
-    except ZeroDivisionError:
-        return False
-    return True
-
-
-def fix_text(text):
-
-    if text is None:
-        return None
-
-    while '  ' in text:
-        text = text.replace('  ', ' ')
-    while '/n/n' in text:
-        text = text.replace('/n/n', '/n')
-    text = text.replace(' : ', ': ')
-    text = text.replace(' - ', ' — ')
-    text = text.strip()
-    return text
-
-
-def fix_float(text):
-
-    if text is None:
-        return None
-
-    dictionary = {' ': '', ',': '.'}
-    for key in dictionary:
-        text = text.replace(key, dictionary[key])
-
-    text = text.strip()
-
-    return float(text)
