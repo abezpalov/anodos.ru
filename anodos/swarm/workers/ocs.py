@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 
 from django.utils import timezone
 from django.conf import settings
-from swarm.models import *
-from distributors.models import *
-from swarm.workers.worker import Worker
+import swarm.models
+import distributors.models
+import swarm.workers.worker
 
 
 class Worker(Worker):
@@ -25,11 +25,8 @@ class Worker(Worker):
     def __init__(self):
         self.start_time = timezone.now()
         self.host = settings.HOST
-        self.source = Source.objects.take(
-            name=self.source_name)
-        self.distributor = Distributor.objects.take(
-            name=self.name
-        )
+        self.source = swarm.models.Source.objects.take(name=self.source_name)
+        self.distributor = distributors.models.Distributor.objects.take(name=self.name)
         self.token = settings.OCS_TOKEN
 
         self.cities = []
@@ -67,8 +64,8 @@ class Worker(Worker):
             self.update_catalog_products()
 
             # Удаляем устаревшие партии
-            Party.objects.filter(distributor=self.distributor,
-                                 created__lte=self.start_time).delete()
+            distributors.models.Party.objects.filter(distributor=self.distributor,
+                                                     created__lte=self.start_time).delete()
 
             # Отправляем оповещение об успешном завершении
             self.send(f'{self.distributor} {command} finish:\n'
@@ -92,12 +89,13 @@ class Worker(Worker):
             self.update_content(ids)
 
         elif command == 'drop_parameters':
-            Parameter.objects.filter(distributor=self.distributor).delete()
-            Parameter.objects.filter(distributor__isnull=True).delete()
-            Product.objects.filter(distributor=self.distributor).update(content_loaded=None, content=None)
+            distributors.models.Parameter.objects.filter(distributor=self.distributor).delete()
+            distributors.models.Parameter.objects.filter(distributor__isnull=True).delete()
+            distributors.models.Product.objects.filter(distributor=self.distributor).update(content_loaded=None,
+                                                                                            content=None)
 
         elif command == 'test':
-            Vendor.objects.filter(distributor__isnull=True).update(distributor=self.distributor)
+            distributors.models.Vendor.objects.filter(distributor__isnull=True).update(distributor=self.distributor)
 
         elif command == 'all_delete':
             self.distributor.delete()
@@ -137,7 +135,7 @@ class Worker(Worker):
     def save_data(self, url, content):
         url = f'{url}.json'
         content = json.dumps(content)
-        data = SourceData.objects.take(source=self.source, url=url)
+        data = swarm.models.SourceData.objects.take(source=self.source, url=url)
         data.save_file(content)
 
     def update_events(self):
@@ -172,14 +170,14 @@ class Worker(Worker):
             date = self.fix_text(date)
 
             try:
-                data = SourceData.objects.get(source=self.source, url=url)
-            except SourceData.DoesNotExist:
+                data = swarm.models.SourceData.objects.get(source=self.source, url=url)
+            except swarm.models.SourceData.DoesNotExist:
                 content = f'<b><a href="{url}">{name}</a></b>\n' \
                           f'<i>{date} {location}</i>\n\n' \
                           f'#{self.name} #{event} #{vendor}'
                 self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
 
-                data = SourceData.objects.take(source=self.source, url=url)
+                data = swarm.models.SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
             print(data)
@@ -206,14 +204,14 @@ class Worker(Worker):
                     url = '{}/{}'.format(self.url['base'], url)
 
             try:
-                data = SourceData.objects.get(source=self.source, url=url)
-            except SourceData.DoesNotExist:
+                data = swarm.models.SourceData.objects.get(source=self.source, url=url)
+            except swarm.models.SourceData.DoesNotExist:
                 content = f'<b><a href="{url}">{title}</a></b>\n' \
                           f'<i>{term}</i>\n\n' \
                           f'{text}\n' \
                           f'#{self.name} #{news_type}'
                 self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
-                data = SourceData.objects.take(source=self.source, url=url)
+                data = swarm.models.SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
             print(data)
@@ -233,18 +231,14 @@ class Worker(Worker):
                     url = '{}/{}'.format(self.url['base'], url)
 
             try:
-                data = SourceData.objects.get(source=self.source, url=url)
-            except SourceData.DoesNotExist:
-                content = f'<b><a href="{url}">{name}</a></b>\n' \
-                          f'<i>{date} {location}</i>\n\n' \
-                          f'#{self.name} #{event} #{vendor}'
-
+                data = swarm.models.SourceData.objects.get(source=self.source, url=url)
+            except swarm.models.SourceData.DoesNotExist:
                 content = f'<b><a href="{url}">{title}</a></b>\n' \
                           f'<i>{term}</i>\n\n' \
                           f'{text}\n' \
                           f'#{self.name} #{news_type}'
                 self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
-                data = SourceData.objects.take(source=self.source, url=url)
+                data = swarm.models.SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
             print(data)
@@ -270,14 +264,14 @@ class Worker(Worker):
                     url = '{}/{}'.format(self.url['base'], url)
 
             try:
-                data = SourceData.objects.get(source=self.source, url=url)
-            except SourceData.DoesNotExist:
+                data = swarm.models.SourceData.objects.get(source=self.source, url=url)
+            except swarm.models.SourceData.DoesNotExist:
                 content = f'<b><a href="{url}">{title}</a></b>\n' \
                           f'<i>{term}</i>\n\n' \
                           f'{text}\n' \
                           f'#{self.name} #промо #{vendor}'
                 self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
-                data = SourceData.objects.take(source=self.source, url=url)
+                data = swarm.models.SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
             print(data)
@@ -371,11 +365,10 @@ class Worker(Worker):
         for item in data:
             key = item['category']
             name = item['name']
-            category = Category.objects.take(
-                distributor=self.distributor,
-                key=key,
-                name=name,
-                parent=parent)
+            category = distributors.models.Category.objects.take(distributor=self.distributor,
+                                                                 key=key,
+                                                                 name=name,
+                                                                 parent=parent)
             print(category)
             if item['children']:
                 self.parse_categories(item['children'], category)
@@ -386,7 +379,7 @@ class Worker(Worker):
 
         for city in self.cities:
             if settings.OCS_TEST:
-                data = SourceData.objects.take(source=self.source, url=f'{command}.json')
+                data = swarm.models.SourceData.objects.take(source=self.source, url=f'{command}.json')
                 data = data.load_file()
                 data = json.loads(data)
             else:
@@ -401,10 +394,10 @@ class Worker(Worker):
                 self.count_products += 1
 
     def parse_product(self, item):
-        vendor = Vendor.objects.take(distributor=self.distributor,
-                                     name=item['product']['producer'])
-        category = Category.objects.take(distributor=self.distributor,
-                                         key=item['product']['category'])
+        vendor = distributors.models.Vendor.objects.take(distributor=self.distributor,
+                                                         name=item['product']['producer'])
+        category = distributors.models.Category.objects.take(distributor=self.distributor,
+                                                             key=item['product']['category'])
 
         product_key = item['product'].get('itemId', None)
         party_key = item['product'].get('productKey', None)
@@ -441,38 +434,37 @@ class Worker(Worker):
         depth = item['packageInformation'].get('depth', None)
         volume = item['packageInformation'].get('volume', None)
         multiplicity = item['packageInformation'].get('multiplicity', None)
-        unit = Unit.objects.take(key=item['packageInformation'].get('units', None))
+        unit = distributors.models.Unit.objects.take(key=item['packageInformation'].get('units', None))
 
-        product = Product.objects.take_by_party_key(distributor=self.distributor,
-                                                    party_key=party_key,
-                                                    name=name,
-                                                    vendor=vendor,
-                                                    category=category,
-                                                    product_key=product_key,
-                                                    part_number=part_number,
-                                                    short_name=short_name,
-                                                    name_rus=name_rus,
-                                                    name_other=name_other,
-                                                    description=description,
-                                                    ean_128=ean_128,
-                                                    upc=upc,
-                                                    pnc=pnc,
-                                                    hs_code=hs_code,
-                                                    traceable=traceable,
-                                                    unconditional=unconditional,
-                                                    sale=sale,
-                                                    condition_description=condition_description,
-                                                    weight=weight,
-                                                    width=width,
-                                                    height=height,
-                                                    depth=depth,
-                                                    volume=volume,
-                                                    multiplicity=multiplicity,
-                                                    unit=unit,
-                                                    warranty=warranty)
-
+        product = distributors.models.Product.objects.take_by_party_key(distributor=self.distributor,
+                                                                        party_key=party_key,
+                                                                        name=name,
+                                                                        vendor=vendor,
+                                                                        category=category,
+                                                                        product_key=product_key,
+                                                                        part_number=part_number,
+                                                                        short_name=short_name,
+                                                                        name_rus=name_rus,
+                                                                        name_other=name_other,
+                                                                        description=description,
+                                                                        ean_128=ean_128,
+                                                                        upc=upc,
+                                                                        pnc=pnc,
+                                                                        hs_code=hs_code,
+                                                                        traceable=traceable,
+                                                                        unconditional=unconditional,
+                                                                        sale=sale,
+                                                                        condition_description=condition_description,
+                                                                        weight=weight,
+                                                                        width=width,
+                                                                        height=height,
+                                                                        depth=depth,
+                                                                        volume=volume,
+                                                                        multiplicity=multiplicity,
+                                                                        unit=unit,
+                                                                        warranty=warranty)
         # Удаляем имеющиеся партии товара
-        Party.objects.filter(product=product).delete()
+        distributors.models.Party.objects.filter(product=product).delete()
 
         # Получаем актуальную информацию по партиям товара
         is_available_for_order = item.get('isAvailableForOrder', None)
@@ -481,7 +473,7 @@ class Worker(Worker):
             price_in = item['price']['order']['value']
             currency_in = item['price']['order']['currency']
             currency_in = currency_in.replace('RUR', 'RUB')
-            currency_in = Currency.objects.take(key=currency_in)
+            currency_in = distributors.models.Currency.objects.take(key=currency_in)
         except KeyError:
             price_in = None
             currency_in = None
@@ -490,7 +482,7 @@ class Worker(Worker):
             price_out = item['price']['endUser']['value']
             currency_out = item['price']['endUser']['currency']
             currency_out = currency_out.replace('RUR', 'RUB')
-            currency_out = Currency.objects.take(key=currency_out)
+            currency_out = distributors.models.Currency.objects.take(key=currency_out)
         except KeyError:
             price_out = None
             currency_out = None
@@ -499,7 +491,7 @@ class Worker(Worker):
             price_out_open = item['price']['endUserWeb']['value']
             currency_out_open = item['price']['endUserWeb']['currency']
             currency_out_open = currency_out_open.replace('RUR', 'RUB')
-            currency_out_open = Currency.objects.take(key=currency_out_open)
+            currency_out_open = distributors.models.Currency.objects.take(key=currency_out_open)
         except KeyError:
             price_out_open = None
             currency_out_open = None
@@ -518,61 +510,60 @@ class Worker(Worker):
 
             can_reserve = location.get('canReserve', None)
 
-            location = Location.objects.take(distributor=self.distributor,
-                                             key=key,
-                                             description=description)
+            location = distributors.models.Location.objects.take(distributor=self.distributor,
+                                                                 key=key,
+                                                                 description=description)
 
-            party = Party.objects.create(distributor=self.distributor,
-                                         product=product,
-                                         price_in=price_in,
-                                         currency_in=currency_in,
-                                         price_out=price_out,
-                                         currency_out=currency_out,
-                                         price_out_open=price_out_open,
-                                         currency_out_open=currency_out_open,
-                                         must_keep_end_user_price=must_keep_end_user_price,
-                                         location=location,
-                                         quantity=quantity,
-                                         quantity_great_than=quantity_great_than,
-                                         unit=unit,
-                                         can_reserve=can_reserve,
-                                         is_available_for_order=is_available_for_order)
-
+            distributors.models.Party.objects.create(distributor=self.distributor,
+                                                     product=product,
+                                                     price_in=price_in,
+                                                     currency_in=currency_in,
+                                                     price_out=price_out,
+                                                     currency_out=currency_out,
+                                                     price_out_open=price_out_open,
+                                                     currency_out_open=currency_out_open,
+                                                     must_keep_end_user_price=must_keep_end_user_price,
+                                                     location=location,
+                                                     quantity=quantity,
+                                                     quantity_great_than=quantity_great_than,
+                                                     unit=unit,
+                                                     can_reserve=can_reserve,
+                                                     is_available_for_order=is_available_for_order)
         if len(item['locations']) == 0:
             location = None
             quantity = None
             quantity_great_than = None
             can_reserve = None
 
-            party = Party.objects.create(distributor=self.distributor,
-                                         product=product,
-                                         price_in=price_in,
-                                         currency_in=currency_in,
-                                         price_out=price_out,
-                                         currency_out=currency_out,
-                                         price_out_open=price_out_open,
-                                         currency_out_open=currency_out_open,
-                                         must_keep_end_user_price=must_keep_end_user_price,
-                                         location=location,
-                                         quantity=quantity,
-                                         quantity_great_than=quantity_great_than,
-                                         can_reserve=can_reserve,
-                                         is_available_for_order=is_available_for_order)
+            distributors.models.Party.objects.create(distributor=self.distributor,
+                                                     product=product,
+                                                     price_in=price_in,
+                                                     currency_in=currency_in,
+                                                     price_out=price_out,
+                                                     currency_out=currency_out,
+                                                     price_out_open=price_out_open,
+                                                     currency_out_open=currency_out_open,
+                                                     must_keep_end_user_price=must_keep_end_user_price,
+                                                     location=location,
+                                                     quantity=quantity,
+                                                     quantity_great_than=quantity_great_than,
+                                                     can_reserve=can_reserve,
+                                                     is_available_for_order=is_available_for_order)
             self.count_parties += 1
         return product
 
     def get_ids_for_update_content(self, mode=None):
 
         if mode == 'all':
-            ids_ = Product.objects.filter(distributor=self.distributor).values('product_key')
+            ids_ = distributors.models.Product.objects.filter(distributor=self.distributor).values('product_key')
             ids = []
             for id_ in ids_:
                 ids.append(id_['product_key'])
             return ids
 
         elif mode == 'clear':
-            ids_ = Product.objects.filter(distributor=self.distributor,
-                                          content__isnull=True).values('product_key')
+            ids_ = distributors.models.Product.objects.filter(distributor=self.distributor,
+                                                              content__isnull=True).values('product_key')
             ids = []
             for id_ in ids_:
                 ids.append(id_['product_key'])
@@ -632,8 +623,8 @@ class Worker(Worker):
 
     def parse_content(self, content):
 
-        products = Product.objects.filter(distributor=self.distributor,
-                                          product_key=content['itemId'])
+        products = distributors.models.Product.objects.filter(distributor=self.distributor,
+                                                              product_key=content['itemId'])
         for product in products:
 
             # description
@@ -647,26 +638,26 @@ class Worker(Worker):
                 unit = parameter.get('unit', None)
 
                 if name:
-                    parameter = Parameter.objects.take(distributor=self.distributor,
-                                                       name=name,
-                                                       description=description)
+                    parameter = distributors.models.Parameter.objects.take(distributor=self.distributor,
+                                                                           name=name,
+                                                                           description=description)
                 else:
                     continue
 
                 if unit:
-                    unit = ParameterUnit.objects.take(key=unit)
+                    unit = distributors.models.ParameterUnit.objects.take(key=unit)
 
-                parameter_value = ParameterValue.objects.take(distributor=self.distributor,
-                                                              product=product,
-                                                              parameter=parameter,
-                                                              value=value,
-                                                              unit=unit)
+                parameter_value = distributors.models.ParameterValue.objects.take(distributor=self.distributor,
+                                                                                  product=product,
+                                                                                  parameter=parameter,
+                                                                                  value=value,
+                                                                                  unit=unit)
                 print(parameter_value)
 
             # images
             for image in content['images']:
                 url = image.get('url', None)
-                image = ProductImage.objects.take(product=product, source_url=url)
+                image = distributors.models.ProductImage.objects.take(product=product, source_url=url)
                 print(image)
 
             product.content_loaded = timezone.now()
