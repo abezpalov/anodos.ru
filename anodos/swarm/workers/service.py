@@ -176,8 +176,7 @@ class Worker(Worker):
         # ids_ = pflops.models.Product.objects.filter(images_loaded__isnull=True).values('id')
         for n, id_ in enumerate(ids_):
 
-            if n % 100 == 0:
-                gc.collect()
+            gc.collect()
 
             product = pflops.models.Product.objects.get(id=id_['id'])
             print(f'{n + 1} of {len(ids_)} {product}')
