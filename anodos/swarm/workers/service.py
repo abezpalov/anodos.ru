@@ -1,3 +1,4 @@
+import gc
 import PIL
 import numpy as np
 
@@ -174,6 +175,8 @@ class Worker(Worker):
         ids_ = pflops.models.Product.objects.all().values('id')
         # ids_ = pflops.models.Product.objects.filter(images_loaded__isnull=True).values('id')
         for n, id_ in enumerate(ids_):
+
+            gc.collect()
 
             product = pflops.models.Product.objects.get(id=id_['id'])
             print(f'{n + 1} of {len(ids_)} {product}')
