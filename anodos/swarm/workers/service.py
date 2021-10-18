@@ -218,25 +218,25 @@ class Worker(Worker):
                 images_ = distributors.models.ProductImage.objects.filter(product=product_)
                 for image_ in images_:
 
-                    # Открываем исходное изображение и проверяем, достаточный ли размер изображения
-                    try:
-                        im = PIL.Image.open(image_.file_name)
-                    except ValueError:
-                        del im
-                        continue
-                    except PIL.UnidentifiedImageError:
-                        del im
-                        continue
-
-                    if im.size[0] < 600 and im.size[1] < 600:
-                        del im
-                        continue
-
                     # Берём сущность с базы
                     image = pflops.models.ProductImage.objects.take(product=product,
                                                                     source_url=image_.source_url)
 
                     if image.file_name:
+                        continue
+
+                    # Открываем исходное изображение и проверяем, достаточный ли размер изображения
+                    try:
+                        im = PIL.Image.open(image_.file_name)
+                    except ValueError:
+                        continue
+                    except AttributeError:
+                        continue
+                    except PIL.UnidentifiedImageError:
+                        continue
+
+                    if im.size[0] < 600 and im.size[1] < 600:
+                        im.close()
                         del im
                         continue
 
@@ -251,6 +251,8 @@ class Worker(Worker):
                         im_new.paste(im, (dx, dy))
                         im_new = im_new.resize((600, 600))
                     except SyntaxError:
+                        im.close()
+                        im_new.close()
                         del im, im_new
                         image.delete()
                         continue
@@ -265,6 +267,8 @@ class Worker(Worker):
                             copy = True
 
                     if copy is True:
+                        im.close()
+                        im_new.close()
                         del im, im_new, v_
                         image.delete()
                     else:
@@ -276,5 +280,8 @@ class Worker(Worker):
                         image.save()
 
                         print(image)
+
+                        im.close()
+                        im_new.close()
 
                         del im, im_new, v_, image
