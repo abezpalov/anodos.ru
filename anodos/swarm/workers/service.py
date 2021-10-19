@@ -261,6 +261,7 @@ class Worker(Worker):
                     im.close()
                     im_new.close()
                     image.delete()
+                    continue
 
                 # Сравниваем изображения с имеющимися
                 copy = False
