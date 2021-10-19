@@ -1,6 +1,6 @@
-import gc
 import PIL
 import numpy as np
+from threading import Thread
 
 from django.conf import settings
 
@@ -176,115 +176,112 @@ class Worker(Worker):
         # ids_ = pflops.models.Product.objects.filter(images_loaded__isnull=True).values('id')
         for n, id_ in enumerate(ids_):
 
-            gc.collect()
-
             product = pflops.models.Product.objects.get(id=id_['id'])
             print(f'{n + 1} of {len(ids_)} {product}')
 
-            # Получаем векторы для сравнения из базы имеющихся изображений
-            vs = []
-            images = pflops.models.ProductImage.objects.filter(product=product)
-            for image in images:
+            thread = Thread(target=self.update_images_of_product, args=(product,))
+            thread.start()
+            thread.join()
 
-                # Если изображение уже есть
-                if image.file_name:
+    def update_images_of_product(self, product):
 
-                    # Загружаем изображение
-                    try:
-                        im = PIL.Image.open(image.file_name)
-                    except FileNotFoundError:
-                        image.delete()
-                        continue
-                    except PIL.UnidentifiedImageError:
-                        image.delete()
-                        continue
+        # Получаем векторы для сравнения из базы имеющихся изображений
+        vs = []
+        images = pflops.models.ProductImage.objects.filter(product=product)
+        for image in images:
 
-                    # Сравниваем изображения с имеющимися
-                    copy = False
-                    thumbnail_ = im.resize((42, 42))
-                    v_ = np.array(thumbnail_).reshape(42 * 42 * 4)
-                    for v in vs:
-                        r = np.dot(v, v_) / (np.linalg.norm(v) * np.linalg.norm(v_))
-                        if r < 1.0e-12:
-                            copy = True
+            # Если изображение уже есть
+            if image.file_name:
 
-                    # Если это копия
-                    if copy is True:
-                        image.delete()
-                    else:
-                        vs.append(v_)
+                # Загружаем изображение
+                try:
+                    im = PIL.Image.open(image.file_name)
+                except FileNotFoundError:
+                    continue
+                except PIL.UnidentifiedImageError:
+                    continue
 
-            # Проходим по всех исходным продуктам у дистрибьюторов
-            for product_ in distributors.models.Product.objects.filter(to_pflops=product):
+                # Сравниваем изображения с имеющимися
+                copy = False
+                thumbnail_ = im.resize((42, 42))
+                v_ = np.array(thumbnail_).reshape(42 * 42 * 4)
+                for v in vs:
+                    r = np.dot(v, v_) / (np.linalg.norm(v) * np.linalg.norm(v_))
+                    if r < 1.0e-12:
+                        copy = True
 
-                # Проходим по всем изображениям
-                images_ = distributors.models.ProductImage.objects.filter(product=product_)
-                for image_ in images_:
+                # Если это копия
+                if copy is True:
+                    image.delete()
+                else:
+                    vs.append(v_)
 
-                    # Берём сущность с базы
-                    image = pflops.models.ProductImage.objects.take(product=product,
+        # Проходим по всех исходным продуктам у дистрибьюторов
+        for product_ in distributors.models.Product.objects.filter(to_pflops=product):
+
+            # Проходим по всем изображениям
+            images_ = distributors.models.ProductImage.objects.filter(product=product_)
+            for image_ in images_:
+
+                # Берём сущность с базы
+                image = pflops.models.ProductImage.objects.take(product=product,
                                                                     source_url=image_.source_url)
 
-                    if image.file_name:
-                        continue
+                if image.file_name:
+                    continue
 
-                    # Открываем исходное изображение и проверяем, достаточный ли размер изображения
-                    try:
-                        im = PIL.Image.open(image_.file_name)
-                    except ValueError:
-                        continue
-                    except AttributeError:
-                        continue
-                    except PIL.UnidentifiedImageError:
-                        continue
+                # Открываем исходное изображение и проверяем, достаточный ли размер изображения
+                try:
+                    im = PIL.Image.open(image_.file_name)
+                except ValueError:
+                    continue
+                except AttributeError:
+                    continue
+                except PIL.UnidentifiedImageError:
+                    continue
 
-                    if im.size[0] < 600 and im.size[1] < 600:
-                        im.close()
-                        del im
-                        continue
+                if im.size[0] < 600 and im.size[1] < 600:
+                    im.close()
+                    continue
 
-                    # Вычисляем размеры и координаты
-                    size = max(im.size[0], im.size[1])
-                    dx = (size - im.size[0]) // 2
-                    dy = (size - im.size[1]) // 2
+                # Вычисляем размеры и координаты
+                size = max(im.size[0], im.size[1])
+                dx = (size - im.size[0]) // 2
+                dy = (size - im.size[1]) // 2
 
-                    # Создаём новое изображение и масштабируем его
-                    try:
-                        im_new = PIL.Image.new('RGBA', (size, size), '#00000000')
-                        im_new.paste(im, (dx, dy))
-                        im_new = im_new.resize((600, 600))
-                    except SyntaxError:
-                        im.close()
-                        im_new.close()
-                        del im, im_new
-                        image.delete()
-                        continue
+                # Создаём новое изображение и масштабируем его
+                try:
+                    im_new = PIL.Image.new('RGBA', (size, size), '#00000000')
+                    im_new.paste(im, (dx, dy))
+                    im_new = im_new.resize((600, 600))
+                except SyntaxError:
+                    im.close()
+                    im_new.close()
+                    image.delete()
+                    continue
 
-                    # Сравниваем изображения с имеющимися
-                    copy = False
-                    thumbnail_ = im_new.resize((42, 42))
-                    v_ = np.array(thumbnail_).reshape(42*42*4)
-                    for v in vs:
-                        r = np.dot(v, v_) / (np.linalg.norm(v) * np.linalg.norm(v_))
-                        if r < 1.0e-12:
-                            copy = True
+                # Сравниваем изображения с имеющимися
+                copy = False
+                thumbnail_ = im_new.resize((42, 42))
+                v_ = np.array(thumbnail_).reshape(42*42*4)
+                for v in vs:
+                    r = np.dot(v, v_) / (np.linalg.norm(v) * np.linalg.norm(v_))
+                    if r < 1.0e-12:
+                        copy = True
 
-                    if copy is True:
-                        im.close()
-                        im_new.close()
-                        del im, im_new, v_
-                        image.delete()
-                    else:
-                        vs.append(v_)
+                if copy is True:
+                    im.close()
+                    im_new.close()
+                    image.delete()
+                else:
+                    vs.append(v_)
 
-                        image.file_name = f'{settings.MEDIA_ROOT}products/photos/{image.id}.png'
-                        image.create_directory_for_file()
-                        im_new.save(image.file_name, "PNG")
-                        image.save()
+                    image.file_name = f'{settings.MEDIA_ROOT}products/photos/{image.id}.png'
+                    image.create_directory_for_file()
+                    im_new.save(image.file_name, "PNG")
+                    image.save()
 
-                        print(image)
+                    print(image)
 
-                        im.close()
-                        im_new.close()
-
-                        del im, im_new, v_, image
+                    im.close()
+                    im_new.close()
