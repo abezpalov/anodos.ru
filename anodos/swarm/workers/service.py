@@ -223,7 +223,7 @@ class Worker(Worker):
 
                 # Берём сущность с базы
                 image = pflops.models.ProductImage.objects.take(product=product,
-                                                                    source_url=image_.source_url)
+                                                                source_url=image_.source_url)
 
                 if image.file_name:
                     continue
