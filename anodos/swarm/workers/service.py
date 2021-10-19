@@ -257,6 +257,10 @@ class Worker(Worker):
                     im_new.close()
                     image.delete()
                     continue
+                except OSError:
+                    im.close()
+                    im_new.close()
+                    image.delete()
 
                 # Сравниваем изображения с имеющимися
                 copy = False
