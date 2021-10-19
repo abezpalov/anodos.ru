@@ -179,9 +179,7 @@ class Worker(Worker):
             product = pflops.models.Product.objects.get(id=id_['id'])
             print(f'{n + 1} of {len(ids_)} {product}')
 
-            thread = Thread(target=self.update_images_of_product, args=(product,))
-            thread.start()
-            thread.join()
+            self.update_images_of_product(product)
 
     def update_images_of_product(self, product):
 
