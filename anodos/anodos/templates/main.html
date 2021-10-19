@@ -83,13 +83,8 @@
     </div>
 
     <div class="ui hidden divider"></div>
-
-    {% block content %}
-
-    {% endblock %}
-
 </header>
-
+{% block content %}
 <main class="ui center aligned container">
     #Карусель с новинками
     <div class="ui hidden divider"></div>
@@ -142,7 +137,6 @@
                 <div class="description">
                     ...
 
-
                 </div>
             </div>
         </div>
@@ -152,9 +146,8 @@
         <div class="ui card">Рабочее место офисного сотрудника</div>
         <div class="ui card">Принтеры и МФУ для офиса</div>
     </div>
-
-
 </main>
+{% endblock %}
 
 <footer>
   <div class="ui vertical footer segment">
