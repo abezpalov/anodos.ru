@@ -269,7 +269,7 @@ class Currency(models.Model):
     objects = CurrencyManager()
 
     def __str__(self):
-        return f'{self.key} = {self.rate} / {self.quantity}'
+        return f'{self.key}'
 
     class Meta:
         ordering = ['key']
