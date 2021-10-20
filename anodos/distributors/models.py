@@ -414,36 +414,6 @@ class ProductManager(models.Manager):
             o.traceable = traceable
             need_save = True
 
-        # unconditional
-        unconditional = kwargs.get('unconditional', False)
-        if unconditional != o.unconditional:
-            o.unconditional = unconditional
-            need_save = True
-
-        # sale
-        sale = kwargs.get('sale', False)
-        if sale != o.sale:
-            o.sale = sale
-            need_save = True
-
-        # promo
-        promo = kwargs.get('promo', False)
-        if promo != o.promo:
-            o.promo = promo
-            need_save = True
-
-        # outoftrade
-        outoftrade = kwargs.get('outoftrade', False)
-        if outoftrade != o.outoftrade:
-            o.outoftrade = outoftrade
-            need_save = True
-
-        # condition_description
-        condition_description = kwargs.get('condition_description', None)
-        if condition_description is not None and condition_description != o.condition_description:
-            o.condition_description = condition_description
-            need_save = True
-
         # weight
         weight = kwargs.get('weight', None)
         if weight is not None and weight != o.weight:
@@ -527,13 +497,6 @@ class Product(models.Model):
 
     # Прослеживаемый товар
     traceable = models.BooleanField(null=True, default=None, db_index=True)
-
-    # Кондиционность и распродажа
-    unconditional = models.BooleanField(default=False, db_index=True)
-    sale = models.BooleanField(default=False, db_index=True)
-    promo = models.BooleanField(default=False, db_index=True)
-    outoftrade = models.BooleanField(default=False, db_index=True)
-    condition_description = models.TextField(null=True, default=None)
 
     # Характеристики упаковки
     weight = models.DecimalField(max_digits=18, decimal_places=9, null=True, default=None)
@@ -681,6 +644,13 @@ class PartyManager(models.Manager):
         can_reserve = kwargs.get('can_reserve', None)
         is_available_for_order = kwargs.get('is_available_for_order', None)
 
+        # Кондиционность и распродажа
+        unconditional = kwargs.get('unconditional', False)
+        sale = kwargs.get('sale', False)
+        promo = kwargs.get('promo', False)
+        outoftrade = kwargs.get('outoftrade', False)
+        condition_description = kwargs.get('condition_description', None)
+
         o = super().create(distributor=distributor,
                            product=product,
                            price=price,
@@ -693,7 +663,12 @@ class PartyManager(models.Manager):
                            quantity_great_than=quantity_great_than,
                            unit=unit,
                            can_reserve=can_reserve,
-                           is_available_for_order=is_available_for_order)
+                           is_available_for_order=is_available_for_order,
+                           unconditional=unconditional,
+                           sale=sale,
+                           promo=promo,
+                           outoftrade=outoftrade,
+                           condition_description=condition_description)
         return o
 
 
@@ -725,6 +700,13 @@ class Party(models.Model):
                              on_delete=models.CASCADE, related_name='+')
     can_reserve = models.BooleanField(null=True, default=None, db_index=True)
     is_available_for_order = models.BooleanField(null=True, default=None, db_index=True)
+
+    # Кондиционность и распродажа
+    unconditional = models.BooleanField(default=False, db_index=True)
+    sale = models.BooleanField(default=False, db_index=True)
+    promo = models.BooleanField(default=False, db_index=True)
+    outoftrade = models.BooleanField(default=False, db_index=True)
+    condition_description = models.TextField(null=True, default=None)
 
     created = models.DateTimeField(default=timezone.now)
 

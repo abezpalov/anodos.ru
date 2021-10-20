@@ -11,8 +11,6 @@ from swarm.workers.worker import Worker
 class Worker(Worker):
     source_name = 'treolan.ru'
     name = 'Treolan'
-    login = settings.TREOLAN_LOGIN
-    password = settings.TREOLAN_PASSWORD
     url = {'wsdl': 'https://api.treolan.ru/ws/service.asmx?wsdl',
            'base': 'https://www.treolan.ru',
            }
@@ -28,8 +26,8 @@ class Worker(Worker):
 
         self.source = swarm.models.Source.objects.take(
             name=self.source_name,
-            login=self.login,
-            password=self.password)
+            login=settings.TREOLAN_LOGIN,
+            password=settings.TREOLAN_PASSWORD)
         self.distributor = distributors.models.Distributor.objects.take(name=self.name)
 
         self.stock = distributors.models.Location.objects.take(distributor=self.distributor,
@@ -176,8 +174,8 @@ class Worker(Worker):
         return category
 
     def update_catalog(self):
-        result = self.client.service.GenCatalogV2(login=self.login,
-                                                  password=self.password,
+        result = self.client.service.GenCatalogV2(login=settings.TREOLAN_LOGIN,
+                                                  password=settings.TREOLAN_PASSWORD,
                                                   category='',
                                                   vendorid=0,
                                                   keywords='',
@@ -327,10 +325,6 @@ class Worker(Worker):
                                                                                 gtin=gtin,
                                                                                 tnved=tnved,
                                                                                 traceable=traceable,
-                                                                                unconditional=sale,
-                                                                                sale=sale,
-                                                                                promo=promo,
-                                                                                outoftrade=outoftrade,
                                                                                 weight=weight,
                                                                                 width=width,
                                                                                 height=height,
@@ -360,7 +354,11 @@ class Worker(Worker):
                                                                          quantity=quantity_on_stock,
                                                                          quantity_great_than=great_than_on_stock,
                                                                          can_reserve=can_reserve,
-                                                                         is_available_for_order=is_available_for_order)
+                                                                         is_available_for_order=is_available_for_order,
+                                                                         unconditional=sale,
+                                                                         sale=sale,
+                                                                         promo=promo,
+                                                                         outoftrade=outoftrade)
                         self.count_parties += 1
                         print(party)
 
@@ -379,7 +377,11 @@ class Worker(Worker):
                                                                          quantity=quantity_on_transit,
                                                                          quantity_great_than=great_than_on_transit,
                                                                          can_reserve=can_reserve,
-                                                                         is_available_for_order=is_available_for_order)
+                                                                         is_available_for_order=is_available_for_order,
+                                                                         unconditional=sale,
+                                                                         sale=sale,
+                                                                         promo=promo,
+                                                                         outoftrade=outoftrade)
                         self.count_parties += 1
                         print(party)
 
@@ -403,8 +405,8 @@ class Worker(Worker):
     def update_content(self, keys):
 
         for n, key in enumerate(keys):
-            result = self.client.service.ProductInfoV2(Login=self.login,
-                                                       password=self.password,
+            result = self.client.service.ProductInfoV2(Login=settings.TREOLAN_LOGIN,
+                                                       password=settings.TREOLAN_PASSWORD,
                                                        Articul=key)
             tree = lxml.etree.fromstring(result['Result'])
             self.parse_content(tree=tree, n_key=n, len_keys=len(keys))

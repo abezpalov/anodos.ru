@@ -30,6 +30,7 @@ class Worker(Worker):
         elif command == 'update_products':
             # Продукты
             self.update_products()
+            self.update_prices_and_quantities()
 
         elif command == 'update_parameters':
             # Характеристики
@@ -39,10 +40,6 @@ class Worker(Worker):
 
             # Изображения
             self.update_images()
-
-            # Количество
-
-            # Цены
 
         elif command == 'fix':
             ids_ = pflops.models.Product.objects.all().values('id')
@@ -84,11 +81,6 @@ class Worker(Worker):
                                                          gtin=product_.gtin,
                                                          tnved=product_.tnved,
                                                          traceable=product_.traceable,
-                                                         unconditional=product_.unconditional,
-                                                         sale=product_.sale,
-                                                         promo=product_.promo,
-                                                         outoftrade=product_.outoftrade,
-                                                         condition_description=product_.condition_description,
                                                          weight=product_.weight,
                                                          width=product_.width,
                                                          height=product_.height,
@@ -100,7 +92,59 @@ class Worker(Worker):
             if product_.to_pflops != product:
                 product_.to_pflops = product
                 product_.save()
+
             print(f'{n + 1} of {len(ids_)} {product}')
+
+    def update_prices_and_quantities(self):
+
+        rub_ = distributors.models.Currency.objects.take(key="RUB")
+        rub = pflops.models.Currency.objects.take(key="RUB")
+
+        ids_ = pflops.models.Product.objects.all().values('id')
+        for n, id_ in enumerate(ids_):
+            product = pflops.models.Product.objects.get(id=id_['id'])
+
+            parties = distributors.models.Party.objects.filter(product__to_pflops=product)
+            price = None
+            quantity = 0
+            quantity_great_than = False
+
+            # Цены
+            for party in parties:
+                if party.quantity:
+                    if party.price_out_open:
+                        if party.price_out_open.currency == rub_:
+                            price = party.price_out_open.value
+                        else:
+                            price = float(party.price_out_open.value) * float(party.price_out_open.currency.rate) / \
+                                    float(party.price_out_open.currency.quantity)
+                        break
+
+                    elif party.price_in:
+                        if party.price_in.currency == rub_:
+                            price_ = float(party.price_in.value) * settings.MARGIN
+                        else:
+                            price_ = float(party.price_in.value) * float(party.price_in.currency.rate) / \
+                                    float(party.price_in.currency.quantity) * settings.MARGIN
+                        if price is None or price_ < price:
+                            price = price_
+
+            # Количество
+            for party in parties:
+                if party.quantity:
+                    quantity += party.quantity
+
+                    if party.quantity_great_than:
+                        quantity_great_than = True
+
+            if price is not None:
+                price = pflops.models.Price.objects.create(value=price, currency=rub)
+            product.price = price
+            product.quantity = quantity
+            product.quantity_great_than = quantity_great_than
+            product.save()
+
+            print(f'{n + 1} of {len(ids_)} {product} | {product.quantity} | {product.price}')
 
     def update_parameters(self):
 

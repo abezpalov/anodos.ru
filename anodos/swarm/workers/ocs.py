@@ -11,7 +11,7 @@ import distributors.models
 import swarm.workers.worker
 
 
-class Worker(Worker):
+class Worker(swarm.workers.worker.Worker):
 
     source_name = 'ocs.ru'
     name = 'OCS'
@@ -452,9 +452,6 @@ class Worker(Worker):
                                                                         pnc=pnc,
                                                                         hs_code=hs_code,
                                                                         traceable=traceable,
-                                                                        unconditional=unconditional,
-                                                                        sale=sale,
-                                                                        condition_description=condition_description,
                                                                         weight=weight,
                                                                         width=width,
                                                                         height=height,
@@ -528,7 +525,10 @@ class Worker(Worker):
                                                      quantity_great_than=quantity_great_than,
                                                      unit=unit,
                                                      can_reserve=can_reserve,
-                                                     is_available_for_order=is_available_for_order)
+                                                     is_available_for_order=is_available_for_order,
+                                                     unconditional=unconditional,
+                                                     sale=sale,
+                                                     condition_description=condition_description)
         if len(item['locations']) == 0:
             location = None
             quantity = None
@@ -548,7 +548,10 @@ class Worker(Worker):
                                                      quantity=quantity,
                                                      quantity_great_than=quantity_great_than,
                                                      can_reserve=can_reserve,
-                                                     is_available_for_order=is_available_for_order)
+                                                     is_available_for_order=is_available_for_order,
+                                                     unconditional=unconditional,
+                                                     sale=sale,
+                                                     condition_description=condition_description)
             self.count_parties += 1
         return product
 

@@ -188,7 +188,7 @@ class Currency(models.Model):
     objects = CurrencyManager()
 
     def __str__(self):
-        return f'{self.key} = {self.rate} / {self.quantity}'
+        return f'{self.key}'
 
     class Meta:
         ordering = ['key']
@@ -444,11 +444,6 @@ class Product(models.Model):
     # Цена, кондиционность и распродажа
     price = models.ForeignKey('Price', null=True, default=None,
                               on_delete=models.SET_NULL, related_name='+')
-    unconditional = models.BooleanField(default=False, db_index=True)
-    sale = models.BooleanField(default=False, db_index=True)
-    promo = models.BooleanField(default=False, db_index=True)
-    outoftrade = models.BooleanField(default=False, db_index=True)
-    condition_description = models.TextField(null=True, default=None)
 
     # Количество и характеристики упаковки
     quantity = models.IntegerField(null=True, default=None)
@@ -496,68 +491,6 @@ class Product(models.Model):
         ordering = ['-created']
         indexes = [GinIndex(fields=['names_search', 'parameters_search'],
                             name='product_search_idx')]
-
-
-class LocationManager(models.Manager):
-
-    pass
-
-
-class Location(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
-    name = models.TextField(null=True, default=None, db_index=True)
-    description = models.TextField(null=True, default=None)
-
-    objects = LocationManager()
-
-    def __str__(self):
-        return f'{self.name}'
-
-    class Meta:
-        ordering = ['name']
-
-
-class PartyManager(models.Manager):
-
-    pass
-
-
-class Party(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    product = models.ForeignKey('Product', null=True, default=None,
-                                on_delete=models.CASCADE, related_name='+')
-
-    # Цены
-    price = models.ForeignKey('Price', null=True, default=None,
-                              on_delete=models.CASCADE, related_name='rel_party_price')
-    price_in = models.ForeignKey('Price', null=True, default=None,
-                                 on_delete=models.CASCADE, related_name='rel_party_price_in')
-    price_out = models.ForeignKey('Price', null=True, default=None,
-                                  on_delete=models.CASCADE, related_name='rel_party_price_out')
-    price_out_open = models.ForeignKey('Price', null=True, default=None,
-                                       on_delete=models.CASCADE, related_name='rel_party_price_out_open')
-    must_keep_end_user_price = models.BooleanField(null=True, default=None, db_index=True)
-
-    # Доступность
-    location = models.ForeignKey('Location', null=True, default=None,
-                                 on_delete=models.CASCADE, related_name='+')
-    quantity = models.IntegerField(null=True, default=None)
-    quantity_great_than = models.BooleanField(null=True, default=None, db_index=True)
-    unit = models.ForeignKey('Unit', null=True, default=None,
-                             on_delete=models.CASCADE, related_name='+')
-    can_reserve = models.BooleanField(null=True, default=None, db_index=True)
-    is_available_for_order = models.BooleanField(null=True, default=None, db_index=True)
-
-    created = models.DateTimeField(default=timezone.now)
-
-    objects = PartyManager()
-
-    def __str__(self):
-        return f'{self.product} | {self.quantity} on {self.location}'
-
-    class Meta:
-        ordering = ['created']
 
 
 class ParameterGroupManager(models.Manager):
