@@ -7,10 +7,11 @@ import telebot
 
 from django.conf import settings
 from django.utils import timezone
-from swarm.models import *
 
 
 class Worker:
+
+    name = None
 
     def __init__(self):
         self.start_time = timezone.now()
@@ -18,6 +19,10 @@ class Worker:
         self.session = None
         self.cookies = None
         self.bot = telebot.TeleBot(settings.TELEGRAM_TOKEN)
+
+    def __del__(self):
+        delta = timezone.now() - self.start_time
+        print(f'{self.name} finish at {delta}')
 
     def send(self, content='test', chat_id=settings.TELEGRAM_LOG_CHAT, disable_web_page_preview=True):
 
