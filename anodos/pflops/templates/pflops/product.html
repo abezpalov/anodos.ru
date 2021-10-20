@@ -62,11 +62,13 @@
                 <tr>
                     <td>В наличии</td>
                     <td>
+                        <a href="#" data-do="show-parties" data-product="{{ product.id }}">
                         {% if product.quantity == None %}
                         0
                         {% else %}
                         {{ product.quantity }}
                         {% endif %}
+                        </a>
                     </td>
                 </tr>
                 <tr>
@@ -129,8 +131,14 @@
         {% endif %}
     </div>
 </main>
+
+{% endblock %}
+
+{% block modal %}
+{% include "pflops/modal/party.html" %}
 {% endblock %}
 
 {% block js %}
 {% include "pflops/js/product.js" %}
+{% include "pflops/js/party.js" %}
 {% endblock %}

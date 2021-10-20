@@ -1,15 +1,18 @@
+import json
+
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.db.models import Q
 
 import anodos.fixers
 import pflops.models
+import distributors.models
 
 
 def view_search(request):
     if request.method == 'POST':
-        search = request.POST.get('search', None)
-        if search:
+        search = request.POST.get('search', '')
+        if len(search) > 1:
             words = anodos.fixers.string_to_words(search)
             qs = [Q(quantity__gt=0)]
             for word in words:
@@ -49,3 +52,31 @@ def vendors(request):
 
     context = {'items': items}
     return render(request, 'pflops/vendors.html', locals())
+
+
+def ajax_get_parties(request):
+
+    # Проверяем тип запроса
+    if not request.is_ajax():
+        return HttpResponse(status=400)
+
+    # Получаем экземпляр продукта
+    product = request.POST.get('product', None)
+    try:
+        product = pflops.models.Product.objects.get(id=product)
+    except pflops.models.Product.DoesNotExist:
+        return HttpResponse(status=404)
+
+    parties = distributors.models.Party.objects.filter(product__to_pflops=product)
+
+    html = '<table>' \
+           '<thead><tr><th>Тест</th></tr>' \
+           '</table>'
+
+    # Готовим ответ
+    result = {'status': 'success',
+              'product': str(product.id),
+              'html': html}
+
+    # Возмращаем результат
+    return HttpResponse(json.dumps(result), 'application/javascript')

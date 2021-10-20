@@ -31,5 +31,7 @@ urlpatterns = [
     path('search/', pflops.views.view_search),
     path('product/<slug:product_slug>/', pflops.views.view_product),
 
+    path('ajax/get-parties/', pflops.views.ajax_get_parties),
+
     path('<slug:slug>/', pflops.views.article),
 ]

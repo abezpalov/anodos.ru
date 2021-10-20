@@ -3,6 +3,7 @@
 {% block title %}Anodos: Поиск по складам{% endblock %}
 
 {% block content %}
+<main class="ui center aligned container">
 <form method="post" action="/distributors/" id="form_distributors_search">
     <div class="ui fluid action input">
         <input name="search" type="text" value="{{ search }}"
@@ -58,7 +59,7 @@
 </table>
 {% endif %}
 {% endfor %}
-
+</main>
 {% endblock %}
 
 

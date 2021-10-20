@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     {% block description %}
     <meta name="description" content="Вычислительная техника и программное обеспечение из Самары с доставкой по России." />
     {% endblock %}
@@ -71,17 +72,8 @@
         {% endif %}
 
         <div class="right menu">
-            {% if user.is_authenticated %}
-            <a class="item" data-do="open-user-profile">
-                <i class="user secret icon"></i>
-            </a>
-            {% else %}
-            <a class="item" data-do="open-user-login">
-                <i class="user outline icon"></i>
-            </a>
-            {% endif %}
             <a class="item">
-                <i class="dolly icon"></i>Заказ
+                <i class="dolly flatbed icon"></i>Заказ
             </a>
         </div>
     </div>
@@ -154,13 +146,24 @@
 {% endblock %}
 
 <footer>
-  <div class="ui vertical footer segment">
-    <div class="ui center aligned container">
-      <div class="ui horizontal small divided link list">
-        <a class="item" href="mailto:root@anodos.ru">&copy; Андрей Безпалов</a>
-        <a class="item">Контактные данные</a>
-        <a class="item">Условия и положения</a>
-        <a class="item">Политика конфиденциальности</a>
+    <div class="ui vertical footer segment">
+        <div class="ui center aligned container">
+            <div class="ui horizontal small divided link list">
+                <a class="item" href="mailto:root@anodos.ru">&copy; Андрей Безпалов</a>
+                <a class="item">Контактные данные</a>
+                <a class="item">Условия и положения</a>
+                <a class="item">Политика конфиденциальности</a>
+                {% if user.is_authenticated %}
+                <a class="item" data-do="open-user-profile">
+                    <i class="user secret icon"></i>Служебный выход
+                </a>
+                {% else %}
+                <a class="item" data-do="open-user-login">
+                    <i class="user secret icon"></i>Служебный вход
+                </a>
+                {% endif %}
+
+
       </div>
     </div>
   </div>

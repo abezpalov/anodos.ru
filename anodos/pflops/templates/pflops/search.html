@@ -25,11 +25,13 @@
             <td>{{ product.part_number }}</td>
             <td><a href="/product/{{ product.slug }}/">{{ product.name }}</a></td>
             <td class="center aligned">
+                <a href="#" data-do="show-parties" data-product="{{ product.id }}">
                 {% autoescape off %}
                 {% if product.quantity == None %}0
                 {% else %}{{ product.quantity }}&nbsp;{{ product.unit.name }}
                 {% endif %}
                 {% endautoescape %}
+                </a>
             </td>
             <td class="right aligned">
                 {% autoescape off %}
@@ -50,4 +52,5 @@
 {% endblock %}
 
 {% block js %}
+{% include "pflops/js/party.js" %}
 {% endblock %}
