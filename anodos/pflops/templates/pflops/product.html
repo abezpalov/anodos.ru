@@ -7,93 +7,108 @@
 {% endblock %}
 
 {% block content %}
-<h2>{{ product.name }}</h2>
+<main class="ui container">
+    <h2>{{ product.name }}</h2>
 
-<div class="ui two column grid">
-    <div class="column">
+    <div class="ui two column grid">
+        <div class="column">
 
-        {# Когда картинок нет или она одна #}
-        {% if images|length <= 1 %}
+            {# Когда картинок нет или она одна #}
+            {% if images|length <= 1 %}
+                {% for image in images %}
+                    <img class="ui fluid image" src="{{ image.url }}" />
+                {% empty %}
+                    <img class="ui fluid image" src="/static/image.png" />
+                {% endfor %}
+
+            {# Когда картинок больше одной #}
+            {% else %}
+
             {% for image in images %}
-                <img class="ui fluid image" src="{{ image.url }}" />
-            {% empty %}
-                <img class="ui fluid image" src="/static/image.png" />
+                {% if forloop.first %}
+                <img class="ui fluid image" src="{{ image.url }}" id="showed-image"/>
+
+                <div class="ui four cards">
+                      <a class="green card" data-do="show-image" data-src="{{ image.url }}">
+                          <div class="image">
+                              <img class="ui image" src="{{ image.url }}">
+                          </div>
+                      </a>
+                {% else %}
+                      <a class="card" data-do="show-image" data-src="{{ image.url }}">
+                          <div class="white image">
+                              <img class="ui image" src="{{ image.url }}">
+                          </div>
+                      </a>
+                {% endif %}
+                {% if forloop.last %}
+                </div>
+                {% endif %}
+
             {% endfor %}
-
-        {# Когда картинок больше одной #}
-        {% else %}
-
-        {% for image in images %}
-            {% if forloop.first %}
-            <img class="ui fluid image" src="{{ image.url }}" />
-            <div class="ui tiny images">
-                <img class="ui image" src="{{ image.url }}">
             {% endif %}
-                <img class="ui image" src="{{ image.url }}">
-            {% if forloop.last %}
+        </div>
+        <div class="column">
+            <table class="ui celled striped table">
+                <tbody>
+                <tr>
+                    <td>Производитель</td>
+                    <td>{{ product.vendor.name }}</td>
+                </tr>
+                <tr>
+                    <td>Артикул</td>
+                    <td>{{ product.part_number }}</td>
+                </tr>
+                <tr>
+                    <td>В наличии</td>
+                    <td>
+                        {% if product.quantity == None %}
+                        0
+                        {% else %}
+                        {{ product.quantity }}
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Цена</td>
+                    <td>
+                        {% if product.price == None %}
+                        По запросу
+                        {% else %}
+                        <b>{% autoescape off %}{{ product.price.html }}{% endautoescape %}</b>
+                        {% endif %}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            {% if product.quantity > 0 %}
+            <div class="fluid ui animated positive fade button" tabindex="0">
+                <div class="visible content">Купить</div>
+                <div class="hidden content">или получить КП за час</div>
+            </div>
+            {% else %}
+            <div class="fluid ui animated primary fade button" tabindex="0">
+                <div class="visible content">Купить на заказ</div>
+                <div class="hidden content">или подобрать аналог</div>
             </div>
             {% endif %}
-
-        {% endfor %}
-        {% endif %}
-    </div>
-    <div class="column">
-        <table class="ui celled striped table">
-            <tbody>
-            <tr>
-                <td>Производитель</td>
-                <td>{{ product.vendor.name }}</td>
-            </tr>
-            <tr>
-                <td>Артикул</td>
-                <td>{{ product.part_number }}</td>
-            </tr>
-            <tr>
-                <td>В наличии</td>
-                <td>{% if product.quantity == None %}
-                    0
-                    {% else %}
-                    {{ product.quantity }}
-                    {% endif %}
-                </td>
-            </tr>
-            <tr>
-                <td>Цена</td>
-                <td>{% if product.price == None %}
-                    По запросу
-                    {% else %}
-                    <b>{{ product.price }}</b>
-                    {% endif %}
-                </td>
-            </tr>
-            </tbody>
-        </table>
-        {% if product.quantity > 0 %}
-        <div class="fluid ui animated primary fade button" tabindex="0">
-            <div class="visible content">Купить</div>
-            <div class="hidden content">или получить КП за час</div>
         </div>
-        {% else %}
-        <div class="fluid ui animated primary fade button" tabindex="0">
-            <div class="visible content">Купить на заказ</div>
-            <div class="hidden content">или подобрать аналог</div>
-        </div>
-        {% endif %}
     </div>
-</div>
 
-<div class="ui grid"><div class="ui hidden divider"></div></div>
+    <div class="ui grid"><div class="ui hidden divider"></div></div>
 
-<div>
+    <div>
     {# Поставить табы на описание, характеристики, документы, сертификаты, файлы для скачивания #}
 
-    {% if params|length > 0 %}
-    <table class="ui celled table">
-        <thead>
-            <tr><th>Характеристика</th><th>Значение</th></tr>
-        </thead>
-        <tbody>
-        {% for param in params %}
+        {% if params|length > 0 %}
+        <table class="ui celled table">
+            <thead>
+            <tr>
+                <th>Характеристика</th>
+                <th>Значение</th></tr>
+            </thead>
+            <tbody>
+            {% for param in params %}
             {% if param.value != None %}
             <tr>
                 <td>{{ param.parameter.name }}</td>
@@ -108,11 +123,14 @@
                 </td>
             </tr>
             {% endif %}
-        {% endfor %}
-        </tbody>
-    </table>
-    {% endif %}
-</div>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}
 
-
+{% block js %}
+{% include "pflops/js/product.js" %}
 {% endblock %}

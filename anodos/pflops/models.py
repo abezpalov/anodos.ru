@@ -180,6 +180,7 @@ class Currency(models.Model):
     key_digit = models.CharField(max_length=32, null=True, default=None, unique=True)
 
     name = models.TextField(null=True, default=None, db_index=True)
+    html = models.TextField(null=True, default=None, db_index=True)
     full_name = models.TextField(null=True, default=None, db_index=True)
 
     quantity = models.FloatField(null=True, default=None)
@@ -188,7 +189,10 @@ class Currency(models.Model):
     objects = CurrencyManager()
 
     def __str__(self):
-        return f'{self.key}'
+        if self.html is None:
+            return f'{self.key}'
+        else:
+            return f'{self.html}'
 
     class Meta:
         ordering = ['key']
@@ -212,9 +216,27 @@ class Price(models.Model):
     def __str__(self):
         return f'{self.value} {self.currency}'
 
+    def save(self, *args, **kwargs):
+        if self.value is not None:
+            if float(self.value) > 10.0:
+                self.value = int(self.value)
+        super().save(*args, **kwargs)
+
+    def create(self, *args, **kwargs):
+        if self.value is not None:
+            if float(self.value) > 10.0:
+                self.value = int.self.value
+        super().save(*args, **kwargs)
+
     @property
     def html(self):
-        return f'{self.value}&nbsp;{self.currency}'
+        if self.value is not None:
+            value = f'{self.value:,}'
+            value = value.replace(',', '&nbsp;')
+            value = value.replace('.', ',')
+            return f'{value}&nbsp;{self.currency}'
+        else:
+            return None
 
     class Meta:
         ordering = ['created']
@@ -587,6 +609,19 @@ class ParameterValue(models.Model):
             return f'{self.product}: {self.parameter} = {self.value} {self.unit}'
         else:
             return f'{self.product}: {self.parameter} = {self.value}'
+
+    def save(self, *args, **kwargs):
+        try:
+            value_ = float(self.value)
+            self.value = str(self.value)
+            while '.' in self.value and self.value[-1] in ('0', '.',):
+                self.value = self.value[:-1]
+        except ValueError:
+            pass
+        except TypeError:
+            pass
+
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['created']

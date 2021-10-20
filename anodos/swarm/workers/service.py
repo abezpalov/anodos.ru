@@ -41,12 +41,27 @@ class Worker(Worker):
             # Изображения
             self.update_images()
 
-        elif command == 'fix':
+        elif command == 'fix_products':
             ids_ = pflops.models.Product.objects.all().values('id')
             for n, id_ in enumerate(ids_):
                 product = pflops.models.Product.objects.get(id=id_['id'])
                 print(f'{n + 1} of {len(ids_)} {product}')
                 product.save()
+
+        elif command == 'fix_parameter_values':
+            ids_ = pflops.models.ParameterValue.objects.all().values('id')
+            for n, id_ in enumerate(ids_):
+                value = pflops.models.ParameterValue.objects.get(id=id_['id'])
+                print(f'{n + 1} of {len(ids_)} {value}')
+                value.save()
+
+        elif command == 'test':
+            images = pflops.models.ProductImage.objects.all()
+            for n, image in enumerate(images):
+                print(f'{n} of {len(images)} {image}')
+
+        elif command == 'del_all_images':
+            pflops.models.ProductImage.objects.all().delete()
 
     def update_products(self):
         """ Переносит сущность продукт в чистовик """
@@ -249,7 +264,7 @@ class Worker(Worker):
                 v_ = np.array(thumbnail_).reshape(42 * 42 * 4)
                 for v in vs:
                     r = np.dot(v, v_) / (np.linalg.norm(v) * np.linalg.norm(v_))
-                    if r < 1.0e-12:
+                    if r < 1.0e-11:
                         copy = True
 
                 # Если это копия
@@ -282,7 +297,7 @@ class Worker(Worker):
                 except PIL.UnidentifiedImageError:
                     continue
 
-                if im.size[0] < 600 and im.size[1] < 600:
+                if im.size[0] < 300 and im.size[1] < 300:
                     im.close()
                     continue
 

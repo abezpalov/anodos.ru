@@ -82,3 +82,24 @@ def fix_float(text):
     text = text.strip()
 
     return float(text)
+
+
+def string_to_words(name):
+    name = name.lower()
+
+    dictionary = {',': ' ', '?': ' ', '~': ' ', '!': ' ', '@': ' ', '#': ' ', '$': ' ',
+                  '%': ' ', '^': ' ', '&': ' ', '*': ' ', '(': ' ', ')': ' ', '=': ' ',
+                  '+': ' ', ':': ' ', ';': ' ', '<': ' ', '>': ' ', '\'': ' ', '"': ' ',
+                  '\\': ' ', '/': ' ', '№': ' ', '[': ' ', ']': ' ', '{': ' ', '}': '-',
+                  'ґ': ' ', 'ї': ' ', 'є': ' ', 'Ґ': ' ', 'Ї': ' ', 'Є': ' ', '—': ' ',
+                  '\t': ' ', '\n': ' ', }
+
+    for key in dictionary:
+        name = name.replace(key, dictionary[key])
+
+    while '  ' in name:
+        name = name.replace('  ', ' ')
+
+    name = name.strip()
+
+    return name.split(' ')

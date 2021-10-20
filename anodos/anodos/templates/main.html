@@ -18,12 +18,16 @@
             <h1 class="ui header"><a href="/">Anodos</a></h1>
         </div>
         <div class="ten wide column">
-            <div class="ui fluid action input">
-                <input name="search" type="text" value="{{ search }}"
-                       placeholder="Артикул, название, производитель, что угодно...">
-                <div class="ui positive button" data-do="apply-distributors-search">Найти</div>
-            </div>
-            <p></p>
+            <form method="post" action="/search/" id="form-search">
+
+                <div class="ui fluid action left icon input">
+                    <i class="search icon"></i>
+                    <input name="search" type="text" value="{{ search }}"
+                           placeholder="Артикул, название, производитель, что угодно...">
+                    <div class="ui positive button" data-do="apply-search">Найти</div>
+                </div>
+                <input name="csrfmiddlewaretoken" type="hidden" value="{{ csrf_token }}">
+            </form>
         </div>
         <div class="right aligned three wide column">
             <button class="circular ui positive icon button" data-do="open-callback">
@@ -203,6 +207,7 @@
 {% else %}
 {% include "anodos/js/login.js" %}
 {% endif %}
+{% include "anodos/js/search.js" %}
 {% block js %}
 {% endblock %}
 </script>

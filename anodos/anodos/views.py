@@ -7,12 +7,12 @@ from django.contrib.auth import authenticate, login, logout
 
 def view_index(request):
     context = {}
-    return render(request, 'main.html', context)
+    return render(request, 'main.html', locals())
 
 
 def view_login(request):
     context = {}
-    return render(request, 'login.html', context)
+    return render(request, 'login.html', locals())
 
 
 def ajax_login(request):

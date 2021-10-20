@@ -4,6 +4,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.db.models import Q
 
+import anodos.fixers
 import distributors.models
 import pflops.models
 
@@ -15,7 +16,7 @@ def index(request):
     if request.method == 'POST':
         search = request.POST.get('search', None)
         if search:
-            words = string_to_words(search)
+            words = anodos.fixers.string_to_words(search)
             qs = []
             for word in words:
                 if word:
@@ -494,24 +495,3 @@ def ajax_save_unit(request):
 
     # Возмращаем результат
     return HttpResponse(json.dumps(result), 'application/javascript')
-
-
-def string_to_words(name):
-    name = name.lower()
-
-    dictionary = {',': ' ', '?': ' ', '~': ' ', '!': ' ', '@': ' ', '#': ' ', '$': ' ',
-                  '%': ' ', '^': ' ', '&': ' ', '*': ' ', '(': ' ', ')': ' ', '=': ' ',
-                  '+': ' ', ':': ' ', ';': ' ', '<': ' ', '>': ' ', '\'': ' ', '"': ' ',
-                  '\\': ' ', '/': ' ', '№': ' ', '[': ' ', ']': ' ', '{': ' ', '}': '-',
-                  'ґ': ' ', 'ї': ' ', 'є': ' ', 'Ґ': ' ', 'Ї': ' ', 'Є': ' ', '—': ' ',
-                  '\t': ' ', '\n': ' ', }
-
-    for key in dictionary:
-        name = name.replace(key, dictionary[key])
-
-    while '  ' in name:
-        name = name.replace('  ', ' ')
-
-    name = name.strip()
-
-    return name.split(' ')
