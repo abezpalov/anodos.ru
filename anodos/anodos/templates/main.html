@@ -141,7 +141,7 @@
                         </div>
                         <div class="uk-overlay uk-overlay-primary uk-position-bottom uk-text-center">
                             <h3 class="uk-margin-remove">PRIMERGY TX1340 M4</h3>
-                            <p class="uk-margin-remove">Полноценный сервер для малого бизнеса или филиалов размером
+                            <p class="uk-margin-remove">Полноценный сервер с удалённым управлением для малого бизнеса или филиалов размером
                                 с папку для бумаг</p>
                         </div>
                     </li>
@@ -168,7 +168,7 @@
     <div class="uk-section-xsmall">
         <div class="uk-container">
             <div class="uk-flex uk-flex-center">
-                <h2><a class="uk-link-reset" href="/catalog/">Каталог</a></h2>
+                <h2><a class="uk-link-reset uk-link-toggle" href="/catalog/">Каталог</a></h2>
                 {% if perms.pflops.can_edit %}
                 <button class="uk-icon-button uk-button-default uk-margin-left"
                     uk-toggle="target: #modal-new-catalog-element">
@@ -207,46 +207,34 @@
         <div class="uk-container">
             <div class="uk-flex uk-flex-center">
                 <h2><a class="uk-link-reset" href="/help/">Помощь в подборе</a></h2>
+                {% if perms.pflops.can_edit %}
+                <button class="uk-icon-button uk-button-default uk-margin-left"
+                    uk-toggle="target: #modal-new-assistant-element">
+                    <i class="fa fa-plus"></i>
+                </button>
+                {% endif %}
             </div>
             <div class="uk-child-width-1-2@s
                         uk-child-width-1-3@m
                         uk-grid" uk-grid>
+                {% for element in assistant_elements %}
                 <div>
-                    <div class="uk-card uk-card-default uk-card-body">
-                        <h3 class="uk-card-title">Default</h3>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+                    <div class="uk-card uk-card-default">
+                        <div class="uk-card-media-top">
+                            <a class="uk-link-reset" href="/catalog/{{ element.path }}/">
+                                <img src="{{ element.image.url }}" alt="">
+                            </a>
+                        </div>
+                        <div class="uk-card-body">
+                            <h3 class="uk-card-title">
+                                <a class="uk-link-reset" href="/catalog/{{ element.path }}/">
+                                    {{ element.title }}
+                                </a>
+                            </h3>
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <div class="uk-card uk-card-default uk-card-body">
-                        <h3 class="uk-card-title">Default</h3>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                    </div>
-                </div>
-                <div>
-                    <div class="uk-card uk-card-default uk-card-body">
-                        <h3 class="uk-card-title">Default</h3>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                    </div>
-                </div>
-                <div>
-                    <div class="uk-card uk-card-default uk-card-body">
-                        <h3 class="uk-card-title">Default</h3>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                    </div>
-                </div>
-                <div>
-                    <div class="uk-card uk-card-default uk-card-body">
-                        <h3 class="uk-card-title">Default</h3>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                    </div>
-                </div>
-                <div>
-                    <div class="uk-card uk-card-default uk-card-body">
-                        <h3 class="uk-card-title">Default</h3>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
@@ -283,6 +271,7 @@
 
 {% include "anodos/modal/login.html" %}
 {% include "pflops/modal/catalog.html" %}
+{% include "pflops/modal/article.html" %}
 {% block modal %}
 {% endblock %}
 
@@ -300,6 +289,7 @@
 <script>
 {% block js %}
 {% include "pflops/js/catalog.js" %}
+{% include "pflops/js/article.js" %}
 {% endblock %}
 </script>
 

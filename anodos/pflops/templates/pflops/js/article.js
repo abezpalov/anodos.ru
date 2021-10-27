@@ -1,11 +1,11 @@
 {% if perms.pflops.can_edit %}
 
 // Загрузка нового изображения в каталог
-var new_catalog_element_progressbar = document.getElementById('new-catalog-element-progressbar');
+var new_assistant_element_progressbar = document.getElementById('new-assistant-element-progressbar');
 
-UIkit.upload('#new-catalog-element-upload', {
+UIkit.upload('#new-assistant-element-upload', {
 
-    url: '/ajax/load-catalog-element-image/',
+    url: '/ajax/load-assistant-element-image/',
     multiple: true,
     mime: 'image/*',
 
@@ -28,25 +28,24 @@ UIkit.upload('#new-catalog-element-upload', {
     },
     loadStart: function (e) {
         console.log('loadStart', arguments);
-        new_catalog_element_progressbar.removeAttribute('hidden');
-        new_catalog_element_progressbar.max = e.total;
-        new_catalog_element_progressbar.value = e.loaded;
+        new_assistant_element_progressbar.removeAttribute('hidden');
+        new_assistant_element_progressbar.max = e.total;
+        new_assistant_element_progressbar.value = e.loaded;
     },
     progress: function (e) {
         console.log('progress', arguments);
-        new_catalog_element_progressbar.max = e.total;
-        new_catalog_element_progressbar.value = e.loaded;
+        new_assistant_element_progressbar.max = e.total;
+        new_assistant_element_progressbar.value = e.loaded;
     },
     loadEnd: function (e) {
         console.log('loadEnd', arguments);
-        new_catalog_element_progressbar.max = e.total;
-        new_catalog_element_progressbar.value = e.loaded;
+        new_assistant_element_progressbar.max = e.total;
+        new_assistant_element_progressbar.value = e.loaded;
     },
     completeAll: function (e) {
         console.log('completeAll', arguments);
-
         setTimeout(function () {
-            new_catalog_element_progressbar.setAttribute('hidden', 'hidden');
+            new_assistant_element_progressbar.setAttribute('hidden', 'hidden');
         }, 1000);
         data = JSON.parse(e.responseText);
             UIkit.notification({
@@ -54,17 +53,17 @@ UIkit.upload('#new-catalog-element-upload', {
                 pos: 'bottom-right',
                 timeout: 5000
             });
-        $('#new-catalog-element-image-view').html('<img src="' + data.url + '" >');
-        $('#new-catalog-element-image').val(data.id);
+        $('#new-assistant-element-image-view').html('<img src="' + data.url + '" >');
+        $('#new-assistant-element-image').val(data.id);
     }
 });
 
-// Сохранение нового элемента в каталог
-$("body").delegate("[data-do='save-new-catalog-element']", "click", function(){
-    $.post('/ajax/save-new-catalog-element/', {
-        title: $('#new-catalog-element-title').val(),
-        slug: $('#new-catalog-element-slug').val(),
-        image: $('#new-catalog-element-image').val(),
+// Сохранение нового элемента помощи
+$("body").delegate("[data-do='save-new-assistant-element']", "click", function(){
+    $.post('/ajax/save-new-assistant-element/', {
+        title: $('#new-assistant-element-title').val(),
+        slug: $('#new-assistant-element-slug').val(),
+        image: $('#new-assistant-element-image').val(),
         csrfmiddlewaretoken: '{{ csrf_token }}'
     },
     function(data) {

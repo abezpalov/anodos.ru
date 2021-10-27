@@ -143,6 +143,71 @@ class CatalogElement(models.Model):
             self.path = f'{self.parent.path}/{self.slug}'
         else:
             self.path = self.slug
+        self.edited = timezone.now()
+
+        super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ['-created']
+
+
+class ArticleManager(models.Manager):
+
+    def create(self, title=None, slug=None, parent=None, image=None, assistant=False):
+
+        if title is None:
+            return None
+
+        if slug:
+            slug = anodos.fixers.to_slug(slug)
+        else:
+            slug = anodos.fixers.to_slug(title)
+
+        try:
+            image = Image.objects.get(id=image)
+        except Image.DoesNotExist:
+            return None
+
+        try:
+            parent = self.get(id=parent)
+        except Article.DoesNotExist:
+            parent = None
+
+        o = super().create(parent=parent, title=title, slug=slug, image=image, assistant=assistant)
+
+        return o
+
+
+class Article(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    parent = models.ForeignKey('CatalogElement', null=True, default=None,
+                               on_delete=models.SET_NULL, related_name='+')
+    image = models.ForeignKey('Image', null=True, default=None,
+                              on_delete=models.SET_NULL, related_name='+')
+    title = models.TextField(db_index=True)
+    slug = models.TextField(db_index=True, null=True, default=None)
+    path = models.TextField(db_index=True, null=True, default=None)
+    content = models.TextField(null=True, default=None)
+    description = models.TextField(null=True, default=None)
+
+    assistant = models.BooleanField(db_index=True, default=False)
+
+    created = models.DateTimeField(db_index=True, default=timezone.now)
+    edited = models.DateTimeField(db_index=True, null=True, default=None)
+    published = models.DateTimeField(db_index=True, null=True, default=None)
+
+    objects = ArticleManager()
+
+    def __str__(self):
+        return f'{self.title}'
+
+    def save(self, *args, **kwargs):
+        self.slug = anodos.fixers.to_slug(self.slug)
+        if self.parent:
+            self.path = f'{self.parent.path}/{self.slug}'
+        else:
+            self.path = self.slug
+        self.edited = timezone.now()
 
         super().save(*args, **kwargs)
 
