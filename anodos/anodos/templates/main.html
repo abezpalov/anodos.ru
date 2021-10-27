@@ -15,7 +15,7 @@
     {# CSS #}
     <link rel="stylesheet" href="/static/main.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.7.6/dist/css/uikit.min.css" />
-    <link href="static/fontawesome-pro-5.15.4-web/css/all.min.css" rel="stylesheet" type="text/css" />
+    <link href="/static/fontawesome-pro-5.15.4-web/css/all.min.css" rel="stylesheet" type="text/css" />
 
     {# Favicons #}
     <link type="image/x-icon" rel="shortcut icon" href="/favicon.ico">
@@ -221,13 +221,13 @@
                 <div>
                     <div class="uk-card uk-card-default">
                         <div class="uk-card-media-top">
-                            <a class="uk-link-reset" href="/catalog/{{ element.path }}/">
+                            <a class="uk-link-reset" href="/assistant/{{ element.path }}/">
                                 <img src="{{ element.image.url }}" alt="">
                             </a>
                         </div>
                         <div class="uk-card-body">
                             <h3 class="uk-card-title">
-                                <a class="uk-link-reset" href="/catalog/{{ element.path }}/">
+                                <a class="uk-link-reset" href="/assistant/{{ element.path }}/">
                                     {{ element.title }}
                                 </a>
                             </h3>

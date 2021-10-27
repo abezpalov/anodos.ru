@@ -31,6 +31,9 @@ urlpatterns = [
     path('search/', pflops.views.view_search),
     path('product/<slug:product_slug>/', pflops.views.view_product),
 
+    path('catalog/<path:path>/', pflops.views.view_catalog_element),
+    path('assistant/<path:path>/', pflops.views.view_assistant_element),
+
     path('ajax/get-parties/', pflops.views.ajax_get_parties),
     path('ajax/load-catalog-element-image/', pflops.views.ajax_load_catalog_element_image),
     path('ajax/save-new-catalog-element/', pflops.views.ajax_save_new_catalog_element),

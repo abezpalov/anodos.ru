@@ -39,6 +39,14 @@ def view_search(request):
     return render(request, 'pflops/search.html', locals())
 
 
+def view_catalog_element(request):
+    pass
+
+
+def view_assistant_element(request):
+    pass
+
+
 def view_product(request, product_slug):
 
     product = pflops.models.Product.objects.get(slug=product_slug)
