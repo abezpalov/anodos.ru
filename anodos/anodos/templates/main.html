@@ -183,10 +183,16 @@
                 <div>
                     <div class="uk-card uk-card-default">
                         <div class="uk-card-media-top">
-                            <img src="{{ element.image.url }}" alt="">
+                            <a class="uk-link-reset" href="/catalog/{{ element.path }}/">
+                                <img src="{{ element.image.url }}" alt="">
+                            </a>
                         </div>
                         <div class="uk-card-body">
-                            <h3 class="uk-card-title">{{ element.title }}</h3>
+                            <h3 class="uk-card-title">
+                                <a class="uk-link-reset" href="/catalog/{{ element.path }}/">
+                                    {{ element.title }}
+                                </a>
+                            </h3>
                         </div>
                     </div>
                 </div>
@@ -205,10 +211,6 @@
             <div class="uk-child-width-1-2@s
                         uk-child-width-1-3@m
                         uk-grid" uk-grid>
-                <div class="uk-card uk-card-default uk-card-body">
-                    <h3 class="uk-card-title">Media Bottom</h3>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.</p>
-                </div>
                 <div>
                     <div class="uk-card uk-card-default uk-card-body">
                         <h3 class="uk-card-title">Default</h3>
