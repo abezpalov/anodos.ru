@@ -1,28 +1,90 @@
-<div class="ui modal" id="modal-user-login">
-    <i class="close icon"></i>
-    <div class="header">Авторизоваться</div>
-    <div class="content">
-        <form class="ui form">
-            <div class="field">
-                <label>Имя пользователя</label>
-                <input id="login-username" name="username" type="text" placeholder="login" />
-            </div>
-            <div class="field">
-                <label>Пароль</label>
-                <input id="login-password" name="password" type="password" placeholder="password" />
-            </div>
-            <div class="ui horizontal divider">Или</div>
-            <p><a href="#" data-do="open-password-recovery">Восстановить пароль</a></p>
-            <p><a href="#" data-do="open-register">Зарегистрироваться</a></p>
-        </form>
-        <div id="modal-login-alert"></div>
-    </div>
-    <div class="actions">
-        <button class="ui labeled icon green button" data-do="apply-login">
-            <i class="sign-in icon"></i>Войти
-        </button>
-        <button class="ui labeled icon deny button">
-            <i class="x icon"></i>Отмена
-        </button>
+{% if user.is_authenticated %}
+
+<div id="modal-user-profile" class="uk-flex-top" uk-modal>
+    <div class="uk-modal-dialog uk-margin-auto-vertical">
+        <button class="uk-modal-close-outside" type="button" uk-close></button>
+        <div class="uk-modal-header">
+            <h2 class="uk-modal-title">Профиль пользователя</h2>
+        </div>
+        <div class="uk-modal-body">
+            <form>
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="profile-firstname">Имя</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" id="profile-firstname"
+                               name="firstname" type="text">
+                    </div>
+                </div>
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="profile-lastname">Фамилия</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" id="profile-lastname"
+                               name="lastname" type="text">
+                    </div>
+                </div>
+            </form>
+            <div id="modal-profile-alert"></div>
+        </div>
+        <div class="uk-modal-footer uk-text-right">
+            <button class="uk-button uk-button-primary" data-do="save-profile">
+                <span uk-icon="check"></span>
+                Сохранить профиль
+            </button>
+            <button class="uk-button uk-button-default uk-modal-close">
+                <span uk-icon="close"></span>
+                Отмена
+            </button>
+            <button class="uk-button uk-button-danger" data-do="apply-logout">
+                <span uk-icon="sign-out"></span>
+                Выйти
+            </button>
+        </div>
     </div>
 </div>
+
+{% else %}
+
+<div id="modal-user-login" class="uk-flex-top" uk-modal>
+    <div class="uk-modal-dialog uk-margin-auto-vertical">
+        <button class="uk-modal-close-outside" type="button" uk-close></button>
+        <div class="uk-modal-header">
+            <h2 class="uk-modal-title">Авторизоваться</h2>
+        </div>
+        <div class="uk-modal-body">
+            <form>
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="login-username">Имя пользователя</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" id="login-username"
+                               name="username" type="text" placeholder="login">
+                    </div>
+                </div>
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="login-password">Пароль</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" id="login-password"
+                               name="username" type="password" placeholder="password">
+                    </div>
+                </div>
+                <hr>
+                <ul>
+                    <li><a href="#" data-do="open-password-recovery">Восстановить пароль</a></li>
+                    <li><a href="#" data-do="open-register">Зарегистрироваться</a></li>
+                </ul>
+            </form>
+            <div id="modal-login-alert"></div>
+        </div>
+        <div class="uk-modal-footer uk-text-right">
+            <button class="uk-button uk-button-primary" data-do="apply-login">
+                <span uk-icon="sign-in"></span>
+                Войти
+            </button>
+            <button class="uk-button uk-button-default uk-modal-close">
+                <span uk-icon="close"></span>
+                Отмена
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endif %}

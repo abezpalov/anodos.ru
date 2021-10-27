@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="32.0px"
+   height="32.0px"
+   viewBox="0 0 32.0 32.0"
+   version="1.1"
+   id="SVGRoot"
+   sodipodi:docname="favicn3.svg"
+   inkscape:version="1.1.1 (eb90963e84, 2021-10-02)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview26"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="px"
+     showgrid="true"
+     inkscape:zoom="24.886869"
+     inkscape:cx="31.964648"
+     inkscape:cy="17.941188"
+     inkscape:window-width="2488"
+     inkscape:window-height="1376"
+     inkscape:window-x="72"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid32" />
+  </sodipodi:namedview>
+  <defs
+     id="defs21" />
+  <g
+     inkscape:label="Слой 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       class="fa-group"
+       id="g6"
+       transform="matrix(0.09448084,0,0,0.09802953,0.8830656,-9.0818355)">
+      <path
+         class="fa-secondary"
+         fill="currentColor"
+         d="m 63.52,351.84 a 23.94,23.94 0 0 1 -33.85,0 L 7.05,329.33 6.87,329.15 a 23.77,23.77 0 0 1 0.18,-33.61 l 96.42,-96.15 56.53,56.47 z"
+         opacity="0.4"
+         id="path2" />
+      <path
+         class="fa-primary"
+         fill="currentColor"
+         d="M 313.13,295.81 312.95,295.64 177,160.11 A 24,24 0 0 0 143,160 L 103.49,199.39 256.33,352 a 23.94,23.94 0 0 0 33.85,0 L 313,329.43 a 23.78,23.78 0 0 0 0.13,-33.62 z"
+         id="path4" />
+    </g>
+  </g>
+</svg>

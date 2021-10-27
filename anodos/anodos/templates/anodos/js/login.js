@@ -1,8 +1,18 @@
-// Открыть окно профиля
-$("body").delegate("[data-do*='open-user-login']", "click", function(e){
-    $('#modal-user-login').modal('show');
+{% if user.is_authenticated %}
+
+$("body").delegate("[data-do='apply-logout']", "click", function(){
+    $.post('/ajax/logout/', {
+        csrfmiddlewaretoken : '{{ csrf_token }}'
+    },
+    function(data) {
+        if (data.status == 'success'){
+            location.reload();
+        }
+    }, "json");
+    return false;
 });
 
+{% else %}
 
 // Авторизоваться
 $("body").delegate("[data-do='apply-login']", "click", function(){
@@ -21,16 +31,4 @@ $("body").delegate("[data-do='apply-login']", "click", function(){
     return false;
 });
 
-
-// Выйти
-$("body").delegate("[data-do='apply-logout']", "click", function(){
-    $.post('/ajax/logout/', {
-        csrfmiddlewaretoken : '{{ csrf_token }}'
-    },
-    function(data) {
-        if (data.status == 'success'){
-            location.reload();
-        }
-    }, "json");
-    return false;
-});
+{% endif %}

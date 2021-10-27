@@ -1,5 +1,8 @@
 import os
+import io
+import PIL
 import uuid
+
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -8,19 +11,124 @@ from django.contrib.postgres.indexes import GinIndex
 import anodos.fixers
 
 
+class ImageManager(models.Manager):
+
+    def take(self, bytes, style='catalog'):
+
+        if style == 'catalog':
+            width = 400
+            height = 240
+        else:
+            width = 400
+            height = 240
+
+        im = PIL.Image.open(io.BytesIO(bytes))
+
+        # Масштабируем исходное изображение
+        dx = width / im.size[0]
+        dy = height / im.size[1]
+        d = max(dx, dy)
+        im = im.resize((int(im.size[0]*d), int(im.size[1]*d)))
+
+        # Создаём новое изображение и вставляем в него участок исходного
+        im_new = PIL.Image.new('RGBA', (width, height), '#00000000')
+        dx = (width - im.size[0]) // 2
+        dy = (height - im.size[1]) // 2
+        im_new.paste(im, (dx, dy))
+
+        # Закрываем исходное изображение
+        im.close()
+
+        # Создаём объект изображения в базе
+        image = self.create()
+        image.file_name = f'{settings.MEDIA_ROOT}catalog/photos/{image.id}.png'
+        image.create_directory_for_file()
+        image.save()
+
+        im_new.save(image.file_name, "PNG")
+        im_new.close()
+
+        return image
+
+
+class Image(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    file_name = models.TextField(null=True, default=None)
+
+    created = models.DateTimeField(default=timezone.now, db_index=True)
+
+    objects = ImageManager()
+
+    def create_directory_for_file(self):
+        directory = '/'
+        for dir_ in self.file_name.split('/')[:-1]:
+            directory = '{}/{}'.format(directory, dir_)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+
+    def delete(self, *args, **kwargs):
+        try:
+            os.remove(self.file_name)
+        except FileNotFoundError:
+            pass
+        except TypeError:
+            pass
+        super().delete(*args, **kwargs)
+
+    @property
+    def url(self):
+        if self.file_name:
+            return self.file_name.replace(settings.MEDIA_ROOT, settings.MEDIA_URL)
+        else:
+            return None
+
+    def __str__(self):
+        return f'{self.url}'
+
+    class Meta:
+        ordering = ['-created']
+
+
 class ArticleManager(models.Manager):
-    pass
+
+    def create_catalog_element(self, title=None, slug=None, parent=None, image=None):
+
+        if title is None:
+            return None
+
+        if slug:
+            slug = anodos.fixers.to_slug(slug)
+        else:
+            slug = anodos.fixers.to_slug(title)
+
+        try:
+            image = Image.objects.get(id=image)
+        except Image.DoesNotExist:
+            return None
+
+        try:
+            parent = self.get(id=parent)
+        except Article.DoesNotExist:
+            parent = None
+
+        o = self.create(parent=parent, title=title, slug=slug, image=image, catalog_element=True)
+
+        return o
 
 
 class Article(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    Article = models.ForeignKey('Article', null=True, default=None,
-                                on_delete=models.SET_NULL, related_name='+')
+    parent = models.ForeignKey('Article', null=True, default=None,
+                               on_delete=models.SET_NULL, related_name='+')
+    image = models.ForeignKey('Image', null=True, default=None,
+                              on_delete=models.SET_NULL, related_name='+')
     title = models.TextField(db_index=True)
     slug = models.TextField(db_index=True, null=True, default=None)
     path = models.TextField(db_index=True, null=True, default=None)
     content = models.TextField(null=True, default=None)
     description = models.TextField(null=True, default=None)
+
+    catalog_element = models.BooleanField(db_index=True, default=False)
 
     created = models.DateTimeField(db_index=True, default=timezone.now)
     edited = models.DateTimeField(db_index=True, null=True, default=None)
@@ -30,6 +138,13 @@ class Article(models.Model):
 
     def __str__(self):
         return f'{self.title}'
+
+    def save(self, *args, **kwargs):
+        self.slug = anodos.fixers.to_slug(self.slug)
+        if self.parent:
+            self.path = f'{self.parent.path}/{self.slug}'
+
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['-created']

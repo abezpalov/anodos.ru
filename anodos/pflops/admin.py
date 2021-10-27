@@ -1,5 +1,5 @@
 from django.contrib import admin
-from pflops.models import Article, Vendor, Category, Product, Currency
+from pflops.models import Article, Vendor, Category, Product, Currency, Image
 
 
 @admin.register(Article)
@@ -23,5 +23,10 @@ class AdminProduct(admin.ModelAdmin):
 
 
 @admin.register(Currency)
+class AdminProduct(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Image)
 class AdminProduct(admin.ModelAdmin):
     pass

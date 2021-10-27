@@ -1,194 +1,306 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
     {% block description %}
     <meta name="description" content="Вычислительная техника и программное обеспечение из Самары с доставкой по России." />
     {% endblock %}
-    <title>{% block title %}Anodos{% endblock %}</title>
-    <link rel="stylesheet" type="text/css" href="/static/semantic/semantic.min.css">
-    <link rel="stylesheet" type="text/css" href="/static/main.css">
 
+    {% block title %}
+    <title>Anodos</title>
+    {% endblock %}
+
+    {# CSS #}
+    <link rel="stylesheet" href="/static/main.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.7.6/dist/css/uikit.min.css" />
+    <link href="static/fontawesome-pro-5.15.4-web/css/all.min.css" rel="stylesheet" type="text/css" />
+
+    {# Favicons #}
+    <link type="image/x-icon" rel="shortcut icon" href="/favicon.ico">
+    <link type="image/svg+xml" rel="icon" href="/favicon.svg">
 </head>
 <body>
-<header class="ui container">
-    <div class="ui grid"><div class="ui hidden divider"></div></div>
-    <div class="ui grid">
-        <div class="three wide center aligned column">
-            <h1 class="ui header"><a href="/">Anodos</a></h1>
-        </div>
-        <div class="ten wide column">
-            <form method="post" action="/search/" id="form-search">
+<header class="uk-section-xsmall">
 
-                <div class="ui fluid action left icon input">
-                    <i class="search icon"></i>
-                    <input name="search" type="text" value="{{ search }}"
-                           placeholder="Артикул, название, производитель, что угодно...">
-                    <div class="ui positive button" data-do="apply-search">Найти</div>
-                </div>
-                <input name="csrfmiddlewaretoken" type="hidden" value="{{ csrf_token }}">
-            </form>
-        </div>
-        <div class="right aligned three wide column">
-            <button class="circular ui positive icon button" data-do="open-callback">
-                <i class="icon phone"></i>
-            </button>
-            <button class="ui circular linkedin icon button">
-                <i class="paper plane icon"></i>
-            </button>
-            <a href="mailto:info@anodos.ru">
-                <div class="circular ui icon button">
-                    <i class="icon mail"></i>
-                </div>
-            </a>
-        </div>
-    </div>
-    <div class="ui grid"><div class="ui hidden divider"></div></div>
-    <div class="ui secondary menu">
-        <div class="ui dropdown item">
-            Каталог
-            <i class="dropdown icon"></i>
-            <div class="menu">
-                <a class="item">Серверы</a>
-                <a class="item">Системы хранения данных</a>
-                <a class="item">Сетевое оборудование</a>
+    {# Строка с логотипом #}
+    <div class="uk-container">
+        <div class="uk-flex">
+            <div class="uk-width-auto">
+                <a href="/" class="uk-logo">Anodos</a>
             </div>
-        </div>
-        <a class="item">Автоподбор</a>
-        <a class="item">Новинки</a>
-        {% if perms.distributors.can_do_something %}
-        <div class="ui dropdown item">
-            Служебное
-            <i class="dropdown icon"></i>
-            <div class="menu">
-                <a class="item" href="/distributors/">Поиск по складам</a>
-                <a class="item" href="/distributors/vendors/">Производители</a>
-                <a class="item" href="/distributors/categories/">Категории</a>
-                <a class="item" href="/distributors/parameters/">Параметры</a>
-                <a class="item" href="/distributors/units/">Единицы измерения</a>
+            <div class="uk-width-expand uk-margin-left">
+                <form class="uk-form-horizontal" method="post" action="/search/" id="form-search">
+                    <div class="uk-flex">
+                        <input class="uk-input" name="search" type="text" value="{{ search }}"
+                            placeholder="Артикул, название, производитель, что угодно..."
+                            id="main-search">
+                        <button class="uk-button uk-button-primary" data-do="apply-search">Найти</button>
+                    </div>
+                    <input name="csrfmiddlewaretoken" type="hidden" value="{{ csrf_token }}">
+                </form>
             </div>
-        </div>
-        {% endif %}
-
-        <div class="right menu">
-            <a class="item">
-                <i class="dolly flatbed icon"></i>Заказ
-            </a>
+            <div class="uk-width-auto uk-margin-left">
+                <div class="uk-align-right">
+                    <button class="uk-icon-button uk-button-primary">
+                        <i class="fa fa-phone"></i>
+                    </button>
+                    <button class="uk-icon-button uk-button-default">
+                        <i class="fab fa-telegram-plane"></i>
+                    </button>
+                    <button class="uk-icon-button uk-button-default">
+                        <i class="fa fa-envelope"></i>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="ui hidden divider"></div>
+    {# Основное меню #}
+    <div class="uk-container">
+        <nav class="uk-navbar-container" uk-navbar>
+            <div class="uk-navbar-left">
+                <ul class="uk-navbar-nav">
+                    <li>
+                        <a href="#">Каталог</a>
+                        <div class="uk-navbar-dropdown">
+                            <ul class="uk-nav uk-navbar-dropdown-nav">
+                                <li><a href="#">Серверы</a></li>
+                                <li><a href="#">Системы хранения данных</a></li>
+                                <li><a href="#">Ноутбуки и планшеты</a></li>
+                                <li><a href="#">Моноблоки</a></li>
+                                <li><a href="#">Персональные компьютеры</a></li>
+                                <li><a href="#">Информационная безопасность</a></li>
+                                <li><a href="#">Сетевое оборудование</a></li>
+                                <li><a href="#">Оргтехника</a></li>
+                                <li class="uk-nav-divider"></li>
+                                <li><a href="#">Весь каталог</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li>
+                        <a href="#">Помощь в подборе</a>
+                        <div class="uk-navbar-dropdown">
+                            <ul class="uk-nav uk-navbar-dropdown-nav">
+                                <li><a href="#">Сервер для 1С</a></li>
+                                <li><a href="#">Система хранения данных</a></li>
+                                <li><a href="#">Инфраструктура для SAP</a></li>
+                                <li><a href="#">Файловый сервер</a></li>
+                                <li><a href="#">Сервер для видеонаблюдения</a></li>
+                                <li><a href="#">Рабочее место офисного сотрудника</a></li>
+                                <li><a href="#">Принтеры и МФУ для офиса</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li><a href="#">Новости и новинки</a></li>
+                </ul>
+            </div>
+            <div class="uk-navbar-right">
+                <ul class="uk-navbar-nav">
+                    <li>
+                        <a href="#">
+                            {% if odrer.is_not_empty %}
+                            <i class="fad fa-dolly-flatbed-alt"></i>
+                            {% else %}
+                            <i class="fad fa-dolly-flatbed-empty"></i>
+                            {% endif %}
+                            Заказ
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
 </header>
+
 {% block content %}
-<main class="ui center aligned container">
-    #Карусель с новинками
-    <div class="ui hidden divider"></div>
-
-    <h3>Каталог</h3>
-    <div class="ui three cards">
-        <div class="ui card">
-            <div class="image">
-                <img src="">
+<main>
+    {# Карусель #}
+    <div class="uk-section-xsmall">
+        <div class="uk-container">
+            <div class="uk-position-relative uk-visible-toggle uk-light" tabindex="-1"
+                 uk-slideshow="ratio: 19:9; animation: push; autoplay: true">
+                <ul class="uk-slideshow-items">
+                    <li>
+                        <div class="uk-position-cover uk-animation-kenburns
+                                    uk-animation-reverse uk-transform-origin-center-left">
+                            <img src="media/pflops/test1.jpg" alt="" uk-cover>
+                        </div>
+                        <div class="uk-position-bottom uk-position-medium uk-text-center uk-light">
+                            <h3 class="uk-margin-remove">PRIMERGY M6</h3>
+                            <p class="uk-margin-remove">Новые серверы Fujitsu на процессорах Intel Xeon Scale
+                                третьего поколения</p>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="uk-position-cover uk-animation-kenburns
+                                    uk-animation-reverse uk-transform-origin-center-left">
+                            <img src="media/pflops/test2.jpg" alt="" uk-cover>
+                        </div>
+                        <div class="uk-overlay uk-overlay-primary uk-position-bottom uk-text-center">
+                            <h3 class="uk-margin-remove">PRIMERGY TX1340 M4</h3>
+                            <p class="uk-margin-remove">Полноценный сервер для малого бизнеса или филиалов размером
+                                с папку для бумаг</p>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="uk-position-cover uk-animation-kenburns
+                                    uk-animation-reverse uk-transform-origin-center-left">
+                        <img src="media/pflops/test4.jpg" alt="" uk-cover>
+                    </div>
+                    <div class="uk-overlay uk-overlay-primary uk-position-bottom uk-text-center">
+                        <h3 class="uk-margin-remove">PRIMERGY RX2450</h3>
+                        <p class="uk-margin-remove">После долгого перерыва, первый сервер Fujitsu на процессоре AMD</p>
+                    </div>
+                </li>
+                </ul>
+                <a class="uk-position-center-left uk-position-small uk-hidden-hover"
+                   href="#" uk-slidenav-previous uk-slideshow-item="previous"></a>
+                <a class="uk-position-center-right uk-position-small uk-hidden-hover"
+                   href="#" uk-slidenav-next uk-slideshow-item="next"></a>
             </div>
-            <div class="content">
-                <a class="header">Серверы</a>
-                <div class="description">
-                    ...
-
-
-                </div>
-            </div>
-            {% if perms.pflops.can_do_something %}
-            <div class="extra content">
-                <a>
-                    <i class="user icon"></i>
-                    22 Friends
-                </a>
-            </div>
-            {% endif %}
         </div>
-        <div class="ui card">Системы хранения данных</div>
-        <div class="ui card">Резервное копирование</div>
-        <div class="ui card">Ноутбуки</div>
-        <div class="ui card">Моноблоки</div>
-        <div class="ui card">Персональные компьютеры</div>
-        <div class="ui card">Информационная безопасность</div>
-        <div class="ui card">Активное сетевое оборудование</div>
-        <div class="ui card">Оргтехника</div>
     </div>
-    <div class="ui hidden divider"></div>
 
-    <h3>Автоподбор</h3>
-    <div class="ui ui three cards">
-        <div class="ui card">
-            <div class="image">
-                <img src="">
+    {# Каталог #}
+    <div class="uk-section-xsmall">
+        <div class="uk-container">
+            <div class="uk-flex uk-flex-center">
+                <h2><a class="uk-link-reset" href="/catalog/">Каталог</a></h2>
+                {% if perms.pflops.can_edit %}
+                <button class="uk-icon-button uk-button-default uk-margin-left"
+                    uk-toggle="target: #modal-new-catalog-element">
+                    <i class="fa fa-plus"></i>
+                </button>
+                {% endif %}
             </div>
-            <div class="content">
-                <a class="header">Сервер для 1С</a>
-                <div class="meta">
-                    <span class="date">Обновлено 14 октября 2021 года</span>
+            <div class="uk-child-width-1-2@s
+                        uk-child-width-1-3@m
+                        uk-grid" uk-grid>
+                {% for element in catalog_elements %}
+                <div>
+                    <div class="uk-card uk-card-default">
+                        <div class="uk-card-media-top">
+                            <img src="{{ element.image.url }}" alt="">
+                        </div>
+                        <div class="uk-card-body">
+                            <h3 class="uk-card-title">{{ element.title }}</h3>
+                        </div>
+                    </div>
                 </div>
-                <div class="description">
-                    ...
+                {% endfor %}
 
+            </div>
+        </div>
+    </div>
+
+    {# Помощь в подборе #}
+    <div class="uk-section-xsmall">
+        <div class="uk-container">
+            <div class="uk-flex uk-flex-center">
+                <h2><a class="uk-link-reset" href="/help/">Помощь в подборе</a></h2>
+            </div>
+            <div class="uk-child-width-1-2@s
+                        uk-child-width-1-3@m
+                        uk-grid" uk-grid>
+                <div class="uk-card uk-card-default uk-card-body">
+                    <h3 class="uk-card-title">Media Bottom</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.</p>
+                </div>
+                <div>
+                    <div class="uk-card uk-card-default uk-card-body">
+                        <h3 class="uk-card-title">Default</h3>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+                    </div>
+                </div>
+                <div>
+                    <div class="uk-card uk-card-default uk-card-body">
+                        <h3 class="uk-card-title">Default</h3>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+                    </div>
+                </div>
+                <div>
+                    <div class="uk-card uk-card-default uk-card-body">
+                        <h3 class="uk-card-title">Default</h3>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+                    </div>
+                </div>
+                <div>
+                    <div class="uk-card uk-card-default uk-card-body">
+                        <h3 class="uk-card-title">Default</h3>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+                    </div>
+                </div>
+                <div>
+                    <div class="uk-card uk-card-default uk-card-body">
+                        <h3 class="uk-card-title">Default</h3>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+                    </div>
+                </div>
+                <div>
+                    <div class="uk-card uk-card-default uk-card-body">
+                        <h3 class="uk-card-title">Default</h3>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="ui card">Инфраструктура для SAP</div>
-        <div class="ui card">Файловый сервер</div>
-        <div class="ui card">Сервер для видеонаблюдения</div>
-        <div class="ui card">Рабочее место офисного сотрудника</div>
-        <div class="ui card">Принтеры и МФУ для офиса</div>
     </div>
 </main>
 {% endblock %}
 
-<footer>
-    <div class="ui vertical footer segment">
-        <div class="ui center aligned container">
-            <div class="ui horizontal small divided link list">
-                <a class="item" href="mailto:root@anodos.ru">&copy; Андрей Безпалов</a>
-                <a class="item">Контактные данные</a>
-                <a class="item">Условия и положения</a>
-                <a class="item">Политика конфиденциальности</a>
-                {% if user.is_authenticated %}
-                <a class="item" data-do="open-user-profile">
-                    <i class="user secret icon"></i>Служебный выход
-                </a>
-                {% else %}
-                <a class="item" data-do="open-user-login">
-                    <i class="user secret icon"></i>Служебный вход
-                </a>
-                {% endif %}
-
-
-      </div>
+<footer class="uk-section uk-section-muted uk-section-small">
+    <div class="uk-container">
+        <div class="uk-flex uk-flex-center">
+        <div class="uk-subnav uk-subnav-divider">
+            <a class="uk-link-toggle" href="mailto:root@anodos.ru">
+                &copy; Андрей Безпалов
+            </a>
+            <a class="uk-link-toggle">
+                <i class="fa fa-map-marker-alt"></i>&nbsp;Контактные данные
+            </a>
+            <a class="uk-link-toggle">
+                <i class="fa fa-file-signature"></i>&nbsp;Политика конфиденциальности
+            </a>
+            {% if user.is_authenticated %}
+            <a class="uk-link-toggle" uk-toggle="target: #modal-user-profile">
+                <i class="fa fa-clipboard-user"></i>&nbsp;Профиль и выход
+            </a>
+            {% else %}
+            <a class="uk-link-toggle" uk-toggle="target: #modal-user-login">
+                <i class="fa fa-user-secret"></i>&nbsp;Служебный вход
+            </a>
+            {% endif %}
+        </div></div>
     </div>
-  </div>
 </footer>
 
-<!-- Модальные окна  -->
-{% if user.is_authenticated %}
-{% include "anodos/modal/profile.html" %}
-{% else %}
+{# Модальные окна  #}
+
 {% include "anodos/modal/login.html" %}
-{% endif %}
+{% include "pflops/modal/catalog.html" %}
 {% block modal %}
 {% endblock %}
-<!-- /Модальные окна  -->
 
-<!-- jQuery and Semantic -->
+{# JS Frameworks #}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="/static/semantic/semantic.min.js"></script>
-<script>
-    $('.ui.dropdown').dropdown({on: 'hover'});
-    $('.ui.checkbox').checkbox();
-</script>
-<!-- /jQuery and Semantic -->
+<script src="https://cdn.jsdelivr.net/npm/uikit@3.7.6/dist/js/uikit.min.js"></script>
 
-<!-- Yandex.Metrika counter -->
+{# Global scripts #}
+<script>
+{% include "anodos/js/login.js" %}
+{% include "anodos/js/search.js" %}
+</script>
+
+{# Local scripts #}
+<script>
+{% block js %}
+{% include "pflops/js/catalog.js" %}
+{% endblock %}
+</script>
+
+{# Yandex.Metrika counter #}
 <script type="text/javascript" >
    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
    m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
@@ -202,18 +314,6 @@
    });
 </script>
 <noscript><div><img src="https://mc.yandex.ru/watch/13190530" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter -->
-
-<script>
-{% if user.is_authenticated %}
-{% include "anodos/js/profile.js" %}
-{% else %}
-{% include "anodos/js/login.js" %}
-{% endif %}
-{% include "anodos/js/search.js" %}
-{% block js %}
-{% endblock %}
-</script>
 
 </body>
 </html>

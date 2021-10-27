@@ -1,12 +1,22 @@
-import json
 
+import json
+import telebot
+
+from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.db.models import Q
+from django.views.decorators.csrf import csrf_exempt
 
 import anodos.fixers
 import pflops.models
 import distributors.models
+
+
+def view_index(request):
+    catalog_elements = pflops.models.Article.objects.filter(catalog_element=True).order_by('created')
+
+    return render(request, 'main.html', locals())
 
 
 def view_search(request):
@@ -80,3 +90,64 @@ def ajax_get_parties(request):
 
     # Возмращаем результат
     return HttpResponse(json.dumps(result), 'application/javascript')
+
+
+@csrf_exempt
+def ajax_load_catalog_element_image(request):
+
+    # Проверяем права доступа
+    if not request.user.has_perm('pflops.can_change'):
+        return HttpResponse(status=403)
+
+    message = []
+    items = request.FILES.items()
+    for _, file in items:
+
+        bytes = file.read()
+        image = pflops.models.Image.objects.take(bytes, style='catalog')
+
+        message = str(image)
+
+    # Готовим ответ
+    result = {'status': 'success',
+              'id': str(image.id),
+              'url': str(image.url)}
+
+    # Возмращаем результат
+    return HttpResponse(json.dumps(result), 'application/javascript')
+
+
+def ajax_save_new_catalog_element(request):
+
+    # Проверяем тип запроса
+    if not request.POST:
+        return HttpResponse(status=400)
+
+    # title
+    title = request.POST.get('title', None)
+
+    # slug
+    slug = request.POST.get('slug', None)
+
+    # image
+    image = request.POST.get('image', None)
+
+    parent = request.POST.get('parent', None)
+
+    catalog_element = pflops.models.Article.objects.create_catalog_element(parent=parent,
+                                                                           title=title,
+                                                                           slug=slug,
+                                                                           image=image)
+    if catalog_element is None:
+        return HttpResponse(status=400)
+
+    # Готовим ответ
+    result = {'status': 'success',
+              'id': str(catalog_element.id),
+              'title': str(catalog_element.title),
+              'image': str(catalog_element.image),
+              'test': str(image)}
+
+    # Возмращаем результат
+    return HttpResponse(json.dumps(result), 'application/javascript')
+

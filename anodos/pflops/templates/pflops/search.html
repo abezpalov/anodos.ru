@@ -1,53 +1,59 @@
 {% extends "main.html" %}
 
-{% block title %}Anodos: поиск{% endblock %}
+{% block title %}
+<title>Anodos: поиск</title>
+{% endblock %}
 
 {% block content %}
-<main class="ui container">
-    {% for product in products %}
-    {% if forloop.first %}
-    <table class="ui striped table">
-        <thead>
-        <tr>
-            <th class="center aligned">#</th>
-            <th class="center aligned">Производитель</th>
-            <th class="center aligned">Артикул</th>
-            <th class="center aligned">Наименование</th>
-            <th class="center aligned">В&nbsp;наличии</th>
-            <th class="center aligned">Цена</th>
-        </tr>
-        </thead>
-        <tbody>
-    {% endif %}
-        <tr>
-            <td>{{ forloop.counter }}</td>
-            <td>{{ product.vendor.name }}</td>
-            <td>{{ product.part_number }}</td>
-            <td><a href="/product/{{ product.slug }}/">{{ product.name }}</a></td>
-            <td class="center aligned">
-                <a href="#" data-do="show-parties" data-product="{{ product.id }}">
-                {% autoescape off %}
-                {% if product.quantity == None %}0
-                {% else %}{{ product.quantity }}&nbsp;{{ product.unit.name }}
+<main>
+    <div class="uk-section-xsmall">
+        <div class="uk-container">
+            {% for product in products %}
+            {% if forloop.first %}
+            <table class="uk-table">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Производитель</th>
+                    <th>Артикул</th>
+                    <th>Наименование</th>
+                    <th>В&nbsp;наличии</th>
+                    <th>Цена</th>
+                </tr>
+                </thead>
+                <tbody>
                 {% endif %}
-                {% endautoescape %}
-                </a>
-            </td>
-            <td class="right aligned">
-                {% autoescape off %}
-                {% if product.price == None %}
-                По&nbsp;запросу
-                {% else %}
-                {{ product.price.html }}
-                {% endif %}
-                {% endautoescape %}
-            </td>
-        </tr>
-    {% if forloop.last %}
-        </tbody>
-    </table>
-    {% endif %}
-{% endfor %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ product.vendor.name }}</td>
+                    <td>{{ product.part_number }}</td>
+                    <td><a href="/product/{{ product.slug }}/">{{ product.name }}</a></td>
+                    <td>
+                        <a href="#" data-do="show-parties" data-product="{{ product.id }}">
+                            {% autoescape off %}
+                            {% if product.quantity == None %}0
+                            {% else %}{{ product.quantity }}&nbsp;{{ product.unit.name }}
+                            {% endif %}
+                            {% endautoescape %}
+                        </a>
+                    </td>
+                    <td>
+                        {% autoescape off %}
+                        {% if product.price == None %}
+                        По&nbsp;запросу
+                        {% else %}
+                        {{ product.price.html }}
+                        {% endif %}
+                        {% endautoescape %}
+                    </td>
+                </tr>
+                {% if forloop.last %}
+                </tbody>
+            </table>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
 </main>
 {% endblock %}
 

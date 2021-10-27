@@ -22,16 +22,18 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('distributors/', include('distributors.urls')),
 
-    path('', anodos.views.view_index),
     path('login/', anodos.views.view_login),
 
     path('ajax/login/', anodos.views.ajax_login),
     path('ajax/logout/', anodos.views.ajax_logout),
 
+    path('', pflops.views.view_index),
     path('search/', pflops.views.view_search),
     path('product/<slug:product_slug>/', pflops.views.view_product),
 
     path('ajax/get-parties/', pflops.views.ajax_get_parties),
+    path('ajax/load-catalog-element-image/', pflops.views.ajax_load_catalog_element_image),
+    path('ajax/save-new-catalog-element/', pflops.views.ajax_save_new_catalog_element),
 
     path('<slug:slug>/', pflops.views.article),
 ]

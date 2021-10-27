@@ -1,0 +1,28 @@
+<div class="ui modal" id="modal-phone">
+    <i class="close icon"></i>
+    <div class="header">Авторизоваться</div>
+    <div class="content">
+        <form class="ui form">
+            <div class="field">
+                <label>Имя пользователя</label>
+                <input id="login-username" name="username" type="text" placeholder="login" />
+            </div>
+            <div class="field">
+                <label>Пароль</label>
+                <input id="login-password" name="password" type="password" placeholder="password" />
+            </div>
+            <div class="ui horizontal divider">Или</div>
+            <p><a href="#" data-do="open-password-recovery">Восстановить пароль</a></p>
+            <p><a href="#" data-do="open-register">Зарегистрироваться</a></p>
+        </form>
+        <div id="modal-login-alert"></div>
+    </div>
+    <div class="actions">
+        <button class="ui labeled icon green button" data-do="apply-login">
+            <i class="sign-in icon"></i>Войти
+        </button>
+        <button class="ui labeled icon deny button">
+            <i class="x icon"></i>Отмена
+        </button>
+    </div>
+</div>

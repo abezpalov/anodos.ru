@@ -1,6 +1,8 @@
 {% extends "main.html" %}
 
-{% block title %}{{ product.name }} {% endblock %}
+{% block title %}
+<title>{{ product.name }}</title>
+{% endblock %}
 
 {% block description %}
 <meta name="description" content="{{ product.name }} купить в Самаре за {{ product.price }} с доставкой по России." />
