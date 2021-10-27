@@ -14,7 +14,7 @@ import distributors.models
 
 
 def view_index(request):
-    catalog_elements = pflops.models.Article.objects.filter(catalog_element=True).order_by('created')
+    catalog_elements = pflops.models.CatalogElement.objects.all().order_by('created')
 
     return render(request, 'main.html', locals())
 
@@ -134,10 +134,10 @@ def ajax_save_new_catalog_element(request):
 
     parent = request.POST.get('parent', None)
 
-    catalog_element = pflops.models.Article.objects.create_catalog_element(parent=parent,
-                                                                           title=title,
-                                                                           slug=slug,
-                                                                           image=image)
+    catalog_element = pflops.models.CatalogElement.objects.create(parent=parent,
+                                                                  title=title,
+                                                                  slug=slug,
+                                                                  image=image)
     if catalog_element is None:
         return HttpResponse(status=400)
 

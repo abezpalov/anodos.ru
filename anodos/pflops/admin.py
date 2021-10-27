@@ -1,8 +1,8 @@
 from django.contrib import admin
-from pflops.models import Article, Vendor, Category, Product, Currency, Image
+from pflops.models import CatalogElement, Vendor, Category, Product, Currency, Image
 
 
-@admin.register(Article)
+@admin.register(CatalogElement)
 class AdminArticle(admin.ModelAdmin):
     pass
 

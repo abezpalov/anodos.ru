@@ -89,9 +89,9 @@ class Image(models.Model):
         ordering = ['-created']
 
 
-class ArticleManager(models.Manager):
+class CatalogElementManager(models.Manager):
 
-    def create_catalog_element(self, title=None, slug=None, parent=None, image=None):
+    def create(self, title=None, slug=None, parent=None, image=None):
 
         if title is None:
             return None
@@ -108,17 +108,17 @@ class ArticleManager(models.Manager):
 
         try:
             parent = self.get(id=parent)
-        except Article.DoesNotExist:
+        except CatalogElement.DoesNotExist:
             parent = None
 
-        o = self.create(parent=parent, title=title, slug=slug, image=image, catalog_element=True)
+        o = super().create(parent=parent, title=title, slug=slug, image=image)
 
         return o
 
 
-class Article(models.Model):
+class CatalogElement(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    parent = models.ForeignKey('Article', null=True, default=None,
+    parent = models.ForeignKey('CatalogElement', null=True, default=None,
                                on_delete=models.SET_NULL, related_name='+')
     image = models.ForeignKey('Image', null=True, default=None,
                               on_delete=models.SET_NULL, related_name='+')
@@ -128,13 +128,11 @@ class Article(models.Model):
     content = models.TextField(null=True, default=None)
     description = models.TextField(null=True, default=None)
 
-    catalog_element = models.BooleanField(db_index=True, default=False)
-
     created = models.DateTimeField(db_index=True, default=timezone.now)
     edited = models.DateTimeField(db_index=True, null=True, default=None)
     published = models.DateTimeField(db_index=True, null=True, default=None)
 
-    objects = ArticleManager()
+    objects = CatalogElementManager()
 
     def __str__(self):
         return f'{self.title}'
@@ -143,6 +141,8 @@ class Article(models.Model):
         self.slug = anodos.fixers.to_slug(self.slug)
         if self.parent:
             self.path = f'{self.parent.path}/{self.slug}'
+        else:
+            self.path = self.slug
 
         super().save(*args, **kwargs)
 
