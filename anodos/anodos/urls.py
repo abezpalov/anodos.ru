@@ -39,6 +39,8 @@ urlpatterns = [
     path('ajax/save-new-catalog-element/', pflops.views.ajax_save_new_catalog_element),
     path('ajax/load-assistant-element-image/', pflops.views.ajax_load_assistant_element_image),
     path('ajax/save-new-assistant-element/', pflops.views.ajax_save_new_assistant_element),
+    path('ajax/product-image-upload/', pflops.views.ajax_product_image_upload),
+    path('ajax/product-image-link/', pflops.views.ajax_product_image_link),
 
     path('<slug:slug>/', pflops.views.article),
 ]

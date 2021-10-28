@@ -9,128 +9,136 @@
 {% endblock %}
 
 {% block content %}
-<main class="ui container">
-    <h2>{{ product.name }}</h2>
-
-    <div class="ui two column grid">
-        <div class="column">
-
-            {# Когда картинок нет или она одна #}
-            {% if images|length <= 1 %}
-                {% for image in images %}
-                    <img class="ui fluid image" src="{{ image.url }}" />
-                {% empty %}
-                    <img class="ui fluid image" src="/static/image.png" />
-                {% endfor %}
-
-            {# Когда картинок больше одной #}
-            {% else %}
-
-            {% for image in images %}
-                {% if forloop.first %}
-                <img class="ui fluid image" src="{{ image.url }}" id="showed-image"/>
-
-                <div class="ui four cards">
-                      <a class="green card" data-do="show-image" data-src="{{ image.url }}">
-                          <div class="image">
-                              <img class="ui image" src="{{ image.url }}">
-                          </div>
-                      </a>
-                {% else %}
-                      <a class="card" data-do="show-image" data-src="{{ image.url }}">
-                          <div class="white image">
-                              <img class="ui image" src="{{ image.url }}">
-                          </div>
-                      </a>
-                {% endif %}
-                {% if forloop.last %}
-                </div>
-                {% endif %}
-
-            {% endfor %}
-            {% endif %}
-        </div>
-        <div class="column">
-            <table class="ui celled striped table">
-                <tbody>
-                <tr>
-                    <td>Производитель</td>
-                    <td>{{ product.vendor.name }}</td>
-                </tr>
-                <tr>
-                    <td>Артикул</td>
-                    <td>{{ product.part_number }}</td>
-                </tr>
-                <tr>
-                    <td>В наличии</td>
-                    <td>
-                        <a href="#" data-do="show-parties" data-product="{{ product.id }}">
-                        {% if product.quantity == None %}
-                        0
-                        {% else %}
-                        {{ product.quantity }}
-                        {% endif %}
-                        </a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Цена</td>
-                    <td>
-                        {% if product.price == None %}
-                        По запросу
-                        {% else %}
-                        <b>{% autoescape off %}{{ product.price.html }}{% endautoescape %}</b>
-                        {% endif %}
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-            {% if product.quantity > 0 %}
-            <div class="fluid ui animated positive fade button" tabindex="0">
-                <div class="visible content">Купить</div>
-                <div class="hidden content">или получить КП за час</div>
-            </div>
-            {% else %}
-            <div class="fluid ui animated primary fade button" tabindex="0">
-                <div class="visible content">Купить на заказ</div>
-                <div class="hidden content">или подобрать аналог</div>
-            </div>
-            {% endif %}
+<main>
+    {# Заголовок #}
+    <div class="uk-section-xsmall">
+        <div class="uk-container">
+            <h2>{{ product.name }}</h2>
         </div>
     </div>
+    <div class="uk-section-xsmall">
+        <div class="uk-container">
+            <div uk-grid>
+                <div class="uk-width-1-2">
 
-    <div class="ui grid"><div class="ui hidden divider"></div></div>
-
-    <div>
-    {# Поставить табы на описание, характеристики, документы, сертификаты, файлы для скачивания #}
-
-        {% if params|length > 0 %}
-        <table class="ui celled table">
-            <thead>
-            <tr>
-                <th>Характеристика</th>
-                <th>Значение</th></tr>
-            </thead>
-            <tbody>
-            {% for param in params %}
-            {% if param.value != None %}
-            <tr>
-                <td>{{ param.parameter.name }}</td>
-                <td>
-                    {% if param.value == 'True' %}
-                    Есть
-                    {% elif param.value == 'False' %}
-                    Нет
-                    {% else %}
-                    {{ param.value }}{% if param.unit %} {{ param.unit }}{% endif %}
+                    {# Нет фотографий #}
+                    {% if images|length == 0 %}
+                    <img src="/static/image.png" />
                     {% endif %}
-                </td>
-            </tr>
+
+                    {# Одна фотография #}
+                    {% if images|length == 1 %}
+                    <img src="{{ image.url }}" />
+                    {% endif %}
+
+                    {# Несколько фотографий #}
+                    {% if images|length > 1 %}
+
+                    {% for image in images %}
+                    {% if forloop.first %}
+                    <div uk-slideshow="animation: push; autoplay: true">
+                        <div class="uk-position-relative uk-visible-toggle uk-light" tabindex="-1">
+                            <ul class="uk-slideshow-items">
+                    {% endif %}
+                                <li><img src="{{ image.url }}" alt="" uk-cover></li>
+                    {% if forloop.last %}
+                            </ul>
+                            <a class="uk-position-center-left uk-position-small uk-hidden-hover" href="#" uk-slidenav-previous uk-slideshow-item="previous"></a>
+                            <a class="uk-position-center-right uk-position-small uk-hidden-hover" href="#" uk-slidenav-next uk-slideshow-item="next"></a>
+                        </div>
+                        <ul class="uk-slideshow-nav uk-dotnav uk-flex-center uk-margin"></ul>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    {% endif %}
+
+                    {# Загрузка фотографий #}
+                    {% if perms.pflops.can_edit %}
+                    <div class="js-upload uk-placeholder uk-text-center" id="product-image-upload">
+                        <span uk-icon="icon: cloud-upload"></span>
+                        <span class="uk-text-middle">Attach binaries by dropping them here or</span>
+                        <div uk-form-custom>
+                            <input type="file" multiple>
+                            <span class="uk-link">selecting one</span>
+                        </div>
+                    </div>
+                    <progress id="product-image-progressbar" class="uk-progress" value="0" max="100" hidden></progress>
+                    {% endif %}
+                </div>
+                <div class="uk-width-1-2">
+                    <table class="uk-table uk-table-striped">
+                        <tbody>
+                        <tr>
+                            <td>Производитель</td>
+                            <td>{{ product.vendor.name }}</td>
+                        </tr>
+                        <tr>
+                            <td>Артикул</td>
+                            <td>{{ product.part_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>В наличии</td>
+                            <td>
+                                <a href="#" data-do="show-parties" data-product="{{ product.id }}">
+                                    {% if product.quantity == None %}
+                                    0
+                                    {% else %}
+                                    {{ product.quantity }}
+                                    {% endif %}
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Цена</td>
+                            <td>
+                                {% if product.price == None %}
+                                По запросу
+                                {% else %}
+                                <b>{% autoescape off %}{{ product.price.html }}{% endautoescape %}</b>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    {% if product.quantity > 0 %}
+                    <button class="uk-button uk-button-primary uk-width-1-1" >Купить</button>
+                    {% else %}
+                    <button class="uk-button uk-button-primary uk-width-1-1">Заказать</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="uk-section-xsmall">
+        <div class="uk-container">
+            {% if params|length > 0 %}
+            <table class="ui celled table">
+                <thead>
+                <tr>
+                    <th>Характеристика</th>
+                    <th>Значение</th></tr>
+                </thead>
+                <tbody>
+                {% for param in params %}
+                {% if param.value != None %}
+                <tr>
+                    <td>{{ param.parameter.name }}</td>
+                    <td>
+                        {% if param.value == 'True' %}
+                        Есть
+                        {% elif param.value == 'False' %}
+                        Нет
+                        {% else %}
+                        {{ param.value }}{% if param.unit %} {{ param.unit }}{% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+                </tbody>
+            </table>
             {% endif %}
-            {% endfor %}
-            </tbody>
-        </table>
-        {% endif %}
+        </div>
     </div>
 </main>
 

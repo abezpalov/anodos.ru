@@ -13,7 +13,7 @@ import anodos.fixers
 
 class ImageManager(models.Manager):
 
-    def take(self, bytes, style='catalog'):
+    def upload(self, bytes, style='catalog'):
 
         if style == 'catalog':
             width = 400
@@ -809,6 +809,9 @@ class ParameterValue(models.Model):
 
 class ProductImageManager(models.Manager):
 
+    width = 600
+    height = 600
+
     def take(self, product, source_url, **kwargs):
         if not product or not source_url:
             return None
@@ -830,6 +833,36 @@ class ProductImageManager(models.Manager):
             o.save()
 
         return o
+
+    def upload(self, bytes):
+
+        im = PIL.Image.open(io.BytesIO(bytes))
+
+        # Масштабируем исходное изображение
+        dx = self.width / im.size[0]
+        dy = self.height / im.size[1]
+        d = min(dx, dy)
+        im = im.resize((int(im.size[0]*d), int(im.size[1]*d)))
+
+        # Создаём новое изображение и вставляем в него участок исходного
+        im_new = PIL.Image.new('RGBA', (self.width, self.height), '#00000000')
+        dx = (self.width - im.size[0]) // 2
+        dy = (self.height - im.size[1]) // 2
+        im_new.paste(im, (dx, dy))
+
+        # Закрываем исходное изображение
+        im.close()
+
+        # Создаём объект изображения в базе
+        image = self.create()
+        image.file_name = f'{settings.MEDIA_ROOT}products/photos/{image.id}.png'
+        image.create_directory_for_file()
+        image.save()
+
+        im_new.save(image.file_name, "PNG")
+        im_new.close()
+
+        return image
 
 
 class ProductImage(models.Model):

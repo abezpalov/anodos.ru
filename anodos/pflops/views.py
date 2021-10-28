@@ -113,7 +113,7 @@ def ajax_load_catalog_element_image(request):
     for _, file in items:
 
         bytes = file.read()
-        image = pflops.models.Image.objects.take(bytes, style='catalog')
+        image = pflops.models.Image.objects.upload(bytes, style='catalog')
 
         message = str(image)
 
@@ -172,7 +172,7 @@ def ajax_load_assistant_element_image(request):
     for _, file in items:
 
         bytes = file.read()
-        image = pflops.models.Image.objects.take(bytes, style='assistant')
+        image = pflops.models.Image.objects.upload(bytes, style='assistant')
 
         message = str(image)
 
@@ -215,6 +215,61 @@ def ajax_save_new_assistant_element(request):
               'id': str(assistant.id),
               'title': str(assistant.title),
               'image': str(assistant.image)}
+
+    # Возмращаем результат
+    return HttpResponse(json.dumps(result), 'application/javascript')
+
+
+@csrf_exempt
+def ajax_product_image_upload(request):
+
+    # Проверяем права доступа
+    if not request.user.has_perm('pflops.can_change'):
+        return HttpResponse(status=403)
+
+    message = []
+    items = request.FILES.items()
+    for _, file in items:
+
+        bytes = file.read()
+        image = pflops.models.ProductImage.objects.upload(bytes)
+
+        message = str(image)
+
+    # Готовим ответ
+    result = {'status': 'success',
+              'id': str(image.id),
+              'url': str(image.url)}
+
+    # Возмращаем результат
+    return HttpResponse(json.dumps(result), 'application/javascript')
+
+
+@csrf_exempt
+def ajax_product_image_link(request):
+
+    # Проверяем права доступа
+    if not request.user.has_perm('pflops.can_change'):
+        return HttpResponse(status=403)
+
+    image = request.POST.get('image', None)
+    try:
+        image = pflops.models.ProductImage.objects.get(id=image)
+    except pflops.models.ProductImage.DoesNotExist:
+        return HttpResponse(status=400)
+
+    product = request.POST.get('product', None)
+    try:
+        product = pflops.models.Product.objects.get(id=product)
+    except pflops.models.Product.DoesNotExist:
+        return HttpResponse(status=400)
+
+    image.product = product
+    image.save()
+
+    # Готовим ответ
+    result = {'status': 'success',
+              'id': str(product.id)}
 
     # Возмращаем результат
     return HttpResponse(json.dumps(result), 'application/javascript')

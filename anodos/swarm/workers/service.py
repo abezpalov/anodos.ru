@@ -297,7 +297,7 @@ class Worker(Worker):
                 except PIL.UnidentifiedImageError:
                     continue
 
-                if im.size[0] < 300 and im.size[1] < 300:
+                if im.size[0] < 450 and im.size[1] < 450:
                     im.close()
                     continue
 
