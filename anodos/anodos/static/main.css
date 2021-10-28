@@ -26,3 +26,10 @@ footer{
 button {
     cursor: pointer !important;
 }
+
+th {
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    background-color: #f8f8f8 !important;
+    color: #000 !important;
+}
