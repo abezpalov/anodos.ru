@@ -1,3 +1,4 @@
+import os
 
 
 def to_slug(name):
@@ -103,3 +104,11 @@ def string_to_words(name):
     name = name.strip()
 
     return name.split(' ')
+
+
+def create_directory_for_file(file_name):
+    directory = '/'
+    for dir_ in file_name.split('/')[:-1]:
+        directory = '{}/{}'.format(directory, dir_)
+        if not os.path.exists(directory):
+            os.makedirs(directory)

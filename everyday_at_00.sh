@@ -9,6 +9,9 @@ timeout 2h ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py treolan 
 
 timeout 2h ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py service update_products
 
+# Обновление карты сайта
+timeout 12h ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py service update_sitemap
+
 # Описания
 timeout 12h ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py ocs update_content_changes
 #timeout 12h ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py ocs update_content_clear

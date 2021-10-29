@@ -677,6 +677,22 @@ class Product(models.Model):
         else:
             return f'{self.vendor.name} [{self.part_number}] ({self.id}) {self.slug}'
 
+    @property
+    def url_xml(self):
+        if self.slug:
+            loc = f'{settings.HOST}/product/{self.slug}'
+            if self.quantity and self.price:
+                priority = 1.0
+            else:
+                priority = 0.5
+            url = f'    <url>\n' \
+                  f'        <loc>{loc}</loc>\n' \
+                  f'        <priority>{priority}</priority>\n' \
+                  f'    </url>\n'
+            return url
+        else:
+            return None
+
     def save(self, *args, **kwargs):
         if self.vendor:
             self.names_search = f'{self.name.lower()} ' \

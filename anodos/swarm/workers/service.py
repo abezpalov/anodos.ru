@@ -1,9 +1,10 @@
 import PIL
 import numpy as np
-from threading import Thread
+from datetime import datetime
 
 from django.conf import settings
 
+import anodos.fixers
 from swarm.models import *
 from swarm.workers.worker import Worker
 
@@ -62,6 +63,9 @@ class Worker(Worker):
 
         elif command == 'del_all_images':
             pflops.models.ProductImage.objects.all().delete()
+
+        elif command == 'update_sitemap':
+            self.update_sitemap()
 
     def update_products(self):
         """ Переносит сущность продукт в чистовик """
@@ -347,3 +351,56 @@ class Worker(Worker):
 
                     im.close()
                     im_new.close()
+
+    def update_sitemap(self):
+
+        print('update_sitemap')
+
+        count_of_urls = 0
+        count_of_urlsets = 0
+        urls_in_urlset = 25000
+
+        urlsets_str = ''
+        urlset_str = ''
+
+        products = pflops.models.Product.objects.all()
+
+        for n, product in enumerate(products):
+            print(f'{n+1} of {len(products)} {product}')
+            if product.url_xml:
+                urlset_str = f'{urlset_str}{product.url_xml}'
+                count_of_urls += 1
+
+            if (count_of_urls and count_of_urls % urls_in_urlset == 0) or n + 1 == len(products):
+                urlset_filename = f'{settings.STATIC_ROOT}sitemap/sitemap-{count_of_urlsets}.xml'
+                urlset_url = f'{settings.HOST}{settings.STATIC_URL}sitemap/sitemap-{count_of_urlsets}.xml'
+                urlsets_str = f'{urlsets_str}\n' \
+                              f'    <sitemap>\n' \
+                              f'        <loc>{urlset_url}</loc>\n' \
+                              f'        <lastmod>{str(datetime.now())}</lastmod>\n' \
+                              f'    </sitemap>\n'
+                count_of_urlsets += 1
+
+                urlset_str = f'<?xml version="1.0" encoding="UTF-8"?>\n' \
+                             f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' \
+                             f'{urlset_str}' \
+                             f'</urlset>\n'
+
+                anodos.fixers.create_directory_for_file(urlset_filename)
+                urlset_file = open(urlset_filename, 'w')
+                urlset_file.write(urlset_str)
+                urlset_file.close()
+
+                urlset_str = ''
+
+        urlsets_str = f'<?xml version="1.0" encoding="UTF-8"?>\n' \
+                      f'<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' \
+                      f'{urlsets_str}' \
+                      f'</sitemapindex>\n'
+
+        urlsets_filename = f'{settings.STATIC_ROOT}sitemap/sitemap.xml'
+        anodos.fixers.create_directory_for_file(urlsets_filename)
+        urlset_files = open(urlsets_filename, 'w')
+        urlset_files.write(urlsets_str)
+        urlset_files.close()
+
