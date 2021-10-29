@@ -680,7 +680,7 @@ class Product(models.Model):
     @property
     def url_xml(self):
         if self.slug:
-            loc = f'{settings.HOST}/product/{self.slug}'
+            loc = f'{settings.HOST}/product/{self.slug}/'
             if self.quantity and self.price:
                 priority = 1.0
             else:
