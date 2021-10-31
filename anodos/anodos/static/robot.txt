@@ -1,4 +1,6 @@
 User-agent: *
+Disallow: /admin/
 Disallow: /search/
+Disallow: /distributors/
 Sitemap: https://anodos.ru/sitemap.xml
 
