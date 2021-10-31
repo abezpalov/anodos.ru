@@ -9,11 +9,11 @@
 {% endblock %}
 
 {% block content %}
-<main>
+<main itemscope itemtype="http://schema.org/Product">
     {# Заголовок #}
     <div class="uk-section-xsmall">
         <div class="uk-container">
-            <h2>{{ product.name }}</h2>
+            <h2 itemprop="name">{{ product.name }}</h2>
         </div>
     </div>
     <div class="uk-section-xsmall">
@@ -28,7 +28,7 @@
 
                     {# Одна фотография #}
                     {% if images|length == 1 %}
-                    <img src="{{ image.url }}" />
+                    <img src="{{ image.url }}" itemprop="image"/>
                     {% endif %}
 
                     {# Несколько фотографий #}
@@ -39,8 +39,10 @@
                     <div uk-slideshow="animation: push; autoplay: true">
                         <div class="uk-position-relative uk-visible-toggle uk-light" tabindex="-1">
                             <ul class="uk-slideshow-items">
-                    {% endif %}
+                                <li><img src="{{ image.url }}" alt="" itemprop="image" uk-cover></li>
+                    {% else %}
                                 <li><img src="{{ image.url }}" alt="" uk-cover></li>
+                    {% endif %}
                     {% if forloop.last %}
                             </ul>
                             <a class="uk-position-center-left uk-position-small uk-hidden-hover" href="#" uk-slidenav-previous uk-slideshow-item="previous"></a>
@@ -66,40 +68,48 @@
                     {% endif %}
                 </div>
                 <div class="uk-width-1-2">
-                    <table class="uk-table uk-table-striped">
-                        <tbody>
-                        <tr>
-                            <td>Производитель</td>
-                            <td>{{ product.vendor.name }}</td>
-                        </tr>
-                        <tr>
-                            <td>Артикул</td>
-                            <td>{{ product.part_number }}</td>
-                        </tr>
-                        <tr>
-                            <td>В наличии</td>
-                            <td>
-                                <a href="#" data-do="show-parties" data-product="{{ product.id }}">
-                                    {% if product.quantity == None %}
-                                    0
+                    <div itemprop="offers" itemscope itemtype="http://schema.org/Offer">
+                        <table class="uk-table uk-table-striped">
+                            <tbody>
+                            <tr>
+                                <td>Производитель</td>
+                                <td>{{ product.vendor.name }}</td>
+                            </tr>
+                            <tr>
+                                <td>Артикул</td>
+                                <td>{{ product.part_number }}</td>
+
+                            </tr>
+                            <tr>
+                                <td>В наличии</td>
+                                <td>
+                                    <a href="#" data-do="show-parties" data-product="{{ product.id }}">
+                                        <div>
+                                            {% if product.quantity == None %}
+                                            0
+                                            {% else %}
+                                            {{ product.quantity }}
+                                            {% endif %}
+                                        </div>
+                                        <link itemprop="availability" href="http://schema.org/InStock">
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Цена</td>
+                                <td>
+                                    {% if product.price == None %}
+                                    По запросу
                                     {% else %}
-                                    {{ product.quantity }}
+                                    <b>{% autoescape off %}{{ product.price.html }}{% endautoescape %}</b>
+                                    <meta itemprop="price" content="{{ product.price.value }}">
+                                    <meta itemprop="priceCurrency" content="{{ product.price.currency.key }}">
                                     {% endif %}
-                                </a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Цена</td>
-                            <td>
-                                {% if product.price == None %}
-                                По запросу
-                                {% else %}
-                                <b>{% autoescape off %}{{ product.price.html }}{% endautoescape %}</b>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                     {% if product.quantity > 0 %}
                     <button class="uk-button uk-button-primary uk-width-1-1" >Купить</button>
                     {% else %}

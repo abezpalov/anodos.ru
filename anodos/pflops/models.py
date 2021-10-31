@@ -703,6 +703,7 @@ class Product(models.Model):
             self.names_search = f'{self.name.lower()} ' \
                           f'{self.part_number.lower()}'
             self.slug = anodos.fixers.to_slug(f'{self.part_number}')
+        self.updated = timezone.now()
         super().save(*args, **kwargs)
 
     class Meta:
