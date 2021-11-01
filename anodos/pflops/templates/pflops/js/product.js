@@ -1,14 +1,7 @@
-$("body").delegate("[data-do*='show-image']", "click", function(e){
-    $("[data-do*='show-image']").removeClass('green');
-    $(this).addClass('green');
-    src=$(this).data('src');
-    $('#showed-image').attr("src", src);
-});
-
 {% if perms.pflops.can_edit %}
+
 // Загрузка нового изображения в каталог
 var product_image_progressbar = document.getElementById('product-image-progressbar');
-
 UIkit.upload('#product-image-upload', {
 
     url: '/ajax/product-image-upload/',
@@ -75,6 +68,21 @@ UIkit.upload('#product-image-upload', {
             }
         }, "json");
     }
+});
+
+// Загрузка информации о продукте из базы для редактирования
+$("body").delegate("[data-do='open-product-editor']", "click", function(e){
+    product_id = $(this).data('product');
+    $.post('/distributors/ajax/get-product/', {
+        product: product_id,
+        csrfmiddlewaretoken: '{{ csrf_token }}'
+    },
+    function(data) {
+        if ('success' == data.status){
+            alert(data.id);
+        }
+    }, "json");
+    return false;
 });
 
 

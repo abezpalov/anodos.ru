@@ -678,6 +678,14 @@ class Product(models.Model):
             return f'{self.vendor.name} [{self.part_number}] ({self.id}) {self.slug}'
 
     @property
+    def url(self):
+        if self.slug:
+            url = f'{settings.HOST}/product/{self.slug}/'
+            return url
+        else:
+            return None
+
+    @property
     def url_xml(self):
         if self.slug:
             loc = f'{settings.HOST}/product/{self.slug}/'
@@ -692,6 +700,47 @@ class Product(models.Model):
             return url
         else:
             return None
+
+    @property
+    def json(self):
+        product = {'id': str(self.id),
+                   'part_number': str(self.part_number),
+                   'vendor': str(self.vendor),
+                   'category': str(self.category),
+                   'names_search': str(self.names_search),
+                   'parameters_search': str(self.parameters_search),
+                   'slug': str(self.slug),
+                   'name': str(self.name),
+                   'short_name': str(self.short_name),
+                   'name_rus': str(self.name_rus),
+                   'name_other': str(self.name_other),
+                   'description': str(self.description),
+                   'warranty': str(self.warranty),
+                   'ean_128': str(self.ean_128),
+                   'upc': str(self.upc),
+                   'pnc': str(self.pnc),
+                   'hs_code': str(self.hs_code),
+                   'gtin': str(self.gtin),
+                   'tnved': str(self.tnved),
+                   'price': str(self.price),
+                   'quantity': str(self.quantity),
+                   'quantity_great_than': str(self.quantity_great_than),
+                   'weight': str(self.weight),
+                   'width': str(self.width),
+                   'height': str(self.height),
+                   'depth': str(self.depth),
+                   'volume': str(self.volume),
+                   'multiplicity': str(self.multiplicity),
+                   'unit': str(self.unit),
+                   'content': str(self.content),
+                   'content_loaded': str(self.content_loaded),
+                   'images_loaded': str(self.images_loaded),
+                   'created': str(self.created),
+                   'updated': str(self.updated),
+                   'edited': str(self.edited),
+                   }
+
+        return product
 
     def save(self, *args, **kwargs):
         if self.vendor:

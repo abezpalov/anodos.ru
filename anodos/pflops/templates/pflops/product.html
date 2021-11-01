@@ -36,7 +36,7 @@
 
                     {% for image in images %}
                     {% if forloop.first %}
-                    <div uk-slideshow="animation: push; autoplay: true">
+                    <div uk-slideshow="animation: push">
                         <div class="uk-position-relative uk-visible-toggle uk-light" tabindex="-1">
                             <ul class="uk-slideshow-items">
                                 <li><img src="{{ image.url }}" alt="" itemprop="image" uk-cover></li>
@@ -65,6 +65,8 @@
                         </div>
                     </div>
                     <progress id="product-image-progressbar" class="uk-progress" value="0" max="100" hidden></progress>
+                    <button class="uk-button uk-width-1-1"
+                            uk-toggle="target: #modal-product-editor">Редактировать</button>
                     {% endif %}
                 </div>
                 <div class="uk-width-1-2">
@@ -78,7 +80,6 @@
                             <tr>
                                 <td>Артикул</td>
                                 <td>{{ product.part_number }}</td>
-
                             </tr>
                             <tr>
                                 <td>В наличии</td>
@@ -111,7 +112,7 @@
                         </table>
                     </div>
                     {% if product.quantity > 0 %}
-                    <button class="uk-button uk-button-primary uk-width-1-1" >Купить</button>
+                    <button class="uk-button uk-button-primary uk-width-1-1">Купить</button>
                     {% else %}
                     <button class="uk-button uk-button-primary uk-width-1-1">Заказать</button>
                     {% endif %}
@@ -158,10 +159,9 @@
 {% endblock %}
 
 {% block modal %}
-{% include "pflops/modal/party.html" %}
+{% include "pflops/modal/product.html" %}
 {% endblock %}
 
 {% block js %}
 {% include "pflops/js/product.js" %}
-{% include "pflops/js/party.js" %}
 {% endblock %}

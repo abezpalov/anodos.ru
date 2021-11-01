@@ -366,7 +366,7 @@ class Worker(Worker):
         products = pflops.models.Product.objects.all()
 
         for n, product in enumerate(products):
-            print(f'{n+1} of {len(products)} {product}')
+            print(f'{n+1} of {len(products)} {product.url}')
             if product.url_xml:
                 urlset_str = f'{urlset_str}{product.url_xml}'
                 count_of_urls += 1

@@ -1,41 +1,308 @@
 {% if perms.pflops.can_edit %}
-<div id="modal-new-assistant-element" class="uk-flex-top" uk-modal>
+<div id="modal-product-editor" class="uk-flex-top" uk-modal>
     <div class="uk-modal-dialog uk-margin-auto-vertical">
         <button class="uk-modal-close-outside" type="button" uk-close></button>
         <div class="uk-modal-header">
-            <h2 class="uk-modal-title">Добавить ассистента</h2>
+            <h2 class="uk-modal-title">Редактировать продукт</h2>
         </div>
         <div class="uk-modal-body">
             <form>
                 <input name="csrfmiddlewaretoken" type="hidden" value="{{ csrf_token }}">
+
+                {# id #}
                 <div class="uk-margin">
-                    <label class="uk-form-label" for="new-assistant-element-title">Название</label>
+                    <label class="uk-form-label" for="product-editor-id">id</label>
                     <div class="uk-form-controls">
-                        <input class="uk-input" name="title" id="new-assistant-element-title" type="text">
+                        <input class="uk-input" name="title" id="product-editor-id" type="text">
                     </div>
                 </div>
+
+                {# part_number #}
                 <div class="uk-margin">
-                    <label class="uk-form-label" for="new-assistant-element-slug">Slug</label>
+                    <label class="uk-form-label" for="product-editor-part-number">part_number</label>
                     <div class="uk-form-controls">
-                        <input class="uk-input" name="slug" id="new-assistant-element-slug" type="text">
+                        <input class="uk-input" name="title" id="product-editor-part-number" type="text">
                     </div>
                 </div>
-                <div class="js-upload uk-placeholder uk-text-center" id="new-assistant-element-upload">
-                    <span uk-icon="icon: cloud-upload"></span>
-                    <span class="uk-text-middle">Attach binaries by dropping them here or</span>
-                    <div uk-form-custom>
-                        <input type="file" multiple>
-                        <span class="uk-link">selecting one</span>
+
+                {# vendor #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-vendor">vendor</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-vendor" type="text">
                     </div>
                 </div>
-                <progress id="new-assistant-element-progressbar" class="uk-progress" value="0" max="100" hidden></progress>
-                <input id="new-assistant-element-image" name="image" type="hidden" value="">
-                <div id="new-assistant-element-image-view"></div>
+
+                {# category #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-category">category</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-category" type="text">
+                    </div>
+                </div>
+
+                {# names_search #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-names-search">names_search</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-names-search" type="text">
+                    </div>
+                </div>
+
+                {# parameters_search #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-parameters-search">parameters_search</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-parameters-search" type="text">
+                    </div>
+                </div>
+
+                {# slug #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-slug">slug</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-slug" type="text">
+                    </div>
+                </div>
+
+                {# name #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-name">name</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-name" type="text">
+                    </div>
+                </div>
+
+                {# short_name #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-short-name">short_name</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-short-name" type="text">
+                    </div>
+                </div>
+
+                {# name_rus #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-name-rus">name_rus</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-name-rus" type="text">
+                    </div>
+                </div>
+
+                {# name_other #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-name-other">name_other</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-name-other" type="text">
+                    </div>
+                </div>
+
+                {# description #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-description">description</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-description" type="text">
+                    </div>
+                </div>
+
+                {# warranty #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-warranty">warranty</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-warranty" type="text">
+                    </div>
+                </div>
+
+                {# ean_128 #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-ean-128">ean_128</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-ean-128" type="text">
+                    </div>
+                </div>
+
+                {# upc #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-upc">upc</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-upc" type="text">
+                    </div>
+                </div>
+
+                {# pnc #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-pnc">pnc</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-pnc" type="text">
+                    </div>
+                </div>
+
+                {# hs_code #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-hs-code">hs_code</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-hs-code" type="text">
+                    </div>
+                </div>
+
+                {# gtin #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-gtin">gtin</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-gtin" type="text">
+                    </div>
+                </div>
+
+                {# tnved #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-tnved">tnved</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-tnved" type="text">
+                    </div>
+                </div>
+
+                {# traceable #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-traceable">traceable</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-traceable" type="text">
+                    </div>
+                </div>
+
+                {# price #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-price">price</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-price" type="text">
+                    </div>
+                </div>
+
+                {# quantity #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-quantity">quantity</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-quantity" type="text">
+                    </div>
+                </div>
+
+                {# quantity_great_than #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-quantity-great-than">quantity_great_than</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-quantity-great-than" type="text">
+                    </div>
+                </div>
+
+                {# weight #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-weight">weight</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-weight" type="text">
+                    </div>
+                </div>
+
+                {# width #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-width">width</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-width" type="text">
+                    </div>
+                </div>
+
+                {# height #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-height">height</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-height" type="text">
+                    </div>
+                </div>
+
+                {# depth #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-depth">depth</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-depth" type="text">
+                    </div>
+                </div>
+
+                {# volume #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-volume">volume</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-volume" type="text">
+                    </div>
+                </div>
+
+                {# multiplicity #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-multiplicity">multiplicity</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-multiplicity" type="text">
+                    </div>
+                </div>
+
+                {# unit #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-unit">unit</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-unit" type="text">
+                    </div>
+                </div>
+
+                {# content #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-content">content</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-content" type="text">
+                    </div>
+                </div>
+
+                {# content_loaded #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-content-loaded">content_loaded</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-content-loaded" type="text">
+                    </div>
+                </div>
+
+                {# images_loaded #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-images-loaded">images_loaded</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-images-loaded" type="text">
+                    </div>
+                </div>
+
+                {# created #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-created">created</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-created" type="text">
+                    </div>
+                </div>
+
+                {# updated #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-updated">updated</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-updated" type="text">
+                    </div>
+                </div>
+
+                {# edited #}
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="product-editor-edited">edited</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="product-editor-edited" type="text">
+                    </div>
+                </div>
+
+
             </form>
-            <div id="modal-new-assistant-element-alert"></div>
+            <div id="modal-product-editor-alert"></div>
         </div>
         <div class="uk-modal-footer uk-text-right">
-            <button class="uk-button uk-button-primary" data-do="save-new-assistant-element">
+            <button class="uk-button uk-button-primary" data-do="save-product">
                 <i class="fa fa-check"></i>
                 Сохранить
             </button>
