@@ -1,0 +1,49 @@
+{% if perms.pflops.can_edit %}
+<div id="modal-new-assistant-element" class="uk-flex-top" uk-modal>
+    <div class="uk-modal-dialog uk-margin-auto-vertical">
+        <button class="uk-modal-close-outside" type="button" uk-close></button>
+        <div class="uk-modal-header">
+            <h2 class="uk-modal-title">Добавить ассистента</h2>
+        </div>
+        <div class="uk-modal-body">
+            <form>
+                <input name="csrfmiddlewaretoken" type="hidden" value="{{ csrf_token }}">
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="new-assistant-element-title">Название</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="title" id="new-assistant-element-title" type="text">
+                    </div>
+                </div>
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="new-assistant-element-slug">Slug</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" name="slug" id="new-assistant-element-slug" type="text">
+                    </div>
+                </div>
+                <div class="js-upload uk-placeholder uk-text-center" id="new-assistant-element-upload">
+                    <span uk-icon="icon: cloud-upload"></span>
+                    <span class="uk-text-middle">Attach binaries by dropping them here or</span>
+                    <div uk-form-custom>
+                        <input type="file" multiple>
+                        <span class="uk-link">selecting one</span>
+                    </div>
+                </div>
+                <progress id="new-assistant-element-progressbar" class="uk-progress" value="0" max="100" hidden></progress>
+                <input id="new-assistant-element-image" name="image" type="hidden" value="">
+                <div id="new-assistant-element-image-view"></div>
+            </form>
+            <div id="modal-new-assistant-element-alert"></div>
+        </div>
+        <div class="uk-modal-footer uk-text-right">
+            <button class="uk-button uk-button-primary" data-do="save-new-assistant-element">
+                <i class="fa fa-check"></i>
+                Сохранить
+            </button>
+            <button class="uk-button uk-button-default uk-modal-close">
+                <i class="fa fa-times"></i>
+                Отмена
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
