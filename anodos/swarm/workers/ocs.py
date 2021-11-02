@@ -47,10 +47,10 @@ class Worker(swarm.workers.worker.Worker):
             self.update_news()
             self.update_promo()
             self.update_events()
-            self.send(f'{self.source} {command} finish:\n'
-                      f'- новостей: {self.count_news};\n'
-                      f'- промо: {self.count_promo};\n'
-                      f'- событий: {self.count_events}.')
+            self.message = f'{self.source} {command} finish:\n' \
+                           f'- новостей: {self.count_news};\n' \
+                           f'- промо: {self.count_promo};\n' \
+                           f'- событий: {self.count_events}.'
 
         elif command == 'update_stocks':
 
@@ -68,9 +68,9 @@ class Worker(swarm.workers.worker.Worker):
                                                      created__lte=self.start_time).delete()
 
             # Отправляем оповещение об успешном завершении
-            self.send(f'{self.distributor} {command} finish:\n'
-                      f'- продуктов: {self.count_products};\n'
-                      f'- партий: {self.count_parties}.')
+            self.message = f'{self.distributor} {command} finish:\n' \
+                           f'- продуктов: {self.count_products};\n' \
+                           f'- партий: {self.count_parties}.'
 
         elif command == 'update_content_all':
             ids = self.get_ids_for_update_content('all')

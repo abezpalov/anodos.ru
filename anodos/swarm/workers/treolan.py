@@ -49,8 +49,8 @@ class Worker(Worker):
 
         if command == 'update_news':
             self.update_news()
-            self.send(f'{self.source} {command} finish:\n'
-                      f'- новостей: {self.count_news}.')
+            self.message = f'{self.source} {command} finish:\n' \
+                           f'- новостей: {self.count_news}.'
 
         elif command == 'update_stocks':
 
@@ -66,9 +66,9 @@ class Worker(Worker):
                                                      created__lte=self.start_time).delete()
 
             # Отправляем оповещение об успешном завершении
-            self.send(f'{self.source} {command} finish:\n'
-                      f'- продуктов: {self.count_products};\n'
-                      f'- партий: {self.count_parties}.')
+            self.message = f'{self.source} {command} finish:\n' \
+                           f'- продуктов: {self.count_products};\n' \
+                           f'- партий: {self.count_parties}.'
 
             print(self.test)
 
