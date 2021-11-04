@@ -23,11 +23,11 @@ class Worker:
 
     def __del__(self):
         delta = timezone.now() - self.start_time
-        print(f'{self.name} finish at {delta}')
         if self.message:
             self.send(f'{self.name} finish at {delta}\n\n{self.message}')
         else:
             self.send(f'{self.name} finish at {delta}')
+        print(f'{self.name} finish at {delta}')
 
     def send(self, content='test', chat_id=settings.TELEGRAM_LOG_CHAT, disable_web_page_preview=True):
 

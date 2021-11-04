@@ -1,17 +1,15 @@
-timeout 10s ping ya.ru
+~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py gisp
 
-timeout 6h ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py gisp
+~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py ocs update_news
+~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py treolan update_news
 
-timeout 10m ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py ocs update_news
-timeout 10m ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py treolan update_news
+~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py axoft_events_monitoring
+~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py axoft_news_monitoring
 
-timeout 5m ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py axoft_events_monitoring
-timeout 5m ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py axoft_news_monitoring
+~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py mont update_news
 
-timeout 5m ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py mont update_news
+~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py fujitsu_news_monitoring
+~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py fujitsu_blog_monitoring
+~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py fujitsu_techblog_monitoring
 
-timeout 5m ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py fujitsu_news_monitoring
-timeout 5m ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py fujitsu_blog_monitoring
-timeout 5m ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py fujitsu_techblog_monitoring
-
-timeout 5m ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py maed_webinars_monitoring
+~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py maed_webinars_monitoring
