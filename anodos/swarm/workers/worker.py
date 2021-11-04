@@ -31,18 +31,10 @@ class Worker:
 
     def send(self, content='test', chat_id=settings.TELEGRAM_LOG_CHAT, disable_web_page_preview=True):
 
-        for n in range(4):
-            print(f'Send #{n}')
-            try:
-                self.bot.send_message(chat_id=chat_id,
-                                      text=content,
-                                      parse_mode='HTML',
-                                      disable_web_page_preview=disable_web_page_preview)
-                time.sleep(5)
-                break
-            except Exception:
-                print('Error')
-                time.sleep(30)
+        self.bot.send_message(chat_id=chat_id,
+                              text=content,
+                              parse_mode='HTML',
+                              disable_web_page_preview=disable_web_page_preview)
 
     def ftp_login(self, host):
         self.ftp = ftplib.FTP(host=host, timeout=30)
