@@ -49,7 +49,12 @@ def view_assistant_element(request):
 
 def view_product(request, product_slug):
 
-    product = pflops.models.Product.objects.get(slug=product_slug)
+    try:
+        product = pflops.models.Product.objects.get(slug=product_slug)
+    except pflops.models.Product.MultipleObjectsReturned:
+        product = pflops.models.Product.objects.filter(slug=product_slug)[0]
+    except pflops.models.Product.DoesNotExist:
+        return HttpResponse(status=404)
 
     params = pflops.models.ParameterValue.objects.filter(product=product)
     images = pflops.models.ProductImage.objects.filter(product=product, file_name__isnull=False)
@@ -156,7 +161,7 @@ def ajax_save_new_catalog_element(request):
               'title': str(catalog_element.title),
               'image': str(catalog_element.image)}
 
-    # Возмращаем результат
+    # Возвращаем результат
     return HttpResponse(json.dumps(result), 'application/javascript')
 
 
