@@ -36,7 +36,7 @@
 
                     {% for image in images %}
                     {% if forloop.first %}
-                    <div uk-slideshow="animation: push">
+                    <div uk-slideshow="ratio: 1:1; animation: push">
                         <div class="uk-position-relative uk-visible-toggle uk-light" tabindex="-1">
                             <ul class="uk-slideshow-items">
                                 <li><img src="{{ image.url }}" alt="" itemprop="image" uk-cover></li>
