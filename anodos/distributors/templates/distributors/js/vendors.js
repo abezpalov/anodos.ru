@@ -32,10 +32,6 @@ $("body").delegate("[data-do='erase-vendor-link']", "click", function(e){
 $("body").delegate("[data-do='open-vendor-list']", "click", function(e){
     $('#modal-vendor-list-vendor_').val($(this).data('vendor_'))
     $('#modal-vendor-list-vendor').val('');
-    $('#modal-vendor-list').find('div.text').text('');
-    $('#modal-vendor-list').find('div.item').removeClass('active');
-    $('#modal-vendor-list').find('div.item').removeClass('selected');
-    $('#modal-vendor-list').modal('show');
     return false;
 });
 
@@ -59,7 +55,6 @@ $("body").delegate("[data-do='apply-link-vendor']", "click", function(e){
 $("body").delegate("[data-do='open-vendor-editor']", "click", function(e){
     $('#modal-vendor-editor-id').val($(this).data('vendor'));
     $('#modal-vendor-editor-name').val($(this).data('name'));
-    $('#modal-vendor-editor').modal('show');
     return false;
 });
 
