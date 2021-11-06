@@ -95,6 +95,22 @@
                         </div>
                     </li>
                     <li><a href="#">Новости и новинки</a></li>
+                    {% if perms.distributors.can_do_something %}
+                    <li>
+                        <a href="#">Служебное</a>
+                        <div class="uk-navbar-dropdown">
+                            <ul class="uk-nav uk-navbar-dropdown-nav">
+                                <li><a class="item" href="/distributors/">Поиск по складам</a></li>
+                                <li><a class="item" href="/distributors/vendors/">Производители</a></li>
+                                <li><a class="item" href="/distributors/categories/">Категории</a></li>
+                                <li><a class="item" href="/distributors/parameters/">Параметры</a></li>
+                                <li><a class="item" href="/distributors/units/">Единицы измерения</a></li>
+                                <li><a href="#">Рабочее место офисного сотрудника</a></li>
+                                <li><a href="#">Принтеры и МФУ для офиса</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
             <div class="uk-navbar-right">
