@@ -4,74 +4,85 @@
 <title>Параметры характеристик</title>
 {% endblock %}
 
+{% block description %}
+<meta name="description" content="Модуль редактирования параметров" />
+{% endblock %}
+
 {% block content %}
-<main class="ui center aligned container">
-<h2>Параметры характеристик</h2>
-
-<div class="ui grid"><div class="ui hidden divider"></div></div>
-
-<div>
-    <table class="ui celled table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th colspan="2">Как у поставщика</th>
-                <th colspan="2">Как у нас</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for parameter_ in parameters_ %}
-        <tr>
-            <td>{{ forloop.counter }}</td>
-            <td>{{ parameter_.distributor.name }} | {{ parameter_.name }}</td>
-            <td>
-                <div class="ui icon buttons">
-                    <button class="ui primary icon button"
-                            data-do="do-parameter-as-is"
-                            data-parameter_="{{ parameter_.id }}">
-                        <i class="share icon"></i>
-                    </button>
-                    <button class="ui positive icon button"
-                            data-do="open-parameter-list"
-                            data-parameter_="{{ parameter_.id }}">
-                        <i class="list icon"></i>
-                    </button>
-                </div>
-            </td>
-            <td id="{{ parameter_.id }}-to-pflops"
-                data-parameter="{{ parameter_.to_pflops.id }}">
-                {% if parameter_.to_pflops == None %}
-                -
-                {% else %}
-                {{ parameter_.to_pflops }}
-                {% endif %}
-            </td>
-            <td>
-                <div class="ui icon buttons">
-                    <button class="ui positive icon button"
-                            id="{{ parameter_.id }}-open-parameter-editor-button"7
-                            data-do="open-parameter-editor"
-                            data-parameter_="{{ parameter_.id }}"
-                            data-parameter="{{ parameter_.to_pflops.id }}"
-                            data-name="{{ parameter_.to_pflops.name }}">
-                        <i class="edit icon"></i>
-                    </button>
-                    <button class="ui negative icon button"
-                            data-do="erase-parameter-link"
-                            data-parameter_="{{ parameter_.id }}">
-                        <i class="unlink icon"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
+<main>
+    {# Заголовок #}
+    <div class="uk-section-xsmall">
+        <div class="uk-container">
+            <h2 itemprop="name">Параметры</h2>
+        </div>
+    </div>
+    <div class="uk-section-xsmall">
+        <div class="uk-container">
+            <table class="uk-table uk-table-divider">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th colspan="2">Как у поставщика</th>
+                    <th colspan="2">Как у нас</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for parameter_ in parameters_ %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ parameter_.distributor.name }} | {{ parameter_.name }}</td>
+                    <td>
+                        <div class="uk-button-group">
+                            <button class="uk-button uk-button-primary uk-button-small"
+                                    data-do="do-parameter-as-is"
+                                    data-parameter_="{{ parameter_.id }}">
+                                <i class="fa fa-clone"></i>
+                            </button>
+                            <button class="uk-button uk-button-default uk-button-small"
+                                    data-do="open-parameter-list"
+                                    data-parameter_="{{ parameter_.id }}"
+                                    uk-toggle="target: #modal-parameter-list">
+                                <i class="fa fa-list-ul"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td id="{{ parameter_.id }}-to-pflops"
+                        data-parameter="{{ parameter_.to_pflops.id }}">
+                        {% if parameter_.to_pflops == None %}
+                        -
+                        {% else %}
+                        {{ parameter_.to_pflops }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="uk-button-group">
+                            <button class="uk-button uk-button-primary uk-button-small"
+                                    id="{{ parameter_.id }}-open-parameter-editor-button"
+                                    data-do="open-parameter-editor"
+                                    data-parameter_="{{ parameter_.id }}"
+                                    data-parameter="{{ parameter_.to_pflops.id }}"
+                                    data-name="{{ parameter_.to_pflops.name }}"
+                                    uk-toggle="target: #modal-parameter-editor">
+                                <i class="fa fa-edit"></i>
+                            </button>
+                            <button class="uk-button uk-button-danger uk-button-small"
+                                    data-do="erase-parameter-link"
+                                    data-parameter_="{{ parameter_.id }}">
+                                <i class="fa fa-eraser"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </main>
+{% endblock %}
 
+{% block modal %}
 {% include "distributors/modal/parameters.html" %}
-
 {% endblock %}
 
 {% block js %}

@@ -4,74 +4,85 @@
 <title>Единицы измерения</title>
 {% endblock %}
 
+{% block description %}
+<meta name="description" content="Модуль редактирования удиниц измерения" />
+{% endblock %}
+
 {% block content %}
-<main class="ui center aligned container">
-<h2>Единицы измерения</h2>
-
-<div class="ui grid"><div class="ui hidden divider"></div></div>
-
-<div>
-    <table class="ui celled table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th colspan="2">Как у поставщика</th>
-                <th colspan="2">Как у нас</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for unit_ in units_ %}
-        <tr>
-            <td>{{ forloop.counter }}</td>
-            <td>{{ unit_.name }}</td>
-            <td>
-                <div class="ui icon buttons">
-                    <button class="ui primary icon button"
-                            data-do="do-unit-as-is"
-                            data-unit_="{{ unit_.id }}">
-                        <i class="share icon"></i>
-                    </button>
-                    <button class="ui positive icon button"
-                            data-do="open-unit-list"
-                            data-unit_="{{ unit_.id }}">
-                        <i class="list icon"></i>
-                    </button>
-                </div>
-            </td>
-            <td id="{{ unit_.id }}-to-pflops"
-                data-unit="{{ unit_.to_pflops.id }}">
-                {% if unit_.to_pflops == None %}
-                -
-                {% else %}
-                {{ unit_.to_pflops }}
-                {% endif %}
-            </td>
-            <td>
-                <div class="ui icon buttons">
-                    <button class="ui positive icon button"
-                            id="{{ unit_.id }}-open-unit-editor-button"
-                            data-do="open-unit-editor"
-                            data-unit_="{{ unit_.id }}"
-                            data-unit="{{ unit_.to_pflops.id }}"
-                            data-name="{{ unit_.to_pflops.name }}">
-                        <i class="edit icon"></i>
-                    </button>
-                    <button class="ui negative icon button"
-                            data-do="erase-unit-link"
-                            data-unit_="{{ unit_.id }}">
-                        <i class="unlink icon"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
+<main>
+    {# Заголовок #}
+    <div class="uk-section-xsmall">
+        <div class="uk-container">
+            <h2 itemprop="name">Единицы измерения</h2>
+        </div>
+    </div>
+    <div class="uk-section-xsmall">
+        <div class="uk-container">
+            <table class="uk-table uk-table-divider">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th colspan="2">Как у поставщика</th>
+                    <th colspan="2">Как у нас</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for unit_ in units_ %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ unit_.name }}</td>
+                    <td>
+                        <div class="uk-button-group">
+                            <button class="uk-button uk-button-primary uk-button-small"
+                                    data-do="do-unit-as-is"
+                                    data-unit_="{{ unit_.id }}">
+                                <i class="fa fa-clone"></i>
+                            </button>
+                            <button class="uk-button uk-button-default uk-button-small"
+                                    data-do="open-unit-list"
+                                    data-unit_="{{ unit_.id }}"
+                                    uk-toggle="target: #modal-unit-list">
+                                <i class="fa fa-list-ul"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td id="{{ unit_.id }}-to-pflops"
+                        data-unit="{{ unit_.to_pflops.id }}">
+                        {% if unit_.to_pflops == None %}
+                        -
+                        {% else %}
+                        {{ unit_.to_pflops }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="uk-button-group">
+                            <button class="uk-button uk-button-primary uk-button-small"
+                                    id="{{ unit_.id }}-open-unit-editor-button"
+                                    data-do="open-unit-editor"
+                                    data-unit_="{{ unit_.id }}"
+                                    data-unit="{{ unit_.to_pflops.id }}"
+                                    data-name="{{ unit_.to_pflops.name }}"
+                                    uk-toggle="target: #modal-unit-editor">
+                                <i class="fa fa-edit"></i>
+                            </button>
+                            <button class="uk-button uk-button-danger uk-button-small"
+                                    data-do="erase-unit-link"
+                                    data-unit_="{{ unit_.id }}">
+                                <i class="fa fa-eraser"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </main>
+{% endblock %}
 
+{% block modal %}
 {% include "distributors/modal/units.html" %}
-
 {% endblock %}
 
 {% block js %}

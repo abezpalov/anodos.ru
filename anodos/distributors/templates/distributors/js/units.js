@@ -32,10 +32,6 @@ $("body").delegate("[data-do='erase-unit-link']", "click", function(e){
 $("body").delegate("[data-do='open-unit-list']", "click", function(e){
     $('#modal-unit-list-unit_').val($(this).data('unit_'))
     $('#modal-unit-list-unit').val('');
-    $('#modal-unit-list').find('div.text').text('');
-    $('#modal-unit-list').find('div.item').removeClass('active');
-    $('#modal-unit-list').find('div.item').removeClass('selected');
-    $('#modal-unit-list').modal('show');
     return false;
 });
 
@@ -59,7 +55,6 @@ $("body").delegate("[data-do='apply-link-unit']", "click", function(e){
 $("body").delegate("[data-do='open-unit-editor']", "click", function(e){
     $('#modal-unit-editor-id').val($(this).data('unit'));
     $('#modal-unit-editor-name').val($(this).data('name'));
-    $('#modal-unit-editor').modal('show');
     return false;
 });
 

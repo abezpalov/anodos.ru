@@ -1,47 +1,63 @@
-<div class="ui modal" id="modal-unit-list">
-    <i class="close icon"></i>
-    <div class="header">Выберите параметр</div>
-    <div class="content">
-        <form>
-            <input type="hidden" name="unit_" id="modal-unit-list-unit_">
-            <div class="ui fluid search selection dropdown">
-                <input type="hidden" name="unit" id="modal-unit-list-unit">
-                <i class="dropdown icon"></i>
-                <div class="default text">Выберите параметр</div>
-                <div class="menu">
-                    {% for unit in units %}
-                    <div class="item" data-value="{{ unit.id }}">{{ unit.name }}</div>
-                    {% endfor %}
+{% if perms.pflops.can_edit %}
+<div id="modal-unit-list" class="uk-flex-top" uk-modal>
+    <div class="uk-modal-dialog uk-margin-auto-vertical">
+        <button class="uk-modal-close-outside" type="button" uk-close></button>
+        <div class="uk-modal-header">
+            <h2 class="uk-modal-title">Выберите единицу измерения</h2>
+        </div>
+        <div class="uk-modal-body">
+            <form>
+                <input type="hidden" name="unit_" id="modal-unit-list-unit_">
+                <div class="uk-margin">
+                    <select class="uk-select" id="modal-unit-list-unit">
+                        {% for unit in units %}
+                        <option value="{{ unit.id }}">{{ unit.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
+            </form>
+        </div>
+        <div class="uk-modal-footer">
+            <div class="uk-align-right">
+                <button class="uk-button uk-button-primary uk-modal-close" data-do="apply-link-unit">
+                    <i class="fa fa-check"></i>
+                    Привязать
+                </button>
+                <button class="uk-button uk-button-default uk-modal-close">
+                    <i class="fa fa-times"></i>
+                    Отмена
+                </button>
             </div>
-        </form>
-    </div>
-    <div class="actions">
-        <button class="ui labeled icon positive button" data-do="apply-link-unit">
-            <i class="linkify icon"></i>Привязать
-        </button>
-        <button class="ui labeled icon deny button">
-            <i class="x icon"></i>Отмена
-        </button>
+        </div>
     </div>
 </div>
+{% endif %}
 
-<div class="ui modal" id="modal-unit-editor">
-    <i class="close icon"></i>
-    <div class="header">Редактировать параметр</div>
-    <div class="content">
-        <form class="ui form">
-            <input id="modal-unit-editor-id" type="hidden" name="unit_">
-            <input id="modal-unit-editor-name" type="text" name="name">
-        </form>
-    </div>
-    <div class="actions">
-        <button class="ui labeled icon positive button" data-do="save-unit">
-            <i class="save icon"></i>Сохранить
-        </button>
-        <button class="ui labeled icon deny button">
-            <i class="x icon"></i>Отмена
-        </button>
+{% if perms.pflops.can_edit %}
+<div id="modal-unit-editor" class="uk-flex-top" uk-modal>
+    <div class="uk-modal-dialog uk-margin-auto-vertical">
+        <button class="uk-modal-close-outside" type="button" uk-close></button>
+        <div class="uk-modal-header">
+            <h2 class="uk-modal-title">Редактировать единицу измерения</h2>
+        </div>
+        <div class="uk-modal-body">
+            <form>
+                <input id="modal-unit-editor-id" type="hidden" name="unit_">
+                <input id="modal-unit-editor-name" class="uk-input" type="text" name="name">
+            </form>
+        </div>
+        <div class="uk-modal-footer">
+            <div class="uk-align-right">
+                <button class="uk-button uk-button-primary uk-modal-close" data-do="save-unit">
+                    <i class="fa fa-check"></i>
+                    Сохранить
+                </button>
+                <button class="uk-button uk-button-default uk-modal-close">
+                    <i class="fa fa-times"></i>
+                    Отмена
+                </button>
+            </div>
+        </div>
     </div>
 </div>
-
+{% endif %}
