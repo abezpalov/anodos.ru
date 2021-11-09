@@ -43,15 +43,15 @@
             </div>
             <div class="uk-width-auto uk-margin-left">
                 <div class="uk-align-right">
-                    <button class="uk-icon-button uk-button-primary">
+                    <button class="uk-icon-button uk-button-primary" uk-toggle="target: #modal-conversion-phone">
                         <i class="fa fa-phone"></i>
                     </button>
-                    <button class="uk-icon-button uk-button-default">
+                    <a class="uk-icon-button uk-button-default uk-link-heading" href="tg://resolve?domain=bezpalov">
                         <i class="fab fa-telegram-plane"></i>
-                    </button>
-                    <button class="uk-icon-button uk-button-default">
+                    </a>
+                    <a class="uk-icon-button uk-button-default uk-link-heading" href="mailto:info@anodos.ru">
                         <i class="fa fa-envelope"></i>
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -285,6 +285,7 @@
 {# Модальные окна  #}
 
 {% include "anodos/modal/login.html" %}
+{% include "anodos/modal/conversions.html" %}
 {% include "pflops/modal/catalog.html" %}
 {% include "pflops/modal/article.html" %}
 {% block modal %}
@@ -297,7 +298,7 @@
 {# Global scripts #}
 <script>
 {% include "anodos/js/login.js" %}
-{% include "anodos/js/search.js" %}
+{% include "anodos/js/conversions.js" %}
 </script>
 
 {# Local scripts #}
