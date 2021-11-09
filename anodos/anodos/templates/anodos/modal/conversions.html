@@ -12,20 +12,22 @@
                 </a>
             </h3>
             <p>Позвоните нам или закажите звонок</p>
-            <form>
+            <form id="form-conversion-call">
                 <div class="uk-margin">
-                    <label class="uk-form-label" for="modal-conversion-phone-name">Имя</label>
+                    <label class="uk-form-label" for="modal-conversion-call-name">Имя</label>
                     <div class="uk-form-controls">
-                        <input class="uk-input" id="modal-conversion-phone-name"
+                        <input class="uk-input" id="modal-conversion-call-name"
                                name="name" type="text">
                     </div>
                 </div>
                 <div class="uk-margin">
-                    <label class="uk-form-label" for="modal-conversion-phone-number">Номер телефона</label>
+                    <label class="uk-form-label" for="modal-conversion-call-number">Номер телефона</label>
                     <div class="uk-form-controls">
-                        <input class="uk-input" id="modal-conversion-phone-number"
+                        <input class="uk-input" id="modal-conversion-call-number"
                                name="phone-number" type="tel" placeholder="+7 900 000 00 00">
                     </div>
+                    <input name="url" type="hidden" value="{{ request.path }}">
+                    <input name="csrfmiddlewaretoken" type="hidden" value="{{ csrf_token }}">
                 </div>
             </form>
         </div>
