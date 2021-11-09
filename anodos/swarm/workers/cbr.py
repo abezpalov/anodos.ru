@@ -1,5 +1,3 @@
-from django.conf import settings
-
 import swarm.models
 import swarm.workers.worker
 import pflops.models

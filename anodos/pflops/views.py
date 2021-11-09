@@ -8,7 +8,7 @@ from django.http import HttpResponse
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 
-import anodos.fixers
+import anodos.tools
 import pflops.models
 import distributors.models
 
@@ -24,7 +24,7 @@ def view_search(request):
     if request.method == 'POST':
         search = request.POST.get('search', '')
         if len(search) > 1:
-            words = anodos.fixers.string_to_words(search)
+            words = anodos.tools.string_to_words(search)
             qs = [Q(quantity__gt=0)]
             for word in words:
                 if word:
@@ -103,6 +103,35 @@ def ajax_get_parties(request):
               'html': html}
 
     # Возмращаем результат
+    return HttpResponse(json.dumps(result), 'application/javascript')
+
+
+def ajax_save_conversion_call(request):
+
+    # Проверяем тип запроса
+    if not request.is_ajax():
+        return HttpResponse(status=400)
+
+    # Получаем экземпляр продукта
+    phone = request.POST.get('phone', None)
+    name = request.POST.get('name', None)
+    url = request.POST.get('url', None)
+
+    if phone and name:
+        result = {'status': 'success',
+                  'message': 'Заявка принята, мы вам перезвоним'}
+    elif not name:
+        result = {'status': 'warning',
+                  'message': 'Укажите, пожалуйста, имя'}
+    elif not phone:
+        result = {'status': 'warning',
+                  'message': 'Укажите, пожалуйста, номер телефона'}
+
+    anodos.tools.send(content=f'<b>Заказан обратный звонок с сайта!</b>\n'
+                              f'{name}\n{phone}\n{settings.HOST}{url}',
+                      chat_id=settings.TELEGRAM_LEADS_CHAT)
+
+    # Возвращаем результат
     return HttpResponse(json.dumps(result), 'application/javascript')
 
 

@@ -4,7 +4,7 @@ from datetime import datetime
 
 from django.conf import settings
 
-import anodos.fixers
+import anodos.tools
 from swarm.models import *
 from swarm.workers.worker import Worker
 
@@ -386,7 +386,7 @@ class Worker(Worker):
                              f'{urlset_str}' \
                              f'</urlset>\n'
 
-                anodos.fixers.create_directory_for_file(urlset_filename)
+                anodos.tools.create_directory_for_file(urlset_filename)
                 urlset_file = open(urlset_filename, 'w')
                 urlset_file.write(urlset_str)
                 urlset_file.close()
@@ -399,7 +399,7 @@ class Worker(Worker):
                       f'</sitemapindex>\n'
 
         urlsets_filename = f'{settings.STATIC_ROOT}sitemap/sitemap.xml'
-        anodos.fixers.create_directory_for_file(urlsets_filename)
+        anodos.tools.create_directory_for_file(urlsets_filename)
         urlset_files = open(urlsets_filename, 'w')
         urlset_files.write(urlsets_str)
         urlset_files.close()

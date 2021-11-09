@@ -1,4 +1,16 @@
 import os
+import telebot
+
+from django.conf import settings
+
+
+def send(content='test', chat_id=settings.TELEGRAM_LOG_CHAT,
+         disable_web_page_preview=True):
+    bot = telebot.TeleBot(settings.TELEGRAM_TOKEN)
+    bot.send_message(chat_id=chat_id,
+                     text=content,
+                     parse_mode='HTML',
+                     disable_web_page_preview=disable_web_page_preview)
 
 
 def to_slug(name):

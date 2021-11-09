@@ -25,7 +25,8 @@ class Worker:
         delta = timezone.now() - self.start_time
         print(f'{self.name} finish at {delta}')
 
-    def send(self, content='test', chat_id=settings.TELEGRAM_LOG_CHAT, disable_web_page_preview=True):
+    def send(self, content='test', chat_id=settings.TELEGRAM_LOG_CHAT,
+             disable_web_page_preview=True, independent=False):
         self.bot.send_message(chat_id=chat_id,
                               text=content,
                               parse_mode='HTML',

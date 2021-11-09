@@ -6,7 +6,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.contrib.postgres.indexes import GinIndex
 
-import anodos.fixers
+import anodos.tools
 
 
 class DistributorManager(models.Manager):
@@ -209,7 +209,7 @@ class CurrencyManager(models.Manager):
         if key is None:
             return None
 
-        key = anodos.fixers.fix_text(key)
+        key = anodos.tools.fix_text(key)
 
         need_save = False
 
@@ -223,28 +223,28 @@ class CurrencyManager(models.Manager):
 
         # key_digit
         key_digit = kwargs.get('key_digit', None)
-        key_digit = anodos.fixers.fix_text(key_digit)
+        key_digit = anodos.tools.fix_text(key_digit)
         if key_digit is not None and o.key_digit is None:
             o.key_digit = key_digit
             need_save = True
 
         # name
         name = kwargs.get('name', None)
-        name = anodos.fixers.fix_text(name)
+        name = anodos.tools.fix_text(name)
         if name is not None and o.name is None:
             o.name = name
             need_save = True
 
         # quantity
         quantity = kwargs.get('quantity', None)
-        quantity = anodos.fixers.fix_float(quantity)
+        quantity = anodos.tools.fix_float(quantity)
         if quantity is not None and o.quantity != quantity:
             o.quantity = quantity
             need_save = True
 
         # rate
         rate = kwargs.get('rate', None)
-        rate = anodos.fixers.fix_float(rate)
+        rate = anodos.tools.fix_float(rate)
         if rate is not None and o.rate != rate:
             o.rate = rate
             need_save = True
@@ -422,25 +422,25 @@ class ProductManager(models.Manager):
 
         # width
         width = kwargs.get('width', None)
-        if anodos.fixers.need_new_decimal_value(old=o.width, new=width):
+        if anodos.tools.need_new_decimal_value(old=o.width, new=width):
             o.width = width
             need_save = True
 
         # height
         height = kwargs.get('height', None)
-        if anodos.fixers.need_new_decimal_value(old=o.height, new=height):
+        if anodos.tools.need_new_decimal_value(old=o.height, new=height):
             o.height = height
             need_save = True
 
         # depth
         depth = kwargs.get('depth', None)
-        if anodos.fixers.need_new_decimal_value(old=o.depth, new=depth):
+        if anodos.tools.need_new_decimal_value(old=o.depth, new=depth):
             o.depth = depth
             need_save = True
 
         # volume
         volume = kwargs.get('volume', None)
-        if anodos.fixers.need_new_decimal_value(old=o.volume, new=volume):
+        if anodos.tools.need_new_decimal_value(old=o.volume, new=volume):
             o.volume = volume
             need_save = True
 
@@ -740,7 +740,7 @@ class ParameterManager(models.Manager):
 
         need_save = False
 
-        name = anodos.fixers.fix_text(name)
+        name = anodos.tools.fix_text(name)
 
         try:
             o = self.get(distributor=distributor, name__iexact=name)
