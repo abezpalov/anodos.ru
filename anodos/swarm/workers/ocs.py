@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 
 from django.utils import timezone
 from django.conf import settings
+
+import anodos.tools
 import swarm.models
 import distributors.models
 import swarm.workers.worker
@@ -13,46 +15,45 @@ import swarm.workers.worker
 
 class Worker(swarm.workers.worker.Worker):
 
-    source_name = 'ocs.ru'
     name = 'OCS'
     url = {'api': 'https://connector.b2b.ocs.ru/api/v2/',
            'events': 'https://zubrit.ocs.ru',
            'base': 'https://www.ocs.ru',
            'news': 'https://www.ocs.ru',
-           'promo': 'https://www.ocs.ru/Promo'
-           }
+           'promo': 'https://www.ocs.ru/Promo'}
 
     def __init__(self):
-        self.start_time = timezone.now()
-        self.host = settings.HOST
-        self.source = swarm.models.Source.objects.take(name=self.source_name)
+        self.source = swarm.models.Source.objects.take(name=self.name)
         self.distributor = distributors.models.Distributor.objects.take(name=self.name)
-        self.token = settings.OCS_TOKEN
 
         self.cities = []
         self.stocks = []
         self.reserveplaces = []
 
-        self.count_products = 0
-        self.count_parties = 0
-        self.count_news = 0
-        self.count_promo = 0
-        self.count_events = 0
+        self.count_of_products = 0
+        self.count_of_parties = 0
+        self.count_of_news = 0
+        self.count_of_prs = 0
+        self.count_of_promo = 0
+        self.count_of_events = 0
+        self.count_of_parameters = 0
+        self.count_of_images = 0
+        self.message = None
 
         super().__init__()
 
-    def run(self, command=None):
+    def run(self):
 
-        if command == 'update_news':
+        if self.command == 'update_news':
             self.update_news()
             self.update_promo()
             self.update_events()
-            self.message = f'{self.source} {command} finish:\n' \
-                           f'- новостей: {self.count_news};\n' \
-                           f'- промо: {self.count_promo};\n' \
-                           f'- событий: {self.count_events}.'
+            self.message = f'- новостей: {self.count_of_news};\n' \
+                           f'- пресс-релизов: {self.count_of_prs};\n' \
+                           f'- промо: {self.count_of_promo};\n' \
+                           f'- событий: {self.count_of_events}.'
 
-        elif command == 'update_stocks':
+        elif self.command == 'update_stocks':
 
             # Обновляем информации о логистике
             self.update_shipment_cities()
@@ -68,40 +69,56 @@ class Worker(swarm.workers.worker.Worker):
                                                      created__lte=self.start_time).delete()
 
             # Отправляем оповещение об успешном завершении
-            self.message = f'{self.distributor} {command} finish:\n' \
-                           f'- продуктов: {self.count_products};\n' \
-                           f'- партий: {self.count_parties}.'
+            self.message = f'- продуктов: {self.count_of_products};\n' \
+                           f'- партий: {self.count_of_parties}.'
 
-        elif command == 'update_content_all':
+        elif self.command == 'update_content_all':
             ids = self.get_ids_for_update_content('all')
             self.update_content(ids)
+            self.message = f'- характеристик: {self.count_of_parameters};\n' \
+                           f'- фотографий: {self.count_of_images}.'
 
-        elif command == 'update_content_clear':
+        elif self.command == 'update_content_clear':
             ids = self.get_ids_for_update_content('clear')
             self.update_content(ids)
+            self.message = f'- характеристик: {self.count_of_parameters};\n' \
+                           f'- фотографий: {self.count_of_images}.'
 
-        elif command == 'update_content_changes':
-            ids = self.get_ids_for_update_content('changes')
+        elif self.command == 'update_content_changes_day':
+            ids = self.get_ids_for_update_content('day')
             self.update_content(ids)
+            self.message = f'- характеристик: {self.count_of_parameters};\n' \
+                           f'- фотографий: {self.count_of_images}.'
 
-        elif command == 'update_content_changes_month':
-            ids = self.get_ids_for_update_content('changes_month')
+        elif self.command == 'update_content_changes_week':
+            ids = self.get_ids_for_update_content('week')
             self.update_content(ids)
+            self.message = f'- характеристик: {self.count_of_parameters};\n' \
+                           f'- фотографий: {self.count_of_images}.'
 
-        elif command == 'drop_parameters':
+        elif self.command == 'update_content_changes_month':
+            ids = self.get_ids_for_update_content('month')
+            self.update_content(ids)
+            self.message = f'- характеристик: {self.count_of_parameters};\n' \
+                           f'- фотографий: {self.count_of_images}.'
+
+        elif self.command == 'drop_parameters':
             distributors.models.Parameter.objects.filter(distributor=self.distributor).delete()
             distributors.models.Parameter.objects.filter(distributor__isnull=True).delete()
             distributors.models.Product.objects.filter(distributor=self.distributor).update(content_loaded=None,
                                                                                             content=None)
 
-        elif command == 'test':
-            distributors.models.Vendor.objects.filter(distributor__isnull=True).update(distributor=self.distributor)
-
-        elif command == 'all_delete':
+        elif self.command == 'all_delete':
             self.distributor.delete()
 
         else:
             print('Неизвестная команда!')
+
+        if self.message:
+            anodos.tools.send(content=f'{self.name}: {self.command} finish at {self.delta()}:\n'
+                                      f'{self.message}')
+        else:
+            anodos.tools.send(content=f'{self.name}: {self.command} finish at {self.delta()}.\n')
 
     def get_by_api(self, command='', params=''):
 
@@ -109,7 +126,7 @@ class Worker(swarm.workers.worker.Worker):
             url = f"{self.url['api']}{command}?{params}"
         else:
             url = f"{self.url['api']}{command}"
-        headers = {'X-API-Key': self.token,
+        headers = {'X-API-Key': settings.OCS_TOKEN,
                    'accept': 'application/json'}
         result = r.get(url, headers=headers, verify=None)
 
@@ -121,7 +138,7 @@ class Worker(swarm.workers.worker.Worker):
 
     def post_by_api(self, command='', params=''):
         url = f"{self.url['api']}{command}"
-        headers = {'X-API-Key': self.token,
+        headers = {'X-API-Key': settings.OCS_TOKEN,
                    'accept': 'application/json',
                    'Content-Type': 'application/json'}
 
@@ -147,27 +164,27 @@ class Worker(swarm.workers.worker.Worker):
         items = tree.xpath('//div[@class="event-item"]')
 
         for item in items:
-            event = item.xpath('.//div[@class="event-item-label"]/text()')[0]
-            event = self.fix_text(event)
+            try:
+                event = item.xpath('.//div[@class="event-item-label"]/text()')[0]
+                vendor = item.xpath('.//div[@class="event-item-vendors"]/span/text()')[0]
+                name = item.xpath('.//a[@class="event-item-title"]/text()')[0]
+                url = item.xpath('.//a[@class="event-item-title"]/@href')[0]
+                location = item.xpath('.//div[@class="event-item-location"]/text()')[0]
+                date = item.xpath('.//div[@class="event-item-date"]/text()')[0]
+            except IndexError:
+                continue
 
-            vendor = item.xpath('.//div[@class="event-item-vendors"]/span/text()')[0]
-            vendor = self.fix_text(vendor)
-
-            name = item.xpath('.//a[@class="event-item-title"]/text()')[0]
-            name = self.fix_text(name)
-
-            url = item.xpath('.//a[@class="event-item-title"]/@href')[0]
             if not url.startswith(self.url['events']):
                 if url[0] == '/':
                     url = '{}{}'.format(self.url['events'], url)
                 else:
                     url = '{}/{}'.format(self.url['events'], url)
 
-            location = item.xpath('.//div[@class="event-item-location"]/text()')[0]
-            location = self.fix_text(location)
-
-            date = item.xpath('.//div[@class="event-item-date"]/text()')[0]
-            date = self.fix_text(date)
+            event = anodos.tools.fix_text(event)
+            vendor = anodos.tools.fix_text(vendor)
+            name = anodos.tools.fix_text(name)
+            location = anodos.tools.fix_text(location)
+            date = anodos.tools.fix_text(date)
 
             try:
                 data = swarm.models.SourceData.objects.get(source=self.source, url=url)
@@ -175,13 +192,13 @@ class Worker(swarm.workers.worker.Worker):
                 content = f'<b><a href="{url}">{name}</a></b>\n' \
                           f'<i>{date} {location}</i>\n\n' \
                           f'#{self.name} #{event} #{vendor}'
-                self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
+                anodos.tools.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
 
                 data = swarm.models.SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
             print(data)
-            self.count_events += 1
+            self.count_of_events += 1
 
     def update_news(self):
 
@@ -192,17 +209,26 @@ class Worker(swarm.workers.worker.Worker):
         items = tree.xpath('//div[@class="item item-news"]')
 
         for item in items:
-            news_type = item.xpath('.//*[@class="header"]//a/text()')[0]
-            title = item.xpath('.//*[@class="topic"]//a/text()')[0]
-            url = item.xpath('.//*[@class="topic"]//a/@href')[0]
-            term = item.xpath('.//*[@class="header"]//em/text()')[0]
-            text = item.xpath('.//*[@class="body"]//text()')[0]
+            try:
+                news_type = item.xpath('.//*[@class="header"]//a/text()')[0]
+                title = item.xpath('.//*[@class="topic"]//a/text()')[0]
+                url = item.xpath('.//*[@class="topic"]//a/@href')[0]
+                term = item.xpath('.//*[@class="header"]//em/text()')[0]
+                text = item.xpath('.//*[@class="body"]//text()')[0]
+            except IndexError:
+                continue
+
             if not url.startswith(self.url['news']):
                 if url[0] == '/':
                     url = '{}{}'.format(self.url['base'], url)
                 else:
                     url = '{}/{}'.format(self.url['base'], url)
 
+            news_type = anodos.tools.fix_text(news_type)
+            title = anodos.tools.fix_text(title)
+            term = anodos.tools.fix_text(term)
+            text = anodos.tools.fix_text(text)
+
             try:
                 data = swarm.models.SourceData.objects.get(source=self.source, url=url)
             except swarm.models.SourceData.DoesNotExist:
@@ -210,26 +236,36 @@ class Worker(swarm.workers.worker.Worker):
                           f'<i>{term}</i>\n\n' \
                           f'{text}\n' \
                           f'#{self.name} #{news_type}'
-                self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
+                anodos.tools.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
                 data = swarm.models.SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
             print(data)
-            self.count_news += 1
+
+            self.count_of_news += 1
 
         items = tree.xpath('//div[@class="item item-pr"]')
         for item in items:
-            news_type = item.xpath('.//*[@class="header"]//a/text()')[0]
-            title = item.xpath('.//*[@class="topic"]//a/text()')[0]
-            url = item.xpath('.//*[@class="topic"]//a/@href')[0]
-            term = item.xpath('.//*[@class="header"]//em/text()')[0]
-            text = item.xpath('.//*[@class="body"]//text()')[0]
+            try:
+                news_type = item.xpath('.//*[@class="header"]//a/text()')[0]
+                title = item.xpath('.//*[@class="topic"]//a/text()')[0]
+                url = item.xpath('.//*[@class="topic"]//a/@href')[0]
+                term = item.xpath('.//*[@class="header"]//em/text()')[0]
+                text = item.xpath('.//*[@class="body"]//text()')[0]
+            except IndexError:
+                continue
+
             if not url.startswith(self.url['base']):
                 if url[0] == '/':
                     url = '{}{}'.format(self.url['base'], url)
                 else:
                     url = '{}/{}'.format(self.url['base'], url)
 
+            news_type = anodos.tools.fix_text(news_type)
+            title = anodos.tools.fix_text(title)
+            term = anodos.tools.fix_text(term)
+            text = anodos.tools.fix_text(text)
+
             try:
                 data = swarm.models.SourceData.objects.get(source=self.source, url=url)
             except swarm.models.SourceData.DoesNotExist:
@@ -237,12 +273,13 @@ class Worker(swarm.workers.worker.Worker):
                           f'<i>{term}</i>\n\n' \
                           f'{text}\n' \
                           f'#{self.name} #{news_type}'
-                self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
+                anodos.tools.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
                 data = swarm.models.SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
             print(data)
-            self.count_news += 1
+
+            self.count_of_prs += 1
 
     def update_promo(self):
 
@@ -252,16 +289,25 @@ class Worker(swarm.workers.worker.Worker):
         # Получаем все ссылки
         items = tree.xpath('//div[@class="item"]')
         for item in items:
-            vendor = item.xpath('.//*[@class="vendor"]//text()')[0]
-            term = item.xpath('.//*[@class="term"]//text()')[0]
-            title = item.xpath('.//h2//text()')[0]
-            text = item.xpath('.//div[@class="info"]/p//text()')[0]
-            url = item.xpath('.//h2/a/@href')[0]
+            try:
+                vendor = item.xpath('.//*[@class="vendor"]//text()')[0]
+                term = item.xpath('.//*[@class="term"]//text()')[0]
+                title = item.xpath('.//h2//text()')[0]
+                text = item.xpath('.//div[@class="info"]/p//text()')[0]
+                url = item.xpath('.//h2/a/@href')[0]
+            except IndexError:
+                continue
+
             if not url.startswith(self.url['base']):
                 if url[0] == '/':
                     url = '{}{}'.format(self.url['base'], url)
                 else:
                     url = '{}/{}'.format(self.url['base'], url)
+
+            vendor = anodos.tools.fix_text(vendor)
+            term = anodos.tools.fix_text(term)
+            title = anodos.tools.fix_text(title)
+            text = anodos.tools.fix_text(text)
 
             try:
                 data = swarm.models.SourceData.objects.get(source=self.source, url=url)
@@ -270,12 +316,13 @@ class Worker(swarm.workers.worker.Worker):
                           f'<i>{term}</i>\n\n' \
                           f'{text}\n' \
                           f'#{self.name} #промо #{vendor}'
-                self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
+                anodos.tools.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
                 data = swarm.models.SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
             print(data)
-            self.count_promo += 1
+
+            self.count_of_promo += 1
 
     def update_currencies_exchanges(self):
         command = 'account/currencies/exchanges'
@@ -391,7 +438,7 @@ class Worker(swarm.workers.worker.Worker):
             for n, item in enumerate(data['result']):
                 product = self.parse_product(item)
                 print(f"{n + 1} of {len(data['result'])} {product}")
-                self.count_products += 1
+                self.count_of_products += 1
 
     def parse_product(self, item):
         vendor = distributors.models.Vendor.objects.take(distributor=self.distributor,
@@ -552,7 +599,7 @@ class Worker(swarm.workers.worker.Worker):
                                                      unconditional=unconditional,
                                                      sale=sale,
                                                      condition_description=condition_description)
-            self.count_parties += 1
+            self.count_of_parties += 1
         return product
 
     def get_ids_for_update_content(self, mode=None):
@@ -572,7 +619,7 @@ class Worker(swarm.workers.worker.Worker):
                 ids.append(id_['product_key'])
             return ids
 
-        elif mode == 'changes':
+        elif mode == 'day':
             command = 'content/changes'
             print(command)
 
@@ -586,7 +633,21 @@ class Worker(swarm.workers.worker.Worker):
                 ids.append(id_['itemId'])
             return ids
 
-        elif mode == 'changes_month':
+        elif mode == 'week':
+            command = 'content/changes'
+            print(command)
+
+            start = datetime.utcnow() - timedelta(days=7)
+            start = self.datetime_to_str(x=start)
+
+            ids_ = self.get_by_api(command=command, params=f'from={start}')
+            print(ids_)
+            ids = []
+            for id_ in ids_:
+                ids.append(id_['itemId'])
+            return ids
+
+        elif mode == 'month':
             command = 'content/changes'
             print(command)
 
@@ -656,18 +717,20 @@ class Worker(swarm.workers.worker.Worker):
                                                                                   value=value,
                                                                                   unit=unit)
                 print(parameter_value)
+                self.count_of_parameters += 1
 
             # images
             for image in content['images']:
                 url = image.get('url', None)
                 image = distributors.models.ProductImage.objects.take(product=product, source_url=url)
                 print(image)
+                self.count_of_images += 1
 
             product.content_loaded = timezone.now()
             product.content = content
             product.save()
 
-            url = f'{self.host}/distributors/product/{product.id}/'
+            url = f'{settings.HOST}/distributors/product/{product.id}/'
 
     @staticmethod
     def datetime_to_str(x):

@@ -5,22 +5,28 @@ from datetime import datetime
 from django.conf import settings
 
 import anodos.tools
-from swarm.models import *
-from swarm.workers.worker import Worker
-
+import swarm.models
 import pflops.models
 import distributors.models
+import swarm.workers.worker
 
 
-class Worker(Worker):
+class Worker(swarm.workers.worker.Worker):
+
+    name = 'Service'
 
     def __init__(self):
-
+        self.count_of_products = 0
+        self.count_of_parties = 0
+        self.count_of_parameters = 0
+        self.count_of_images = 0
+        self.count_of_urls = 0
+        self.message = None
         super().__init__()
 
-    def run(self, command=None):
+    def run(self):
 
-        if command == 'info':
+        if self.command == 'info':
             print('Продуктов в PFLOPS:',
                   pflops.models.Product.objects.all().count())
             print('Продуктов не перенесено от дистрибьюторов:',
@@ -28,44 +34,64 @@ class Worker(Worker):
             print('Продуктов перенесено от дистрибьюторов:',
                   distributors.models.Product.objects.filter(to_pflops__isnull=False).count())
 
-        elif command == 'update_products':
-            # Продукты
+        elif self.command == 'update_products':
+
+            # Обновляем продукты
             self.update_products()
+
+            # Обновляем цены и наличие
             self.update_prices_and_quantities()
 
-        elif command == 'update_parameters':
+            # Готовим оповещение
+            self.message = f'- продуктов: {self.count_of_products};\n' \
+                           f'- партий: {self.count_of_parties}.'
+
+        elif self.command == 'update_parameters':
             # Характеристики
             self.update_parameters()
 
-        elif command == 'update_images':
+            # Готовим оповещение
+            self.message = f'- параметров: {self.count_of_parameters}.'
+
+        elif self.command == 'update_images':
 
             # Изображения
             self.update_images()
 
-        elif command == 'fix_products':
+            # Готовим оповещение
+            self.message = f'- изображений: {self.count_of_images}.'
+
+        elif self.command == 'rewrite_products':
             ids_ = pflops.models.Product.objects.all().values('id')
             for n, id_ in enumerate(ids_):
                 product = pflops.models.Product.objects.get(id=id_['id'])
                 print(f'{n + 1} of {len(ids_)} {product}')
                 product.save()
 
-        elif command == 'fix_parameter_values':
+        elif self.command == 'rewrite_parameter_values':
             ids_ = pflops.models.ParameterValue.objects.all().values('id')
             for n, id_ in enumerate(ids_):
                 value = pflops.models.ParameterValue.objects.get(id=id_['id'])
                 print(f'{n + 1} of {len(ids_)} {value}')
                 value.save()
 
-        elif command == 'test':
-            images = pflops.models.ProductImage.objects.all()
-            for n, image in enumerate(images):
-                print(f'{n} of {len(images)} {image}')
-
-        elif command == 'del_all_images':
+        elif self.command == 'del_all_images':
             pflops.models.ProductImage.objects.all().delete()
 
-        elif command == 'update_sitemap':
+        elif self.command == 'update_sitemap':
             self.update_sitemap()
+
+            # Готовим оповещение
+            self.message = f'- ссылок: {self.count_of_urls}.'
+
+        else:
+            print('Неизвестная команда!')
+
+        if self.message:
+            anodos.tools.send(content=f'{self.name}: {self.command} finish at {self.delta()}:\n'
+                                      f'{self.message}')
+        else:
+            anodos.tools.send(content=f'{self.name}: {self.command} finish at {self.delta()}.\n')
 
     def update_products(self):
         """ Переносит сущность продукт в чистовик """
@@ -111,6 +137,8 @@ class Worker(Worker):
             if product_.to_pflops != product:
                 product_.to_pflops = product
                 product_.save()
+
+            self.count_of_products += 1
 
             print(f'{n + 1} of {len(ids_)} {product}')
 
@@ -165,6 +193,8 @@ class Worker(Worker):
 
             print(f'{n + 1} of {len(ids_)} {product} | {product.quantity} | {product.price}')
 
+            self.count_of_parties += 1
+
     def update_parameters(self):
 
         # Удаляем мусор
@@ -175,7 +205,7 @@ class Worker(Worker):
         for n, parameter in enumerate(parameters):
             print(f'{n+1} of {len(parameters)} {parameter}')
 
-            if self.fix_text(parameter.name) != parameter.name:
+            if anodos.tools.fix_text(parameter.name) != parameter.name:
                 parameter.delete()
                 continue
 
@@ -228,7 +258,9 @@ class Worker(Worker):
                     if str(parameter_value.id) in parameter_values_ids:
                         parameter_values_ids.remove(str(parameter_value.id))
 
-            # Удаляем устарейшие параметры
+                    self.count_of_parameters += 1
+
+            # Удаляем устаревшие параметры
             for parameter_values_id in parameter_values_ids:
                 pflops.models.ParameterValue.objects.filter(id=parameter_values_id).delete()
 
@@ -352,6 +384,8 @@ class Worker(Worker):
                     im.close()
                     im_new.close()
 
+                    self.count_of_images += 1
+
     def update_sitemap(self):
 
         print('update_sitemap')
@@ -404,3 +438,4 @@ class Worker(Worker):
         urlset_files.write(urlsets_str)
         urlset_files.close()
 
+        self.count_of_urls = count_of_urls

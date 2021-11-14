@@ -1,4 +1,5 @@
 import os
+import time
 import telebot
 
 from django.conf import settings
@@ -11,6 +12,7 @@ def send(content='test', chat_id=settings.TELEGRAM_LOG_CHAT,
                      text=content,
                      parse_mode='HTML',
                      disable_web_page_preview=disable_web_page_preview)
+    time.sleep(1)
 
 
 def to_slug(name):
@@ -81,6 +83,19 @@ def fix_text(text):
     text = text.replace(' - ', ' — ')
     text = text.strip()
     return text
+
+
+def fix_url(url):
+
+    if url is None:
+        return None
+
+    dictionary = {'\n': '', '\t': ''}
+    for key in dictionary:
+        url = url.replace(key, dictionary[key])
+
+    url = url.strip()
+    return url
 
 
 def fix_float(text):

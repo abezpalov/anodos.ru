@@ -1,12 +1,14 @@
-import time
+import sys
 import ftplib
-import requests as r
+import requests
 import lxml.html
+import lxml.etree
 from io import BytesIO
-import telebot
 
 from django.conf import settings
 from django.utils import timezone
+
+import anodos.tools
 
 
 class Worker:
@@ -18,19 +20,18 @@ class Worker:
         self.ftp = None
         self.session = None
         self.cookies = None
-        self.bot = telebot.TeleBot(settings.TELEGRAM_TOKEN)
         self.message = None
+        try:
+            self.command = sys.argv[2]
+        except IndexError:
+            self.command = None
 
     def __del__(self):
         delta = timezone.now() - self.start_time
         print(f'{self.name} finish at {delta}')
 
-    def send(self, content='test', chat_id=settings.TELEGRAM_LOG_CHAT,
-             disable_web_page_preview=True, independent=False):
-        self.bot.send_message(chat_id=chat_id,
-                              text=content,
-                              parse_mode='HTML',
-                              disable_web_page_preview=disable_web_page_preview)
+    def delta(self):
+        return timezone.now() - self.start_time
 
     def ftp_login(self, host):
         self.ftp = ftplib.FTP(host=host, timeout=30)
@@ -76,36 +77,34 @@ class Worker:
     def load(self, url, result_type=None):
 
         if self.session is None:
-            self.session = r.Session()
+            self.session = requests.Session()
 
-        if self.cookies is None:
-            result = self.session.get(url, allow_redirects=True, verify=False)
-            self.cookies = result.cookies
-        else:
-            result = self.session.get(url, allow_redirects=True, verify=False,
-                                      cookies=self.cookies)
-            self.cookies = result.cookies
+        try:
+            if self.cookies is None:
+                result = self.session.get(url, allow_redirects=True, verify=False)
+                self.cookies = result.cookies
+            else:
+                result = self.session.get(url, allow_redirects=True, verify=False,
+                                          cookies=self.cookies)
+                self.cookies = result.cookies
+        except requests.exceptions.TooManyRedirects:
+            return None
 
         if result_type == 'cookie':
             return result.cookie
         elif result_type == 'text':
             return result.text
         elif result_type == 'html':
-            tree = lxml.html.fromstring(result.text)
+            try:
+                tree = lxml.html.fromstring(result.text)
+                return tree
+            except ValueError:
+                tree = lxml.html.fromstring(result.content)
+                return tree
+        elif result_type == 'xml':
+            tree = lxml.etree.parse(result.text)
             return tree
         elif result_type == 'content':
             return result.content
 
         return result
-
-    @staticmethod
-    def fix_text(text):
-        while '  ' in text:
-            text = text.replace('  ', ' ')
-        while '/n/n' in text:
-            text = text.replace('/n/n', '/n')
-        text = text.replace(' : ', ': ')
-        text = text.replace(' - ', ' — ')
-        text = text.strip()
-
-        return text

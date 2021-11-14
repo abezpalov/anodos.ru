@@ -3,56 +3,48 @@ import zeep
 
 from django.utils import timezone
 from django.conf import settings
+
+import anodos.tools
 import swarm.models
 import distributors.models
-from swarm.workers.worker import Worker
+import swarm.workers.worker
 
 
-class Worker(Worker):
-    source_name = 'treolan.ru'
+class Worker(swarm.workers.worker.Worker):
+
     name = 'Treolan'
     url = {'wsdl': 'https://api.treolan.ru/ws/service.asmx?wsdl',
-           'base': 'https://www.treolan.ru',
-           }
+           'base': 'https://www.treolan.ru'}
     content_urls = {'Новость вендора': 'https://www.treolan.ru/vendor/news',
                     'Промо': 'https://www.treolan.ru/vendor/marketing',
                     'Новое поступление': 'https://www.treolan.ru/new_arrival',
-                    'Новость': 'https://www.treolan.ru/company/news',
-                    }
+                    'Новость': 'https://www.treolan.ru/company/news'}
 
     def __init__(self):
-        self.start_time = timezone.now()
-        self.host = settings.HOST
-
-        self.source = swarm.models.Source.objects.take(
-            name=self.source_name,
-            login=settings.TREOLAN_LOGIN,
-            password=settings.TREOLAN_PASSWORD)
+        self.source = swarm.models.Source.objects.take(name=self.name,
+                                                       login=settings.TREOLAN_LOGIN,
+                                                       password=settings.TREOLAN_PASSWORD)
         self.distributor = distributors.models.Distributor.objects.take(name=self.name)
-
         self.stock = distributors.models.Location.objects.take(distributor=self.distributor,
                                                                key='Склад')
         self.transit = distributors.models.Location.objects.take(distributor=self.distributor,
                                                                  key='Транзит')
-
-        self.count_products = 0
-        self.count_parties = 0
-        self.count_news = 0
-
+        self.count_of_news = 0
+        self.count_of_products = 0
+        self.count_of_parties = 0
+        self.count_of_parameters = 0
+        self.count_of_images = 0
+        self.message = None
         self.client = None
-
-        self.test = set()
-
         super().__init__()
 
-    def run(self, command=None):
+    def run(self):
 
-        if command == 'update_news':
+        if self.command == 'update_news':
             self.update_news()
-            self.message = f'{self.source} {command} finish:\n' \
-                           f'- новостей: {self.count_news}.'
+            self.message = f'- новостей: {self.count_of_news}.'
 
-        elif command == 'update_stocks':
+        elif self.command == 'update_stocks':
 
             # Инициализируем SOAP-клиента
             settings_ = zeep.Settings(strict=False, xml_huge_tree=True)
@@ -65,14 +57,11 @@ class Worker(Worker):
             distributors.models.Party.objects.filter(distributor=self.distributor,
                                                      created__lte=self.start_time).delete()
 
-            # Отправляем оповещение об успешном завершении
-            self.message = f'{self.source} {command} finish:\n' \
-                           f'- продуктов: {self.count_products};\n' \
-                           f'- партий: {self.count_parties}.'
+            # Готовим оповещение о завершении
+            self.message = f'- продуктов: {self.count_of_products};\n' \
+                           f'- партий: {self.count_of_parties}.'
 
-            print(self.test)
-
-        elif command == 'update_content_all':
+        elif self.command == 'update_content_all':
 
             # Инициализируем SOAP-клиента
             settings_ = zeep.Settings(strict=False, xml_huge_tree=True)
@@ -82,7 +71,11 @@ class Worker(Worker):
             keys = self.get_keys_for_update_content('all')
             self.update_content(keys)
 
-        elif command == 'update_content_clear':
+            # Готовим оповещение о завершении
+            self.message = f'- характеристик: {self.count_of_parameters};\n' \
+                           f'- фотографий: {self.count_of_images}.'
+
+        elif self.command == 'update_content_clear':
 
             # Инициализируем SOAP-клиента
             settings_ = zeep.Settings(strict=False, xml_huge_tree=True)
@@ -92,14 +85,22 @@ class Worker(Worker):
             keys = self.get_keys_for_update_content('clear')
             self.update_content(keys)
 
-        elif command == 'test':
-            pass
+            # Готовим оповещение о завершении
+            self.message = f'- характеристик: {self.count_of_parameters};\n' \
+                           f'- фотографий: {self.count_of_images}.'
 
-        elif command == 'all_delete':
+        elif self.command == 'all_delete':
             self.distributor.delete()
 
         else:
             print('Неизвестная команда!')
+
+        # Отправляем оповещение о завершении
+        if self.message:
+            anodos.tools.send(content=f'{self.name}: {self.command} finish at {self.delta()}:\n'
+                                      f'{self.message}')
+        else:
+            anodos.tools.send(content=f'{self.name}: {self.command} finish at {self.delta()}.\n')
 
     def update_news(self):
 
@@ -113,23 +114,20 @@ class Worker(Worker):
 
         items = tree.xpath('.//div[@class="news-preview col-3"]')
         for item in items:
-            # title
-            title = item.xpath('.//*[@class="news-preview__title"]/a/text()')[0]
-            title = self.fix_text(title)
-
-            # url
-            url = item.xpath('.//*[@class="news-preview__title"]/a/@href')[0]
-
-            # date
-            date = item.xpath('.//*[@class="news-preview__date"]/text()')[0]
-            date = self.fix_text(date)
-
-            # description
             try:
-                description = item.xpath('.//*[@class="news-preview__description"]/a/text()')[0]
+                title = item.xpath('.//*[@class="news-preview__title"]/a/text()')[0]
+                date = item.xpath('.//*[@class="news-preview__date"]/text()')[0]
+                url = item.xpath('.//*[@class="news-preview__title"]/a/@href')[0]
+                try:
+                    description = item.xpath('.//*[@class="news-preview__description"]/a/text()')[0]
+                except IndexError:
+                    description = ''
             except IndexError:
-                description = ''
-            description = self.fix_text(description)
+                continue
+
+            title = anodos.tools.fix_text(title)
+            date = anodos.tools.fix_text(date)
+            description = anodos.tools.fix_text(description)
 
             try:
                 data = swarm.models.SourceData.objects.get(source=self.source, url=url)
@@ -138,13 +136,13 @@ class Worker(Worker):
                           f'<i>{date}</i>\n\n' \
                           f'{description}\n' \
                           f'#{self.distributor} #{content_type}'
-                self.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
+                anodos.tools.send(content, chat_id=settings.TELEGRAM_NEWS_CHAT)
 
                 data = swarm.models.SourceData.objects.take(source=self.source, url=url)
                 data.content = content
                 data.save()
             print(data)
-            self.count_news += 1
+            self.count_of_news += 1
 
     def update_categories(self):
         result = self.client.service.GetCategories(login=self.login,
@@ -193,9 +191,9 @@ class Worker(Worker):
         categories = tree.xpath('./category')
         for category_ in categories:
             key = category_.xpath('./@id')[0]
-            key = self.fix_text(key)
+            key = anodos.tools.fix_text(key)
             name = category_.xpath('./@name')[0]
-            name = self.fix_text(name)
+            name = anodos.tools.fix_text(name)
             category = distributors.models.Category.objects.take(distributor=self.distributor,
                                                                  key=key,
                                                                  name=name,
@@ -225,7 +223,7 @@ class Worker(Worker):
 
                 # @vendor - Производитель.
                 vendor = item.xpath('./@vendor')[0]
-                vendor = self.fix_text(vendor)
+                vendor = anodos.tools.fix_text(vendor)
                 vendor = distributors.models.Vendor.objects.take(distributor=self.distributor, name=vendor)
 
                 # @vendor-id - Идентификатор производителя.
@@ -273,11 +271,9 @@ class Worker(Worker):
 
                 # @freenom - Свободно на складе.
                 quantity_on_stock = item.xpath('./@freenom')[0]
-                self.test.add(quantity_on_stock)
 
                 # @freeptrans - Свободнов транзите.
                 quantity_on_transit = item.xpath('./@freeptrans')[0]
-                self.test.add(quantity_on_transit)
 
                 # @ntdate - Дата ближайшего транзита.
                 incoming_date = item.xpath('./@ntdate')[0]
@@ -332,7 +328,7 @@ class Worker(Worker):
                                                                                 volume=width * height * depth)
 
                 if product is not None:
-                    self.count_products += 1
+                    self.count_of_products += 1
                     print(product)
 
                     # Чистим количество
@@ -359,7 +355,7 @@ class Worker(Worker):
                                                                          sale=sale,
                                                                          promo=promo,
                                                                          outoftrade=outoftrade)
-                        self.count_parties += 1
+                        self.count_of_parties += 1
                         print(party)
 
                     if quantity_on_transit:
@@ -382,7 +378,7 @@ class Worker(Worker):
                                                                          sale=sale,
                                                                          promo=promo,
                                                                          outoftrade=outoftrade)
-                        self.count_parties += 1
+                        self.count_of_parties += 1
                         print(party)
 
     def get_keys_for_update_content(self, mode=None):
@@ -410,6 +406,7 @@ class Worker(Worker):
                                                        Articul=key)
             tree = lxml.etree.fromstring(result['Result'])
             self.parse_content(tree=tree, n_key=n, len_keys=len(keys))
+            self.count_of_parties += 1
 
     def parse_content(self, tree, n_key, len_keys):
 
@@ -431,15 +428,16 @@ class Worker(Worker):
         property_elements = product_element.xpath('.//Property')
         for property_element in property_elements:
             parameter_name = property_element.xpath('./@Name')[0]
-            parameter_name = self.fix_text(parameter_name)
+            parameter_name = anodos.tools.fix_text(parameter_name)
             parameter = distributors.models.Parameter.objects.take(distributor=self.distributor, name=parameter_name)
             value = property_element.xpath('./@Value')[0]
-            value = self.fix_text(value)
+            value = anodos.tools.fix_text(value)
             distributors.models.ParameterValue.objects.take(distributor=self.distributor,
                                                             product=product,
                                                             parameter=parameter,
                                                             value=value)
             count += 1
+            self.count_of_parameters += 1
 
         # Проходим по всех изображениям
         image_elements = tree.xpath('.//PictureLink/row')
@@ -448,11 +446,12 @@ class Worker(Worker):
             ext = image_element.xpath('./@ImageType')[0].lower()
             distributors.models.ProductImage.objects.take(product=product, source_url=url, ext=ext)
             count += 1
+            self.count_of_images += 1
 
         if count:
             product.content_loaded = timezone.now()
             product.save()
-            url = f'{self.host}/distributors/product/{product.id}/'
+            url = f'{settings.HOST}/distributors/product/{product.id}/'
 
     @staticmethod
     def fix_quantity(quantity):

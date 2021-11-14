@@ -7,10 +7,10 @@ import swarm.workers.worker
 
 class Worker(swarm.workers.worker.Worker):
 
-    name = 'MONT'
-    urls = {'base': 'https://www.mont.com',
-            'events': 'https://mont.com/ru-ru/events',
-            'news': 'https://mont.com/ru-ru/news'}
+    name = 'Axoft'
+    urls = {'base': 'https://axoft.ru',
+            'news': 'https://axoft.ru/current/news/',
+            'events': 'https://axoft.ru/current/events/list/'}
 
     def __init__(self):
         self.source = swarm.models.Source.objects.take(name=self.name)
@@ -39,16 +39,16 @@ class Worker(swarm.workers.worker.Worker):
         tree = self.load(url=self.urls['news'], result_type='html')
 
         # Получаем все элементы
-        items = tree.xpath('//div[@class="news-item"]')
+        items = tree.xpath('//div[@class="b-news_block"]//div[@class="b-text_block"]')
         items.reverse()
 
         for item in items:
             news_type = 'новость'
             try:
-                title = item.xpath('.//h3/text()')[0]
-                url = item.xpath('.//a/@href')[0]
-                term = item.xpath('.//span[@class="news-item__date news-item__date--mobile"]/text()')[0]
-                text = item.xpath('.//p/text()')[0]
+                title = item.xpath('.//h3//a/text()')[0]
+                url = item.xpath('.//h3//a/@href')[0]
+                term = item.xpath('.//*[@class="b-date"]/text()')[0]
+                text = item.xpath('.//*[@class="b-content_text"]//p/text()')[0]
             except IndexError:
                 continue
 
@@ -79,19 +79,17 @@ class Worker(swarm.workers.worker.Worker):
         # Заходим на первую страницу
         tree = self.load(url=self.urls['events'], result_type='html')
 
-        # Получаем все ссылки
-        items = tree.xpath('//div[@class="events-item"]')
+        # Получаем все элементы
+        items = tree.xpath('//div[@class="b-content_block"]/div')
         items.reverse()
 
         for item in items:
             news_type = 'мероприятие'
             try:
-                title = item.xpath('.//h3/text()')[0]
-                url = item.xpath('.//a/@href')[0]
-                term = item.xpath('.//*[@class="events-item__date-container '
-                                  'events-item__date-container--mobile"]//text()')[1]
-                text = item.xpath('.//section[@class="events-item__text"]//text()')[0:2]
-                text = ' '.join(text)
+                title = item.xpath('.//h3//a/text()')[0]
+                url = item.xpath('.//h3//a/@href')[0]
+                term = item.xpath('.//*[@class="b-date_big"]/text()')[0]
+                text = item.xpath('.//p[@class="b-content_text"]/text()')[0]
             except IndexError:
                 continue
             if not url.startswith(self.urls['base']):
