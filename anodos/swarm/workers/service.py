@@ -316,6 +316,8 @@ class Worker(swarm.workers.worker.Worker):
             images_ = distributors.models.ProductImage.objects.filter(product=product_)
             for image_ in images_:
 
+                self.count_of_images += 1
+
                 # Берём сущность с базы
                 image = pflops.models.ProductImage.objects.take(product=product,
                                                                 source_url=image_.source_url)
@@ -383,8 +385,6 @@ class Worker(swarm.workers.worker.Worker):
 
                     im.close()
                     im_new.close()
-
-                    self.count_of_images += 1
 
     def update_sitemap(self):
 
