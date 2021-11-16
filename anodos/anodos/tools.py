@@ -6,12 +6,18 @@ from django.conf import settings
 
 
 def send(content='test', chat_id=settings.TELEGRAM_LOG_CHAT,
-         disable_web_page_preview=True):
+         disable_web_page_preview=True, count_of_probe=42):
     bot = telebot.TeleBot(settings.TELEGRAM_TOKEN)
-    bot.send_message(chat_id=chat_id,
-                     text=content,
-                     parse_mode='HTML',
-                     disable_web_page_preview=disable_web_page_preview)
+
+    for n in range(count_of_probe):
+        try:
+            bot.send_message(chat_id=chat_id,
+                             text=content,
+                             parse_mode='HTML',
+                             disable_web_page_preview=disable_web_page_preview)
+            break
+        except telebot.apihelper.ApiTelegramException:
+            time.sleep(30)
     time.sleep(1)
 
 

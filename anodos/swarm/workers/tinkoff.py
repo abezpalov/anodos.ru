@@ -1,21 +1,19 @@
-import requests as r
 import json
-
+import requests as r
+from datetime import datetime, date, time, timedelta
 from multiprocessing.dummy import Pool as ThreadPool
 
 from django.conf import settings
-from datetime import datetime, date, time, timedelta
 
-from swarm.models import *
-from trader.models import *
-from swarm.workers.worker import Worker as W
+import anodos.tools
+import swarm.models
+import trader.models
+import swarm.workers.worker
 
 
-class Worker(W):
+class Worker(swarm.workers.worker.Worker):
 
     name = 'tinkoff.ru/invest/collector'
-    login = None
-    password = None
     company = 'Tinkoff'
     url = 'https://api-invest.tinkoff.ru/openapi/'
 
@@ -34,19 +32,14 @@ class Worker(W):
     start_datetime = datetime.combine(date(2000, 1, 1), time(0, 0, 0, 0))
 
     def __init__(self):
-        self.source = Source.objects.take(
-            name=self.name,
-            login=self.login,
-            password=self.password)
-        self.token = settings.TINKOFF_TOKEN
-
+        self.source = swarm.models.Source.objects.take(name=self.name)
         super().__init__()
 
     def run(self, command='history'):
 
         if command is 'history':
-            count = '{:,}'.format(Candle.objects.count()).replace(',', ' ')
-            self.send(f'TI run {command}\n{count} candles is now')
+            count = '{:,}'.format(trader.models.Candle.objects.count()).replace(',', ' ')
+            anodos.tools.send(f'TI run {command}\n{count} candles is now')
 
             while True:
                 # Обновляем список инструментов
@@ -64,14 +57,14 @@ class Worker(W):
                 self.shoot_instruments()
 
         elif command == 'all_delete':
-            Candle.objects.all().delete()
-            Instrument.objects.all().delete()
+            trader.models.Candle.objects.all().delete()
+            trader.models.Instrument.objects.all().delete()
 
         self.send(f'TI end {command}')
 
     def get(self, command='', parameters=''):
         url = f'{self.url}{command}{parameters}'
-        headers = {'Authorization': f'Bearer {self.token}',
+        headers = {'Authorization': f'Bearer {settings.TINKOFF_TOKEN}',
                    'accept': 'application/json'}
         result = r.get(url, headers=headers, verify=None, timeout=180)
         try:
@@ -86,7 +79,7 @@ class Worker(W):
     def update_stocks(self):
         stocks = self.get(command='market/stocks')
         for n, stock in enumerate(stocks['payload']['instruments']):
-            instrument = Instrument.objects.take_by_figi(
+            instrument = trader.models.Instrument.objects.take_by_figi(
                 figi=stock.get('figi', None),
                 ticker=stock.get('ticker', None),
                 isin=stock.get('isin', None),
@@ -104,7 +97,7 @@ class Worker(W):
     def update_bonds(self):
         bonds = self.get(command='market/bonds')
         for n, bond in enumerate(bonds['payload']['instruments']):
-            instrument = Instrument.objects.take_by_figi(
+            instrument = trader.models.Instrument.objects.take_by_figi(
                 figi=bond.get('figi', None),
                 ticker=bond.get('ticker', None),
                 isin=bond.get('isin', None),
@@ -122,7 +115,7 @@ class Worker(W):
     def update_etfs(self):
         etfs = self.get(command='market/etfs')
         for n, etf in enumerate(etfs['payload']['instruments']):
-            instrument = Instrument.objects.take_by_figi(
+            instrument = trader.models.Instrument.objects.take_by_figi(
                 figi=etf.get('figi', None),
                 ticker=etf.get('ticker', None),
                 isin=etf.get('isin', None),
@@ -141,7 +134,7 @@ class Worker(W):
         command = 'market/currencies'
         currencies = self.get(command=command)
         for n, currency in enumerate(currencies['payload']['instruments']):
-            instrument = Instrument.objects.take_by_figi(
+            instrument = trader.models.Instrument.objects.take_by_figi(
                 figi=currency.get('figi', None),
                 ticker=currency.get('ticker', None),
                 isin=currency.get('isin', None),
@@ -159,9 +152,9 @@ class Worker(W):
     def update_instruments_history(self, instrument_type=None):
 
         if instrument_type is None:
-            instruments = Instrument.objects.all()
+            instruments = trader.models.Instrument.objects.all()
         else:
-            instruments = Instrument.objects.filter(type=instrument_type)
+            instruments = trader.models.Instrument.objects.filter(type=instrument_type)
 
         pool = ThreadPool(4)
         pool.map(self.update_instrument_history, instruments)
@@ -212,14 +205,15 @@ class Worker(W):
                     l = len(candles['payload']['candles'])
                     print(f'Update {l} candles: {instrument.ticker} {interval} {start} {end}')
                     for candle in candles['payload']['candles']:
-                        candle = Candle.objects.write(instrument=instrument,
-                                                      datetime=candle['time'],
-                                                      interval=candle['interval'],
-                                                      o=candle['o'],
-                                                      c=candle['c'],
-                                                      h=candle['h'],
-                                                      l=candle['l'],
-                                                      v=candle['v'])
+                        candle = trader.models.Candle.objects.write(
+                            instrument=instrument,
+                            datetime=candle['time'],
+                            interval=candle['interval'],
+                            o=candle['o'],
+                            c=candle['c'],
+                            h=candle['h'],
+                            l=candle['l'],
+                            v=candle['v'])
                 else:
                     print(parameters)
                     print(candles['status'], candles['payload']['code'])
@@ -232,7 +226,7 @@ class Worker(W):
 
     def shoot_instruments(self):
 
-        instruments = Instrument.objects.all()
+        instruments = trader.models.Instrument.objects.all()
 
         l = len(instruments)
         for n, instrument in enumerate(instruments):
@@ -265,9 +259,9 @@ class Worker(W):
                 return None
             candles[interval] = candles_
 
-        snapshot = Snapshot.objects.add(instrument=instrument,
-                                        orderbook=orderbook,
-                                        candles=candles)
+        snapshot = trader.models.Snapshot.objects.add(instrument=instrument,
+                                                      orderbook=orderbook,
+                                                      candles=candles)
         print(snapshot)
 
     def is_actual(self, instrument):
@@ -330,9 +324,9 @@ class Worker(W):
     def export_instruments_candles(self, instrument_type=None):
 
         if instrument_type is None:
-            instruments = Instrument.objects.all()
+            instruments = trader.models.Instrument.objects.all()
         else:
-            instruments = Instrument.objects.filter(type=instrument_type)
+            instruments = trader.models.Instrument.objects.filter(type=instrument_type)
 
         for instrument in instruments:
             pass #TODO
