@@ -4,6 +4,7 @@
 # Загрузка состояния складов у поставщиков
 ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py ocs update_stocks
 ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py treolan update_stocks
+~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py marvel update_stocks
 
 ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py service update_products
 

@@ -461,8 +461,164 @@ class ProductManager(models.Manager):
 
         return o
 
-    def take_by_part_number(self, distributor, vendor, part_number, **kwargs):
-        pass
+    def take_by_part_number(self, distributor, vendor, part_number, name, **kwargs):
+
+        if not distributor or not vendor or not part_number or not name:
+            return None
+
+        need_save = False
+
+        try:
+            o = self.get(distributor=distributor, vendor=vendor, part_number=part_number)
+        except Product.DoesNotExist:
+            o = Product()
+            o.distributor = distributor
+            o.vendor = vendor
+            o.part_number = part_number
+            o.name = name
+            need_save = True
+
+        # party_key
+        party_key = kwargs.get('party_key', None)
+        if party_key is not None and party_key != o.party_key:
+            o.party_key = party_key
+            need_save = True
+
+        # product_key
+        product_key = kwargs.get('product_key', None)
+        if product_key is not None and product_key != o.product_key:
+            o.product_key = product_key
+            need_save = True
+
+        # vendor
+        vendor = kwargs.get('vendor', None)
+        if vendor is not None and vendor != o.vendor:
+            o.vendor = vendor
+            need_save = True
+
+        # category
+        category = kwargs.get('category', None)
+        if category is not None and category != o.category:
+            o.category = category
+            need_save = True
+
+        # name
+        if name is not None and name != o.name:
+            o.name = name
+            need_save = True
+
+        # name_rus
+        name_rus = kwargs.get('name_rus', None)
+        if name_rus is not None and name_rus != o.name_rus:
+            o.name_rus = name_rus
+            need_save = True
+
+        # name_other
+        name_other = kwargs.get('name_other', None)
+        if name_other is not None and name_other != o.name_other:
+            o.name_other = name_other
+            need_save = True
+
+        # description
+        description = kwargs.get('description', None)
+        if description is not None and description != o.description:
+            o.description = description
+            need_save = True
+
+        # warranty
+        warranty = kwargs.get('warranty', None)
+        if warranty is not None and warranty != o.warranty:
+            o.warranty = warranty
+            need_save = True
+
+        # ean_128
+        ean_128 = kwargs.get('ean_128', None)
+        if ean_128 is not None and ean_128 != o.ean_128:
+            o.ean_128 = ean_128
+            need_save = True
+
+        # upc
+        upc = kwargs.get('upc', None)
+        if upc is not None and upc != o.upc:
+            o.upc = upc
+            need_save = True
+
+        # pnc
+        pnc = kwargs.get('pnc', None)
+        if pnc is not None and pnc != o.pnc:
+            o.pnc = pnc
+            need_save = True
+
+        # hs_code
+        hs_code = kwargs.get('hs_code', None)
+        if hs_code is not None and hs_code != o.hs_code:
+            o.hs_code = hs_code
+            need_save = True
+
+        # gtin
+        gtin = kwargs.get('gtin', None)
+        if gtin is not None and gtin != o.gtin:
+            o.gtin = gtin
+            need_save = True
+
+        # tnved
+        tnved = kwargs.get('tnved', None)
+        if tnved is not None and tnved != o.tnved:
+            o.tnved = tnved
+            need_save = True
+
+        # traceable
+        traceable = kwargs.get('traceable', None)
+        if traceable is not None and traceable != o.traceable:
+            o.traceable = traceable
+            need_save = True
+
+        # weight
+        weight = kwargs.get('weight', None)
+        if weight is not None and weight != o.weight:
+            o.weight = weight
+            need_save = True
+
+        # width
+        width = kwargs.get('width', None)
+        if anodos.tools.need_new_decimal_value(old=o.width, new=width):
+            o.width = width
+            need_save = True
+
+        # height
+        height = kwargs.get('height', None)
+        if anodos.tools.need_new_decimal_value(old=o.height, new=height):
+            o.height = height
+            need_save = True
+
+        # depth
+        depth = kwargs.get('depth', None)
+        if anodos.tools.need_new_decimal_value(old=o.depth, new=depth):
+            o.depth = depth
+            need_save = True
+
+        # volume
+        volume = kwargs.get('volume', None)
+        if anodos.tools.need_new_decimal_value(old=o.volume, new=volume):
+            o.volume = volume
+            need_save = True
+
+        # multiplicity
+        multiplicity = kwargs.get('multiplicity', None)
+        if multiplicity is not None and multiplicity != o.multiplicity:
+            o.multiplicity = multiplicity
+            need_save = True
+
+        # unit
+        unit = kwargs.get('unit', None)
+        if unit is not None and unit != o.unit:
+            o.unit = unit
+            need_save = True
+
+        if need_save:
+            o.save()
+
+        return o
 
 
 class Product(models.Model):
@@ -608,18 +764,24 @@ class PartyManager(models.Manager):
         currency_in = kwargs.get('currency_in', None)
         if price_in and currency_in:
             price_in = Price.objects.create(value=price_in, currency=currency_in)
+        else:
+            price_in = None
 
         # price_out
         price_out = kwargs.get('price_out', None)
         currency_out = kwargs.get('currency_out', None)
         if price_out and currency_out:
             price_out = Price.objects.create(value=price_out, currency=currency_out)
+        else:
+            price_out = None
 
         # price_out_open
         price_out_open = kwargs.get('price_out_open', None)
         currency_out_open = kwargs.get('currency_out_open', None)
         if price_out_open and currency_out_open:
             price_out_open = Price.objects.create(value=price_out_open, currency=currency_out_open)
+        else:
+            price_out_open = None
 
         # price
         if price_out_open:

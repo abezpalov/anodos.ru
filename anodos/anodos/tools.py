@@ -109,6 +109,7 @@ def fix_float(text):
     if text is None:
         return None
 
+    text = str(text)
     dictionary = {' ': '', ',': '.'}
     for key in dictionary:
         text = text.replace(key, dictionary[key])

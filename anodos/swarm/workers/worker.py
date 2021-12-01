@@ -3,6 +3,7 @@ import ftplib
 import requests
 import lxml.html
 import lxml.etree
+import json
 from io import BytesIO
 
 from django.conf import settings
@@ -74,21 +75,24 @@ class Worker:
             return None
         return data
 
-    def load(self, url, result_type=None):
+    def load(self, url, result_type=None, request_type='GET'):
 
         if self.session is None:
             self.session = requests.Session()
 
-        try:
-            if self.cookies is None:
-                result = self.session.get(url, allow_redirects=True, verify=False)
-                self.cookies = result.cookies
-            else:
-                result = self.session.get(url, allow_redirects=True, verify=False,
-                                          cookies=self.cookies)
-                self.cookies = result.cookies
-        except requests.exceptions.TooManyRedirects:
-            return None
+        if request_type == 'POST':
+            result = self.session.post(url, allow_redirects=True, verify=False)
+        else:
+            try:
+                if self.cookies is None:
+                    result = self.session.get(url, allow_redirects=True, verify=False)
+                    self.cookies = result.cookies
+                else:
+                    result = self.session.get(url, allow_redirects=True, verify=False,
+                                              cookies=self.cookies)
+                    self.cookies = result.cookies
+            except requests.exceptions.TooManyRedirects:
+                return None
 
         if result_type == 'cookie':
             return result.cookie
@@ -104,6 +108,9 @@ class Worker:
         elif result_type == 'xml':
             tree = lxml.etree.parse(result.text)
             return tree
+        elif result_type == 'json':
+            data = json.loads(result.text)
+            return data
         elif result_type == 'content':
             return result.content
 

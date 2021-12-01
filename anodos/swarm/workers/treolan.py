@@ -335,11 +335,8 @@ class Worker(swarm.workers.worker.Worker):
                     quantity_on_stock, great_than_on_stock = self.fix_quantity(quantity=quantity_on_stock)
                     quantity_on_transit, great_than_on_transit = self.fix_quantity(quantity=quantity_on_transit)
 
-                    if quantity_on_stock or (not quantity_on_stock and not quantity_on_transit):
-                        if quantity_on_stock > 0:
-                            can_reserve, is_available_for_order = True, True
-                        else:
-                            can_reserve, is_available_for_order = False, False
+                    if quantity_on_stock:
+                        can_reserve, is_available_for_order = True, True
                         party = distributors.models.Party.objects.create(distributor=self.distributor,
                                                                          product=product,
                                                                          price_in=price_in,
@@ -359,10 +356,7 @@ class Worker(swarm.workers.worker.Worker):
                         print(party)
 
                     if quantity_on_transit:
-                        if quantity_on_transit > 0:
-                            can_reserve, is_available_for_order = True, True
-                        else:
-                            can_reserve, is_available_for_order = False, False
+                        can_reserve, is_available_for_order = True, True
                         party = distributors.models.Party.objects.create(distributor=self.distributor,
                                                                          product=product,
                                                                          price_in=price_in,
@@ -469,12 +463,9 @@ class Worker(swarm.workers.worker.Worker):
             quantity_great_than = True
 
         if '<' in quantity:
-            quantity = quantity.replace('<', '')
             quantity = str(int(int(quantity) / 2))
 
-        quantity = quantity.replace('+', '')
-
-        dictionary = {'+': '', '>': '', '*': ''}
+        dictionary = {'+': '', '>': '', '*': '', '<': ''}
         for key in dictionary:
             quantity = quantity.replace(key, dictionary[key])
 
