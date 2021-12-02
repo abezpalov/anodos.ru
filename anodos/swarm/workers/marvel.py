@@ -46,7 +46,7 @@ class Worker(swarm.workers.worker.Worker):
             pass
 
         elif self.command == 'update_stocks':
-            #self.update_catalog_categories()
+            self.update_catalog_categories()
             self.update_products()
             # TODO
 
