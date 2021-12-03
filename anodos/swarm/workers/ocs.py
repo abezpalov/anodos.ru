@@ -73,32 +73,32 @@ class Worker(swarm.workers.worker.Worker):
                            f'- партий: {self.count_of_parties}.'
 
         elif self.command == 'update_content_all':
-            ids = self.get_ids_for_update_content('all')
-            self.update_content(ids)
+            keys = self.get_keys_for_update_content('all')
+            self.update_content(keys)
             self.message = f'- характеристик: {self.count_of_parameters};\n' \
                            f'- фотографий: {self.count_of_images}.'
 
         elif self.command == 'update_content_clear':
-            ids = self.get_ids_for_update_content('clear')
-            self.update_content(ids)
+            keys = self.get_keys_for_update_content('clear')
+            self.update_content(keys)
             self.message = f'- характеристик: {self.count_of_parameters};\n' \
                            f'- фотографий: {self.count_of_images}.'
 
         elif self.command == 'update_content_changes_day':
-            ids = self.get_ids_for_update_content('day')
-            self.update_content(ids)
+            keys = self.get_keys_for_update_content('day')
+            self.update_content(keys)
             self.message = f'- характеристик: {self.count_of_parameters};\n' \
                            f'- фотографий: {self.count_of_images}.'
 
         elif self.command == 'update_content_changes_week':
-            ids = self.get_ids_for_update_content('week')
-            self.update_content(ids)
+            keys = self.get_keys_for_update_content('week')
+            self.update_content(keys)
             self.message = f'- характеристик: {self.count_of_parameters};\n' \
                            f'- фотографий: {self.count_of_images}.'
 
         elif self.command == 'update_content_changes_month':
-            ids = self.get_ids_for_update_content('month')
-            self.update_content(ids)
+            keys = self.get_keys_for_update_content('month')
+            self.update_content(keys)
             self.message = f'- характеристик: {self.count_of_parameters};\n' \
                            f'- фотографий: {self.count_of_images}.'
 
@@ -602,79 +602,65 @@ class Worker(swarm.workers.worker.Worker):
             self.count_of_parties += 1
         return product
 
-    def get_ids_for_update_content(self, mode=None):
+    def get_keys_for_update_content(self, mode=None):
+
+        keys = []
 
         if mode == 'all':
-            ids_ = distributors.models.Product.objects.filter(distributor=self.distributor).values('product_key')
-            ids = []
-            for id_ in ids_:
-                ids.append(id_['product_key'])
-            return ids
+            keys_ = distributors.models.Product.objects.filter(distributor=self.distributor).values('product_key')
+            for key_ in keys_:
+                keys.append(key_['product_key'])
 
         elif mode == 'clear':
-            ids_ = distributors.models.Product.objects.filter(distributor=self.distributor,
-                                                              content__isnull=True).values('product_key')
-            ids = []
-            for id_ in ids_:
-                ids.append(id_['product_key'])
-            return ids
+            keys_ = distributors.models.Product.objects.filter(distributor=self.distributor,
+                                                               content__isnull=True).values('product_key')
+            for key_ in keys_:
+                keys.append(key_['product_key'])
 
         elif mode == 'day':
             command = 'content/changes'
-            print(command)
-
             start = datetime.utcnow() - timedelta(days=1)
             start = self.datetime_to_str(x=start)
 
-            ids_ = self.get_by_api(command=command, params=f'from={start}')
-            print(ids_)
-            ids = []
-            for id_ in ids_:
-                ids.append(id_['itemId'])
-            return ids
+            keys_ = self.get_by_api(command=command, params=f'from={start}')
+            for key_ in keys_:
+                keys.append(key_['itemId'])
 
         elif mode == 'week':
             command = 'content/changes'
-            print(command)
-
             start = datetime.utcnow() - timedelta(days=7)
             start = self.datetime_to_str(x=start)
 
-            ids_ = self.get_by_api(command=command, params=f'from={start}')
-            print(ids_)
-            ids = []
-            for id_ in ids_:
-                ids.append(id_['itemId'])
-            return ids
+            keys_ = self.get_by_api(command=command, params=f'from={start}')
+            for key_ in keys_:
+                keys.append(key_['itemId'])
+            return keys
 
         elif mode == 'month':
             command = 'content/changes'
-            print(command)
-
             start = datetime.utcnow() - timedelta(days=31)
             start = self.datetime_to_str(x=start)
 
-            ids_ = self.get_by_api(command=command, params=f'from={start}')
-            print(ids_)
-            ids = []
-            for id_ in ids_:
-                ids.append(id_['itemId'])
-            return ids
+            keys_ = self.get_by_api(command=command, params=f'from={start}')
+            for key_ in keys_:
+                keys.append(key_['itemId'])
 
-    def update_content(self, ids):
+        return keys
+
+    def update_content(self, keys):
         command = 'content/batch'
         print(command)
 
         batch_size = settings.OCS_BATCH_SIZE
 
         # Расчитываем количество партий
-        batches_count = len(ids) // batch_size
-        if len(ids) % batch_size:
+        batches_count = len(keys) // batch_size
+        if len(keys) % batch_size:
             batches_count += 1
 
         for n in range(batches_count):
             print(f"{n+1} of {batches_count}")
-            batch = json.dumps(ids[n*batch_size:(n+1)*batch_size])
+            batch = json.dumps(keys[n*batch_size:(n+1)*batch_size])
 
             data = self.post_by_api(command=command, params=batch)
 

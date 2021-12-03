@@ -14,6 +14,8 @@
 # Описания
 ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py ocs update_content_changes_day
 ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py treolan update_content_clear
+# TODO ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py marvel update_content_changes_day
+~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py marvel update_content_clear
 #~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py ocs update_content_clear
 #~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py ocs update_content_changes_week
 #~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py ocs update_content_changes_moth

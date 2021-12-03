@@ -48,10 +48,22 @@ class Worker(swarm.workers.worker.Worker):
         elif self.command == 'update_stocks':
             self.update_catalog_categories()
             self.update_products()
-            # TODO
+
+            # Отправляем оповещение об успешном завершении
+            self.message = f'- продуктов: {self.count_of_products};\n' \
+                           f'- партий: {self.count_of_parties}.'
 
         elif self.command == 'update_content_all':
-            pass
+            keys = self.get_keys_for_update_content('all')
+            self.update_content(keys)
+            self.message = f'- характеристик: {self.count_of_parameters};\n' \
+                           f'- фотографий: {self.count_of_images}.'
+
+        elif self.command == 'update_content_clear':
+            keys = self.get_keys_for_update_content('clear')
+            self.update_content(keys)
+            self.message = f'- характеристик: {self.count_of_parameters};\n' \
+                           f'- фотографий: {self.count_of_images}.'
 
         elif self.command == 'drop_parameters':
             distributors.models.Parameter.objects.filter(distributor=self.distributor).delete()
@@ -221,7 +233,6 @@ class Worker(swarm.workers.worker.Worker):
 
             if product is not None:
                 self.count_of_products += 1
-                print(product)
 
                 # TODO Party
 
@@ -348,6 +359,94 @@ class Worker(swarm.workers.worker.Worker):
 
         print('ware_pack_statuses', ware_pack_statuses)
         print('dimensions', dimensions)
+
+    def get_keys_for_update_content(self, mode='all'):
+
+        keys = []
+
+        if mode == 'all':
+            keys_ = distributors.models.Product.objects.filter(distributor=self.distributor).values('part_number')
+            for key_ in keys_:
+                keys.append(key_['part_number'])
+
+        elif mode == 'clear':
+            keys_ = distributors.models.Product.objects.filter(distributor=self.distributor,
+                                                               content__isnull=True).values('part_number')
+            for key_ in keys_:
+                keys.append(key_['part_number'])
+
+        return keys
+
+    def update_content(self, keys):
+
+        for n, key in enumerate(keys):
+
+            print(f'{n+1} of {len(keys)} {key}')
+
+            url = f'https://b2b.marvel.ru/Api/GetItems' \
+                  f'?user={settings.MARVEL_LOGIN}' \
+                  f'&password={settings.MARVEL_PASSWORD}' \
+                  f'&packStatus=0' \
+                  f'&responseFormat=1' \
+                  f'&getExtendedItemInfo=1' \
+                  f'&items=<Root><WareItem><ItemId>{key}</ItemId></WareItem></Root>'
+
+            data = self.load(url=url, result_type='json', request_type='POST')
+            if data['Header']['Code'] == 0:
+                self.parse_content(data['Body']['CategoryItem'])
+            else:
+                print('Ошибка!', data['Header']['Message'])
+
+            url = f'https://b2b.marvel.ru/Api/GetItemPhotos' \
+                  f'?user={settings.MARVEL_LOGIN}' \
+                  f'&password={settings.MARVEL_PASSWORD}' \
+                  f'&packStatus=0' \
+                  f'&responseFormat=1' \
+                  f'&items=<Root><WareItem><ItemId>{key}</ItemId></WareItem></Root>'
+
+            data = self.load(url=url, result_type='json', request_type='POST')
+            if data['Header']['Code'] == 0:
+                self.parse_images(data['Body']['Photo'])
+            else:
+                print('Ошибка!', data['Header']['Message'])
+
+    def parse_content(self, data):
+
+        for content in data:
+            product = distributors.models.Product.objects.get(distributor=self.distributor,
+                                                              part_number=content['WareArticle'])
+            for parameter in content['ExtendedInfo']['Parameter']:
+                name = parameter.get('ParameterName', None)
+                value = parameter.get('ParameterValue', None)
+
+                if name:
+                    parameter = distributors.models.Parameter.objects.take(distributor=self.distributor,
+                                                                       name=name)
+                else:
+                    continue
+
+                parameter_value = distributors.models.ParameterValue.objects.take(distributor=self.distributor,
+                                                                                  product=product,
+                                                                                  parameter=parameter,
+                                                                                  value=value,
+                                                                                  unit=None)
+                print(parameter_value)
+                self.count_of_parameters += 1
+
+            product.content_loaded = timezone.now()
+            product.content = content
+            product.save()
+
+    def parse_images(self, images):
+
+        for image in images:
+            product = distributors.models.Product.objects.get(distributor=self.distributor,
+                                                              part_number=image['BigImage']['WareArticle'])
+
+            url = image['BigImage']['URL']
+            image = distributors.models.ProductImage.objects.take(product=product, source_url=url)
+            print(image)
+            self.count_of_images += 1
 
     @staticmethod
     def fix_quantity(quantity):

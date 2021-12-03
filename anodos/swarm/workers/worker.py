@@ -75,21 +75,21 @@ class Worker:
             return None
         return data
 
-    def load(self, url, result_type=None, request_type='GET'):
+    def load(self, url, result_type=None, request_type='GET', timeout=600.0):
 
         if self.session is None:
             self.session = requests.Session()
 
         if request_type == 'POST':
-            result = self.session.post(url, allow_redirects=True, verify=False)
+            result = self.session.post(url, allow_redirects=True, verify=False, timeout=timeout)
         else:
             try:
                 if self.cookies is None:
-                    result = self.session.get(url, allow_redirects=True, verify=False)
+                    result = self.session.get(url, allow_redirects=True, verify=False, timeout=timeout)
                     self.cookies = result.cookies
                 else:
                     result = self.session.get(url, allow_redirects=True, verify=False,
-                                              cookies=self.cookies)
+                                              cookies=self.cookies, timeout=timeout)
                     self.cookies = result.cookies
             except requests.exceptions.TooManyRedirects:
                 return None
