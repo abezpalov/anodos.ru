@@ -69,8 +69,6 @@ class Worker(swarm.workers.worker.Worker):
         print(self.url['product_sitemaps'])
         tree = self.load(url=self.url['product_sitemaps'], result_type='xml')
 
-        print(tree)
-
         for n, sitemap_url in enumerate(tree.xpath('//loc/text()')):
             sitemap_url = anodos.tools.fix_url(sitemap_url)
             if sitemap_url:
