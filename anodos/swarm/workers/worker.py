@@ -5,7 +5,6 @@ import lxml.html
 import lxml.etree
 import json
 from io import BytesIO
-import chardet
 
 from django.conf import settings
 from django.utils import timezone
