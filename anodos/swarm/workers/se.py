@@ -89,14 +89,12 @@ class Worker(swarm.workers.worker.Worker):
         # Загружаем данные
         tree = self.load(url=product_url, result_type='html')
 
-        # part_number
+        # part_number, name
         try:
             part_number = tree.xpath(".//h2/text()")[0]
+            name = tree.xpath(".//h1/text()")[0]
         except IndexError:
             return None
-
-        # name
-        name = tree.xpath(".//h1/text()")[0]
 
         # category
         parent = None
