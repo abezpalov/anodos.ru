@@ -207,8 +207,6 @@ class Worker(swarm.workers.worker.Worker):
             # Проходим по всем продуктам
             for item in products:
 
-                print(lxml.etree.tostring(item))
-
                 # @id - Идентификатор позиции
                 product_key = item.xpath('./@id')[0]
 

@@ -90,7 +90,10 @@ class Worker(swarm.workers.worker.Worker):
         tree = self.load(url=product_url, result_type='html')
 
         # part_number
-        part_number = tree.xpath(".//h2/text()")[0]
+        try:
+            part_number = tree.xpath(".//h2/text()")[0]
+        except IndexError:
+            return None
 
         # name
         name = tree.xpath(".//h1/text()")[0]
