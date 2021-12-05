@@ -74,6 +74,8 @@ def need_new_decimal_value(old, new, delta=0.001):
 
 def fix_text(text):
 
+    text = str(text)
+
     if text is None:
         return None
 
@@ -101,7 +103,11 @@ def fix_url(url):
         url = url.replace(key, dictionary[key])
 
     url = url.strip()
-    return url
+
+    if url:
+        return url
+    else:
+        return None
 
 
 def fix_float(text):

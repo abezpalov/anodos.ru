@@ -5,6 +5,7 @@ import lxml.html
 import lxml.etree
 import json
 from io import BytesIO
+import chardet
 
 from django.conf import settings
 from django.utils import timezone
@@ -99,14 +100,16 @@ class Worker:
         elif result_type == 'text':
             return result.text
         elif result_type == 'html':
-            try:
-                tree = lxml.html.fromstring(result.text)
-                return tree
-            except ValueError:
-                tree = lxml.html.fromstring(result.content)
-                return tree
+            tree = lxml.html.fromstring(result.content)
+            return tree
+        elif result_type == 'html+text':
+            tree = lxml.html.fromstring(result.content)
+            return tree, result.text
         elif result_type == 'xml':
-            tree = lxml.etree.parse(result.text)
+            tree = lxml.etree.fromstring(result.content)
+            for el in tree.iter():
+                if el.tag.startswith('{'):
+                    el.tag = el.tag[el.tag.index('}')+1:]
             return tree
         elif result_type == 'json':
             data = json.loads(result.text)
