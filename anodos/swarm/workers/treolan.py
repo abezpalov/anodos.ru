@@ -182,7 +182,8 @@ class Worker(swarm.workers.worker.Worker):
                                                   inName=0,
                                                   inMark=0,
                                                   showNc=0)
-        tree = lxml.etree.fromstring(result['Result'])
+
+        tree = lxml.html.fromstring(result['Result'])
         self.parse_catalog(tree)
 
     def parse_catalog(self, tree, parent=None):
@@ -206,6 +207,8 @@ class Worker(swarm.workers.worker.Worker):
             # Проходим по всем продуктам
             for item in products:
 
+                print(lxml.etree.tostring(item))
+
                 # @id - Идентификатор позиции
                 product_key = item.xpath('./@id')[0]
 
@@ -219,7 +222,7 @@ class Worker(swarm.workers.worker.Worker):
                 name = item.xpath('./@name')[0]
 
                 # @rusDescr - Русское описание.
-                description = item.xpath('./@rusDescr')[0]
+                description = item.xpath('./@rusdescr')[0]
 
                 # @vendor - Производитель.
                 vendor = item.xpath('./@vendor')[0]
@@ -297,17 +300,17 @@ class Worker(swarm.workers.worker.Worker):
                 weight = item.xpath('./@brutto')[0]
 
                 # @GTIN - Код GTIN (используется Dictionary.Ean).
-                gtin = item.xpath('./@GTIN')[0]
+                gtin = item.xpath('./@gtin')[0]
 
                 # @isTraceable - Признак прослеживаемости (0 – нет, 1 – да).
-                traceable = item.xpath('./@codeTNVED')[0]
+                traceable = item.xpath('./@istraceable')[0]
                 if traceable == '1':
                     traceable = True
                 else:
                     traceable = False
 
                 # @codeTNVED- код ТН ВЭД
-                tnved = item.xpath('./@codeTNVED')[0]
+                tnved = item.xpath('./@codetnved')[0]
 
                 product = distributors.models.Product.objects.take_by_party_key(distributor=self.distributor,
                                                                                 product_key=product_key,
@@ -463,6 +466,7 @@ class Worker(swarm.workers.worker.Worker):
             quantity_great_than = True
 
         if '<' in quantity:
+            quantity = quantity.replace('<', '')
             quantity = str(int(int(quantity) / 2))
 
         dictionary = {'+': '', '>': '', '*': '', '<': ''}
