@@ -74,19 +74,16 @@ class Worker(swarm.workers.worker.Worker):
         for n, sitemap_url in enumerate(tree.xpath('//loc/text()')):
             sitemap_url = anodos.tools.fix_url(sitemap_url)
             if sitemap_url:
-                print(f'{n} [{sitemap_url}]')
                 self.sitemap_urls.add(sitemap_url)
 
     def get_product_urls(self):
 
-        for sitemap_url in self.sitemap_urls:
-            print(sitemap_url)
+        for n, sitemap_url in enumerate(self.sitemap_urls):
+            print(f'{n+1} of {len(self.sitemap_urls)} {sitemap_url}')
             tree = self.load(url=sitemap_url, result_type='xml')
-            for n, product_url in enumerate(tree.xpath('//loc/text()')):
-                print(f'[{product_url}]')
+            for product_url in tree.xpath('//loc/text()'):
                 product_url = anodos.tools.fix_url(product_url)
                 if product_url:
-                    print(f'{n} [{product_url}]')
                     self.product_urls.add(product_url)
 
     def update_product_and_content(self, product_url):
