@@ -427,10 +427,11 @@ class Worker(swarm.workers.worker.Worker):
             parameter = distributors.models.Parameter.objects.take(distributor=self.distributor, name=parameter_name)
             value = property_element.xpath('./@Value')[0]
             value = anodos.tools.fix_text(value)
-            distributors.models.ParameterValue.objects.take(distributor=self.distributor,
-                                                            product=product,
-                                                            parameter=parameter,
-                                                            value=value)
+            parameter_value = distributors.models.ParameterValue.objects.take(distributor=self.distributor,
+                                                                              product=product,
+                                                                              parameter=parameter,
+                                                                              value=value)
+            print(parameter_value)
             count += 1
             self.count_of_parameters += 1
 
@@ -439,7 +440,8 @@ class Worker(swarm.workers.worker.Worker):
         for image_element in image_elements:
             url = image_element.xpath('./@Link')[0]
             ext = image_element.xpath('./@ImageType')[0].lower()
-            distributors.models.ProductImage.objects.take(product=product, source_url=url, ext=ext)
+            product_image = distributors.models.ProductImage.objects.take(product=product, source_url=url, ext=ext)
+            print(product_image)
             count += 1
             self.count_of_images += 1
 
