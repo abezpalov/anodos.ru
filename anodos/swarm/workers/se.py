@@ -175,7 +175,11 @@ class Worker(swarm.workers.worker.Worker):
         # Характеристики
         characteristics = tree.xpath(".//tr[@class='specifications-table__row']")
         for characteristic in characteristics:
-            name = characteristic.xpath('.//th/text()')[0]
+
+            try:
+                name = characteristic.xpath('.//th/text()')[0]
+            except IndexError:
+                continue
 
             # Пропускаем параметры продукта
             if name in ['Вес упаковки',  'Гарантия',
