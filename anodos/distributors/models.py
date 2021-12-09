@@ -258,7 +258,7 @@ class CurrencyManager(models.Manager):
 class Currency(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     key = models.CharField(max_length=32, unique=True)
-    key_digit = models.CharField(max_length=32, null=True, default=None, unique=True)
+    key_digit = models.CharField(max_length=32, null=True, default=None)
 
     name = models.TextField(null=True, default=None, db_index=True)
     full_name = models.TextField(null=True, default=None, db_index=True)
