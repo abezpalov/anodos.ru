@@ -74,6 +74,9 @@ def need_new_decimal_value(old, new, delta=0.001):
 
 def fix_text(text):
 
+    if text is None:
+        return None
+
     text = str(text)
 
     if text is None:

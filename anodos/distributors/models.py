@@ -206,8 +206,12 @@ class Unit(models.Model):
 class CurrencyManager(models.Manager):
 
     def take(self, key, **kwargs):
+
         if key is None:
             return None
+
+        if key == "RUR":
+            key = "RUB"
 
         key = anodos.tools.fix_text(key)
 
