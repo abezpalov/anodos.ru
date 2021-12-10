@@ -286,9 +286,8 @@ class PriceManager(models.Manager):
 
 class Price(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    value = models.DecimalField(max_digits=18, decimal_places=2, null=True, default=None)
-    currency = models.ForeignKey('Currency', null=True, default=None,
-                                 on_delete=models.CASCADE, related_name='+')
+    value = models.DecimalField(max_digits=18, decimal_places=2)
+    currency = models.ForeignKey('Currency', null=True, on_delete=models.CASCADE, related_name='+')
 
     created = models.DateTimeField(default=timezone.now)
 
