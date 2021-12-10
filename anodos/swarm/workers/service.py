@@ -159,7 +159,7 @@ class Worker(swarm.workers.worker.Worker):
             # Цены
             for party in parties:
                 if party.quantity:
-                    if party.price_out_open:
+                    if party.price_out_open and party.price_out_open.value:
                         if party.price_out_open.currency == rub_:
                             price = party.price_out_open.value
                         else:
@@ -167,7 +167,7 @@ class Worker(swarm.workers.worker.Worker):
                                     float(party.price_out_open.currency.quantity)
                         break
 
-                    elif party.price_in:
+                    elif party.price_in and party.price_in.value:
                         if party.price_in.currency == rub_:
                             price_ = float(party.price_in.value) * settings.MARGIN
                         else:
