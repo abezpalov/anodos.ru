@@ -367,8 +367,8 @@ class Currency(models.Model):
     html = models.TextField(null=True, default=None, db_index=True)
     full_name = models.TextField(null=True, default=None, db_index=True)
 
-    quantity = models.FloatField(null=True, default=None)
-    rate = models.FloatField(null=True, default=None)
+    quantity = models.FloatField(default=1.0)
+    rate = models.FloatField(default=1.0)
 
     objects = CurrencyManager()
 

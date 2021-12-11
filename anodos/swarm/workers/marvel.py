@@ -1,9 +1,3 @@
-import time
-import requests as r
-import json
-import urllib.parse
-from datetime import datetime, timedelta
-
 from django.utils import timezone
 from django.conf import settings
 
@@ -464,7 +458,7 @@ class Worker(swarm.workers.worker.Worker):
             quantity_great_than = True
 
         if '<' in quantity:
-            quantity = str(int(int(quantity) / 2))
+            quantity = str(int(quantity) // 2)
 
         dictionary = {'+': '', '>': '', '*': '', '<': ''}
         for key in dictionary:
