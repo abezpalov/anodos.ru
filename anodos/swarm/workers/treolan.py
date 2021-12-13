@@ -354,7 +354,6 @@ class Worker(swarm.workers.worker.Worker):
                                                                          promo=promo,
                                                                          outoftrade=outoftrade)
                         self.count_of_parties += 1
-                        print(party)
 
                     if quantity_on_transit:
                         can_reserve, is_available_for_order = True, True
@@ -374,7 +373,6 @@ class Worker(swarm.workers.worker.Worker):
                                                                          promo=promo,
                                                                          outoftrade=outoftrade)
                         self.count_of_parties += 1
-                        print(party)
 
     def get_keys_for_update_content(self, mode=None):
 
@@ -409,10 +407,13 @@ class Worker(swarm.workers.worker.Worker):
 
         # Получаем экземпляр продукта
         product_elements = tree.xpath('.//Product')
-        product_element = product_elements[0]
-        part_number = product_element.xpath('./@Articul')[0]
-        product = distributors.models.Product.objects.get(distributor=self.distributor, part_number=part_number)
-        print(f'{n_key} of {len_keys} {product}')
+        try:
+            product_element = product_elements[0]
+            part_number = product_element.xpath('./@Articul')[0]
+            product = distributors.models.Product.objects.get(distributor=self.distributor, part_number=part_number)
+            print(f'{n_key} of {len_keys} {product}')
+        except IndexError:
+            return None
 
         description = product_element.xpath('./@RusDescr')[0]
         if product.description is None:
