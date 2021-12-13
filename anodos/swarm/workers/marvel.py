@@ -403,7 +403,7 @@ class Worker(swarm.workers.worker.Worker):
             try:
                 product = distributors.models.Product.objects.get(distributor=self.distributor,
                                                                   part_number=content['WareArticle'])
-            except distributors.models.DoesNotExist:
+            except distributors.models.Product.DoesNotExist:
                 continue
 
             try:
