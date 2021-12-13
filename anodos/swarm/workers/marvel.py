@@ -408,7 +408,7 @@ class Worker(swarm.workers.worker.Worker):
             except KeyError:
                 continue
 
-            for parameter in content['ExtendedInfo']['Parameter']:
+            for parameter in parameters:
                 name = parameter.get('ParameterName', None)
                 value = parameter.get('ParameterValue', None)
 
