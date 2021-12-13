@@ -210,8 +210,8 @@ class Worker(swarm.workers.worker.Worker):
                                                                                       product=product,
                                                                                       parameter=parameter,
                                                                                       value=value)
-                print(parameter_value)
-                self.count_of_parameters += 1
+                    print(parameter_value)
+                    self.count_of_parameters += 1
 
         # Изображения
         images_ = tree.xpath('.//@src')
