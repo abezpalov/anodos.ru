@@ -301,7 +301,6 @@ class Worker(swarm.workers.worker.Worker):
                                                                          unconditional=unconditional,
                                                                          promo=promo)
                         self.count_of_parties += 1
-                        print(party)
 
                     if quantity_on_spb:
                         can_reserve, is_available_for_order = True, True
@@ -317,7 +316,6 @@ class Worker(swarm.workers.worker.Worker):
                                                                          unconditional=unconditional,
                                                                          promo=promo)
                         self.count_of_parties += 1
-                        print(party)
 
                     if quantity_on_near_transit:
                         can_reserve, is_available_for_order = True, False
@@ -333,7 +331,6 @@ class Worker(swarm.workers.worker.Worker):
                                                                          unconditional=unconditional,
                                                                          promo=promo)
                         self.count_of_parties += 1
-                        print(party)
 
                     if quantity_on_far_transit:
                         can_reserve, is_available_for_order = True, False
@@ -349,10 +346,6 @@ class Worker(swarm.workers.worker.Worker):
                                                                          unconditional=unconditional,
                                                                          promo=promo)
                         self.count_of_parties += 1
-                        print(party)
-
-        print('ware_pack_statuses', ware_pack_statuses)
-        print('dimensions', dimensions)
 
     def get_keys_for_update_content(self, mode='all'):
 
@@ -409,13 +402,19 @@ class Worker(swarm.workers.worker.Worker):
         for content in data:
             product = distributors.models.Product.objects.get(distributor=self.distributor,
                                                               part_number=content['WareArticle'])
+
+            try:
+                parameters = content['ExtendedInfo']['Parameter']
+            except KeyError:
+                continue
+
             for parameter in content['ExtendedInfo']['Parameter']:
                 name = parameter.get('ParameterName', None)
                 value = parameter.get('ParameterValue', None)
 
                 if name:
                     parameter = distributors.models.Parameter.objects.take(distributor=self.distributor,
-                                                                       name=name)
+                                                                           name=name)
                 else:
                     continue
 
