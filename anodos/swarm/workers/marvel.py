@@ -400,8 +400,11 @@ class Worker(swarm.workers.worker.Worker):
     def parse_content(self, data):
 
         for content in data:
-            product = distributors.models.Product.objects.get(distributor=self.distributor,
-                                                              part_number=content['WareArticle'])
+            try:
+                product = distributors.models.Product.objects.get(distributor=self.distributor,
+                                                                  part_number=content['WareArticle'])
+            except distributors.models.DoesNotExist:
+                continue
 
             try:
                 parameters = content['ExtendedInfo']['Parameter']
