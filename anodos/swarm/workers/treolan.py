@@ -398,7 +398,7 @@ class Worker(swarm.workers.worker.Worker):
                                                        password=settings.TREOLAN_PASSWORD,
                                                        Articul=key)
             tree = lxml.etree.fromstring(result['Result'])
-            self.parse_content(tree=tree, n_key=n, len_keys=len(keys))
+            self.parse_content(tree=tree, n_key=n+1, len_keys=len(keys))
             self.count_of_parties += 1
 
     def parse_content(self, tree, n_key, len_keys):
