@@ -11,9 +11,11 @@
 # Обновление карты сайта
 ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py service update_sitemap
 
-# Описания
+# Перенос описаний и изображений
 ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py service update_parameters
+~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py service update_images
 
+# Загрузка новых описаний и изображений
 ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py ocs update_content_changes_day
 #~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py ocs update_content_clear
 #~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py ocs update_content_changes_week
@@ -25,4 +27,4 @@
 
 ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py marvel update_content_clear
 
-~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py service update_images
+~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py se update_content_clear
