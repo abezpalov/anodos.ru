@@ -95,7 +95,7 @@ class Worker(swarm.workers.worker.Worker):
 
     def update_product_and_content(self, product_url, clear=False):
 
-        if clear and distributors.models.Product.filter(url=product_url).count() > 0:
+        if clear and distributors.models.Product.objects.filter(url=product_url).count() > 0:
             return None
 
         # Загружаем данные
