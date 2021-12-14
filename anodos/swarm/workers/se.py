@@ -243,6 +243,8 @@ class Worker(swarm.workers.worker.Worker):
             result = float(value[0]) / 1000
         elif value[1] == 'кг':
             result = float(value[0])
+        elif value[1] == 'м':
+            result = float(value[0])
         elif value[1] == 'мм':
             result = float(value[0]) / 1000
         elif value[1] == 'см':
@@ -251,7 +253,8 @@ class Worker(swarm.workers.worker.Worker):
             result = float(value[0]) / 10
         else:
             print(f'Не опознана единица измерения [{text}]')
-            exit()
+            anodos.tools.send(f'Не опознана единица измерения [{text}]')
 
+            exit()
 
         return result
