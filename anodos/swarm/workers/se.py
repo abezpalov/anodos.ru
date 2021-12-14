@@ -46,6 +46,15 @@ class Worker(swarm.workers.worker.Worker):
                            f'- характеристик: {self.count_of_parameters};\n' \
                            f'- фотографий: {self.count_of_images}.'
 
+        elif self.command == 'update_content_clear':
+            self.update_content(clear=True)
+
+            # Отправляем оповещение об успешном завершении
+            self.message = f'- продуктов: {self.count_of_products};\n' \
+                           f'- характеристик: {self.count_of_parameters};\n' \
+                           f'- фотографий: {self.count_of_images}.'
+
+
         if self.message:
             anodos.tools.send(content=f'{self.name}: {self.command} finish at {self.delta()}:\n'
                                       f'{self.message}')
@@ -55,14 +64,14 @@ class Worker(swarm.workers.worker.Worker):
     def update_news(self):
         pass
 
-    def update_content(self):
+    def update_content(self, clear=False):
 
         self.get_sitemap_urls()
         self.get_product_urls()
 
         for n, product_url in enumerate(self.product_urls):
             print(f'{n+1} of {len(self.product_urls)} {product_url}')
-            self.update_product_and_content(product_url)
+            self.update_product_and_content(product_url, clear=clear)
 
     def get_sitemap_urls(self):
 
@@ -84,7 +93,10 @@ class Worker(swarm.workers.worker.Worker):
                 if product_url:
                     self.product_urls.add(product_url)
 
-    def update_product_and_content(self, product_url):
+    def update_product_and_content(self, product_url, clear=False):
+
+        if clear and distributors.models.Product.filter(url=product_url).count() > 0:
+            return None
 
         # Загружаем данные
         tree = self.load(url=product_url, result_type='html')
@@ -168,7 +180,8 @@ class Worker(swarm.workers.worker.Worker):
                                                                           height=height,
                                                                           depth=depth,
                                                                           volume=volume,
-                                                                          warranty=warranty)
+                                                                          warranty=warranty,
+                                                                          url=product_url)
         print(product)
         self.count_of_products += 1
 

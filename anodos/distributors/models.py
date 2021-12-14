@@ -534,6 +534,12 @@ class ProductManager(models.Manager):
             o.warranty = warranty
             need_save = True
 
+        # url
+        url = kwargs.get('url', None)
+        if url is not None and url != o.url:
+            o.url = url
+            need_save = True
+
         # ean_128
         ean_128 = kwargs.get('ean_128', None)
         if ean_128 is not None and ean_128 != o.ean_128:
@@ -645,6 +651,9 @@ class Product(models.Model):
     name_other = models.TextField(null=True, default=None, db_index=True)
     description = models.TextField(null=True, default=None)
     warranty = models.TextField(null=True, default=None)
+
+    # Ссылка на первоисточник информации
+    url = models.TextField(null=True, default=None, db_index=True)
 
     # Коды
     ean_128 = models.TextField(null=True, default=None, db_index=True)
