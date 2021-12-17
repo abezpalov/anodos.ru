@@ -56,8 +56,12 @@ class Worker(swarm.workers.worker.Worker):
 
         elif self.command == 'fix':
             bad_name = 'Schneder Electric'
+            print(bad_name)
+
             distributor = distributors.models.Distributor.objects.get(name=bad_name)
-            products = distributors.models.Distributor.objects.filter(distributor=distributor)
+            print(distributor)
+
+            products = distributors.models.Product.objects.filter(distributor=distributor)
             for product in products:
                 print(product)
                 product.delete()
