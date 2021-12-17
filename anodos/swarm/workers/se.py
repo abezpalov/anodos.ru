@@ -56,8 +56,13 @@ class Worker(swarm.workers.worker.Worker):
 
         elif self.command == 'fix':
             bad_name = 'Schneder Electric'
-            self.distributor = distributors.models.Distributor.objects.take(name=bad_name)
-            self.distributor.delete()
+            distributor = distributors.models.Distributor.objects.take(name=bad_name)
+            products = distributors.models.Distributor.objects.take(distributor=distributor)
+            for product in products:
+                print(product)
+                product.delete()
+
+            distributor.delete()
 
         if self.message:
             anodos.tools.send(content=f'{self.name}: {self.command} finish at {self.delta()}:\n'
