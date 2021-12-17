@@ -15,7 +15,7 @@ import swarm.workers.worker
 class Worker(swarm.workers.worker.Worker):
 
     source_name = 'se.com'
-    name = 'Schneder Electric'
+    name = 'Schneider Electric'
     url = {'base': 'https://www.se.com',
            'product_sitemaps': 'https://www.se.com/ru/ru/product/google-product-sitemapindex-RU-ru.xml',
            }
@@ -54,6 +54,10 @@ class Worker(swarm.workers.worker.Worker):
                            f'- характеристик: {self.count_of_parameters};\n' \
                            f'- фотографий: {self.count_of_images}.'
 
+        elif self.command == 'fix':
+            bad_name = 'Schneder Electric'
+            self.distributor = distributors.models.Distributor.objects.take(name=bad_name)
+            self.distributor.delete()
 
         if self.message:
             anodos.tools.send(content=f'{self.name}: {self.command} finish at {self.delta()}:\n'
