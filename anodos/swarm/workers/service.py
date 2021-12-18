@@ -414,7 +414,7 @@ class Worker(swarm.workers.worker.Worker):
                     vs.append(v_)
 
                     image.file_name = f'{settings.MEDIA_ROOT}products/photos/{image.id}.png'
-                    image.create_directory_for_file()
+                    anodos.tools.create_directory_for_file(image.file_name)
                     im_new.save(image.file_name, "PNG")
                     image.save()
 
