@@ -1106,11 +1106,6 @@ class ProductImageManager(models.Manager):
                         os.remove(img.file_name)
                     img.delete()
 
-        ext = kwargs.get('ext', None)
-        if ext and ext != o.ext:
-            o.ext = ext
-            need_save = True
-
         if need_save:
             o.save()
 
