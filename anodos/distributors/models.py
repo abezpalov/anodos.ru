@@ -1152,21 +1152,13 @@ class ProductImage(models.Model):
 
         # Сохраняем в PNG
         self.file_name = f'{settings.MEDIA_ROOT}distributors/products/photos/{self.id}.png'
-        self.create_directory_for_file()
+        anodos.tools.create_directory_for_file(self.file_name)
         im.save(self.file_name, "PNG")
         im.save()
         self.save()
 
         # Закрываем файл
         im.close()
-
-    def create_directory_for_file(self):
-        directory = '/'
-        for dir_ in self.file_name.split('/')[:-1]:
-            directory = '{}/{}'.format(directory, dir_)
-            if not os.path.exists(directory):
-                os.makedirs(directory)
-        return True
 
     def __str__(self):
         return f'{self.product}: {self.source_url}'

@@ -42,7 +42,7 @@ class ImageManager(models.Manager):
         # Создаём объект изображения в базе
         image = self.create()
         image.file_name = f'{settings.MEDIA_ROOT}catalog/photos/{image.id}.png'
-        image.create_directory_for_file()
+        anodos.tools.create_directory_for_file(self.file_name)
         image.save()
 
         im_new.save(image.file_name, "PNG")
@@ -58,13 +58,6 @@ class Image(models.Model):
     created = models.DateTimeField(default=timezone.now, db_index=True)
 
     objects = ImageManager()
-
-    def create_directory_for_file(self):
-        directory = '/'
-        for dir_ in self.file_name.split('/')[:-1]:
-            directory = '{}/{}'.format(directory, dir_)
-            if not os.path.exists(directory):
-                os.makedirs(directory)
 
     def delete(self, *args, **kwargs):
         try:
@@ -925,7 +918,7 @@ class ProductImageManager(models.Manager):
         # Создаём объект изображения в базе
         image = self.create()
         image.file_name = f'{settings.MEDIA_ROOT}products/photos/{image.id}.png'
-        image.create_directory_for_file()
+        anodos.tools.create_directory_for_file(image.file_name)
         image.save()
 
         im_new.save(image.file_name, "PNG")
@@ -944,13 +937,6 @@ class ProductImage(models.Model):
     created = models.DateTimeField(default=timezone.now, db_index=True)
 
     objects = ProductImageManager()
-
-    def create_directory_for_file(self):
-        directory = '/'
-        for dir_ in self.file_name.split('/')[:-1]:
-            directory = '{}/{}'.format(directory, dir_)
-            if not os.path.exists(directory):
-                os.makedirs(directory)
 
     def delete(self, *args, **kwargs):
         try:
