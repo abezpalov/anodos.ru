@@ -222,9 +222,6 @@ class Worker(swarm.workers.worker.Worker):
             values = []
             for value_element in value_elements:
 
-                text = None
-                url = None
-
                 if value_element.tag in ['span', 'div']:
                     text = value_element.text
                     text = anodos.tools.fix_text(text)
@@ -245,16 +242,14 @@ class Worker(swarm.workers.worker.Worker):
 
         # Изображения
         images_ = tree.xpath('.//@src')
-        # src = "https://download.schneider-electric.com/files?p_Doc_Ref=C63W32M500-image&p_File_Type=rendition_520_jpg"
-        # src = "https://download.schneider-electric.com/files?p_Doc_Ref=C63W32M500-image&p_File_Type=rendition_1500_jpg"
-
         for url in images_:
 
-            if url.endswith('rendition_520_jpg'):
-                url.replace('rendition_520_jpg', 'rendition_1500_jpg')
+            if 'rendition_369' in url:
+                url = url.replace('rendition_369', 'rendition_1500')
                 image = distributors.models.ProductImage.objects.take(product=product, source_url=url)
                 print(image)
                 self.count_of_images += 1
+                time.sleep(2)
 
     @staticmethod
     def fix_logistic_value(text):

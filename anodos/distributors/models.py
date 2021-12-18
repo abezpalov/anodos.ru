@@ -1,6 +1,9 @@
+import io
 import os
 import uuid
 import requests as r
+import PIL
+
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -1123,7 +1126,6 @@ class ProductImage(models.Model):
                                 on_delete=models.CASCADE, related_name='+')
     source_url = models.TextField(null=True, default=None, db_index=True)
     file_name = models.TextField(null=True, default=None)
-    ext = models.TextField(null=True, default=None)
 
     created = models.DateTimeField(default=timezone.now, db_index=True)
 
@@ -1138,22 +1140,33 @@ class ProductImage(models.Model):
 
     def download_file(self):
 
-        # Определяем имя файла
-        if self.ext is None:
-            self.ext = self.source_url.rpartition('.')[2]
-        self.file_name = f'{settings.MEDIA_ROOT}distributors/products/photos/{self.id}.{self.ext}'
-
         # Загружаем фотографию
         result = r.get(self.source_url)
 
+        # Проверяем на целостность
+        try:
+            im = PIL.Image.open(io.BytesIO(result.content))
+        except PIL.UnidentifiedImageError:
+            print(f'Ошибка! не удалось прочитать изображение {self.source_url}.')
+            return None
+
+        # Сохраняем в PNG
+        self.file_name = f'{settings.MEDIA_ROOT}distributors/products/photos/{self.id}.png'
+        self.create_directory_for_file()
+        im.save(self.file_name, "PNG")
+        im.save()
+        self.save()
+
+        # Закрываем файл
+        im.close()
+
+    def create_directory_for_file(self):
         directory = '/'
         for dir_ in self.file_name.split('/')[:-1]:
             directory = '{}/{}'.format(directory, dir_)
             if not os.path.exists(directory):
                 os.makedirs(directory)
-        with open(self.file_name, "wb") as f:
-            f.write(result.content)
-        self.save()
+        return True
 
     def __str__(self):
         return f'{self.product}: {self.source_url}'
