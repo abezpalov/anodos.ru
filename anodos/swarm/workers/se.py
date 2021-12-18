@@ -54,24 +54,6 @@ class Worker(swarm.workers.worker.Worker):
                            f'- характеристик: {self.count_of_parameters};\n' \
                            f'- фотографий: {self.count_of_images}.'
 
-        elif self.command == 'fix':
-            bad_name = 'Schneder Electric'
-            print(bad_name)
-
-            try:
-                distributor = distributors.models.Distributor.objects.get(name=bad_name)
-                print(distributor)
-            except distributors.models.Distributor.DoesNotExist:
-                print('Нечего вычищать!')
-                return None
-
-            products = distributors.models.Product.objects.filter(distributor=distributor)
-            for product in products:
-                print(product)
-                product.delete()
-
-            distributor.delete()
-
         if self.message:
             anodos.tools.send(content=f'{self.name}: {self.command} finish at {self.delta()}:\n'
                                       f'{self.message}')
