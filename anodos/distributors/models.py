@@ -1148,12 +1148,19 @@ class ProductImage(models.Model):
             im = PIL.Image.open(io.BytesIO(result.content))
         except PIL.UnidentifiedImageError:
             print(f'Ошибка! не удалось прочитать изображение {self.source_url}.')
+            anodos.tools.send(f'Ошибка! не удалось прочитать изображение {self.source_url}.')
             return None
 
-        # Сохраняем в PNG
-        self.file_name = f'{settings.MEDIA_ROOT}distributors/products/photos/{self.id}.png'
+        # Сохраняем
+        if im.format == "JPEG":
+            ext = 'jpg'
+        else:
+            print(im.format)
+            exit()
+
+        self.file_name = f'{settings.MEDIA_ROOT}distributors/products/photos/{self.id}.{ext}'
         anodos.tools.create_directory_for_file(self.file_name)
-        im.save(self.file_name, "PNG")
+        im.save(self.file_name)
         self.save()
 
         # Закрываем файл
