@@ -437,7 +437,6 @@ class Worker(swarm.workers.worker.Worker):
         products = pflops.models.Product.objects.all()
 
         for n, product in enumerate(products):
-            print(f'{n+1} of {len(products)} {product.url}')
             if product.url_xml:
                 urlset_str = f'{urlset_str}{product.url_xml}'
                 count_of_urls += 1
@@ -461,6 +460,7 @@ class Worker(swarm.workers.worker.Worker):
                 urlset_file = open(urlset_filename, 'w')
                 urlset_file.write(urlset_str)
                 urlset_file.close()
+                print(urlset_filename)
 
                 urlset_str = ''
 
@@ -474,5 +474,6 @@ class Worker(swarm.workers.worker.Worker):
         urlset_files = open(urlsets_filename, 'w')
         urlset_files.write(urlsets_str)
         urlset_files.close()
+        print(urlsets_filename)
 
         self.count_of_urls = count_of_urls
