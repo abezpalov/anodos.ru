@@ -1154,6 +1154,8 @@ class ProductImage(models.Model):
         # Сохраняем
         if im.format == "JPEG":
             ext = 'jpg'
+        elif im.format == "PNG":
+            ext = 'png'
         else:
             print(im.format)
             exit()
