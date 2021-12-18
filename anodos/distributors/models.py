@@ -1154,7 +1154,6 @@ class ProductImage(models.Model):
         self.file_name = f'{settings.MEDIA_ROOT}distributors/products/photos/{self.id}.png'
         anodos.tools.create_directory_for_file(self.file_name)
         im.save(self.file_name, "PNG")
-        im.save()
         self.save()
 
         # Закрываем файл
