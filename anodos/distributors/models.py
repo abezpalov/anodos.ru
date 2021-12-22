@@ -1151,9 +1151,13 @@ class ProductImage(models.Model):
             ext = 'jpg'
         elif im.format == "PNG":
             ext = 'png'
+        elif im.format == "GIF":
+            ext = 'gif'
         else:
-            print(im.format)
-            exit()
+            print(f'Неизвестный формат изображения! {im.format}')
+            anodos.tools.send(f'Неизвестный формат изображения! {im.format}\n'
+                              f'distributors/models #1159')
+            return None
 
         self.file_name = f'{settings.MEDIA_ROOT}distributors/products/photos/{self.id}.{ext}'
         anodos.tools.create_directory_for_file(self.file_name)
