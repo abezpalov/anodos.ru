@@ -481,7 +481,7 @@ class ProductManager(models.Manager):
         need_save = False
 
         try:
-            o = self.get(distributor=distributor, vendor=vendor, part_number=part_number)
+            o = self.get(distributor=distributor, vendor=vendor, part_number__iexact=part_number)
         except Product.DoesNotExist:
             o = Product()
             o.distributor = distributor
@@ -489,6 +489,13 @@ class ProductManager(models.Manager):
             o.part_number = part_number
             o.name = name
             need_save = True
+        except Product.MultipleObjectsReturned:
+            os_ = self.get(distributor=distributor, vendor=vendor, part_number__iexact=part_number)
+            for n, o_ in enumerate(os_):
+                if n == 0:
+                    o = o_
+                else:
+                    o.delete()
 
         # party_key
         party_key = kwargs.get('party_key', None)
