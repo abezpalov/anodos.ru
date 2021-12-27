@@ -490,7 +490,7 @@ class ProductManager(models.Manager):
             o.name = name
             need_save = True
         except Product.MultipleObjectsReturned:
-            os_ = self.get(distributor=distributor, vendor=vendor, part_number__iexact=part_number)
+            os_ = self.filter(distributor=distributor, vendor=vendor, part_number__iexact=part_number)
             for n, o_ in enumerate(os_):
                 if n == 0:
                     o = o_
