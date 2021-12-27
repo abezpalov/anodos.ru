@@ -495,7 +495,7 @@ class ProductManager(models.Manager):
                 if n == 0:
                     o = o_
                 else:
-                    o.delete()
+                    o_.delete()
 
         # party_key
         party_key = kwargs.get('party_key', None)
