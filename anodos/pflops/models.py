@@ -428,7 +428,7 @@ class ProductManager(models.Manager):
         need_save = False
 
         try:
-            o = self.get(vendor=vendor, part_number=part_number)
+            o = self.get(vendor=vendor, part_number__iexact=part_number)
         except Product.DoesNotExist:
             o = Product()
             o.vendor = vendor
