@@ -727,7 +727,7 @@ class Product(models.Model):
             return f'{self.vendor.name} [{self.part_number}] ({self.id})'
 
     class Meta:
-        ordering = ['vendor__name', 'part_number']
+        ordering = ['-created']
 
 
 class LocationManager(models.Manager):
