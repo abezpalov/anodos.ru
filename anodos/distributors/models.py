@@ -309,6 +309,16 @@ class Price(models.Model):
 
 class ProductManager(models.Manager):
 
+    def get(self, **kwargs):
+
+        try:
+            o = super().get(**kwargs)
+        except Product.MultipleObjectsReturned:
+            for n, o_ in enumerate(self.filter(**kwargs)):
+                if n == 0:
+                    o = o_
+        return o
+
     def take_by_party_key(self, distributor, party_key, name, **kwargs):
 
         if not distributor or not party_key or not name:
