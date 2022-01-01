@@ -437,7 +437,7 @@ class Worker(swarm.workers.worker.Worker):
 
         for image in images:
             product = distributors.models.Product.objects.get(distributor=self.distributor,
-                                                              part_number=image['BigImage']['WareArticle'])
+                                                              part_number__iexact=image['BigImage']['WareArticle'])
 
             url = image['BigImage']['URL']
             image = distributors.models.ProductImage.objects.take(product=product, source_url=url)
