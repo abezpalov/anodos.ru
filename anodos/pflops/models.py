@@ -434,6 +434,12 @@ class ProductManager(models.Manager):
             o.vendor = vendor
             o.part_number = part_number
             need_save = True
+        except Product.MultipleObjectsReturned:
+            for n, o_ in enumerate(self.filter(vendor=vendor, part_number__iexact=part_number)):
+                if n == o:
+                    o = o_
+                else:
+                    o_.delete()
 
         # category
         category = kwargs.get('category', None)
