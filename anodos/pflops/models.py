@@ -436,7 +436,7 @@ class ProductManager(models.Manager):
             need_save = True
         except Product.MultipleObjectsReturned:
             for n, o_ in enumerate(self.filter(vendor=vendor, part_number__iexact=part_number)):
-                if n == o:
+                if n == 0:
                     o = o_
                 else:
                     o_.delete()
