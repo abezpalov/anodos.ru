@@ -388,9 +388,9 @@ class Worker(swarm.workers.worker.Worker):
 
         # Количество продуктов в одном запросе
         if mode in ['all', 'clear']:
-            quantity_in_request = 100
+            quantity_in_request = 1
         else:
-            quantity_in_request = 500
+            quantity_in_request = 1
 
         # Оформляем дату старта
         start = ''
@@ -460,10 +460,14 @@ class Worker(swarm.workers.worker.Worker):
 
     def parse_content(self, data):
 
+        print(len(data))
+        print(data)
+
         for content in data:
             try:
                 product = distributors.models.Product.objects.get(distributor=self.distributor,
                                                                   part_number__iexact=content['WareArticle'])
+                print(product)
             except distributors.models.Product.DoesNotExist:
                 continue
 

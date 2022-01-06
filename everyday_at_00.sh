@@ -17,6 +17,6 @@
 
 # Загрузка новых описаний и изображений
 ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py ocs update_content_changes_day
-~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py marvel update_content_day
+#~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py marvel update_content_day
 ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py treolan update_content_clear
 # ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py se update_content_clear
