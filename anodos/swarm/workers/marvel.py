@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from django.utils import timezone
 from django.conf import settings
 
@@ -48,14 +50,32 @@ class Worker(swarm.workers.worker.Worker):
                            f'- партий: {self.count_of_parties}.'
 
         elif self.command == 'update_content_all':
-            keys = self.get_keys_for_update_content('all')
-            self.update_content(keys)
+            keys = self.get_keys_for_update_content(mode='all')
+            self.update_content(keys=keys, mode='all')
             self.message = f'- характеристик: {self.count_of_parameters};\n' \
                            f'- фотографий: {self.count_of_images}.'
 
         elif self.command == 'update_content_clear':
-            keys = self.get_keys_for_update_content('clear')
-            self.update_content(keys)
+            keys = self.get_keys_for_update_content(mode='clear')
+            self.update_content(keys=keys, mode='clear')
+            self.message = f'- характеристик: {self.count_of_parameters};\n' \
+                           f'- фотографий: {self.count_of_images}.'
+
+        elif self.command == 'update_content_day':
+            keys = self.get_keys_for_update_content(mode='day')
+            self.update_content(keys=keys, mode='day')
+            self.message = f'- характеристик: {self.count_of_parameters};\n' \
+                           f'- фотографий: {self.count_of_images}.'
+
+        elif self.command == 'update_content_week':
+            keys = self.get_keys_for_update_content(mode='week')
+            self.update_content(keys=keys, mode='week')
+            self.message = f'- характеристик: {self.count_of_parameters};\n' \
+                           f'- фотографий: {self.count_of_images}.'
+
+        elif self.command == 'update_content_month':
+            keys = self.get_keys_for_update_content(mode='month')
+            self.update_content(keys=keys, mode='month')
             self.message = f'- характеристик: {self.count_of_parameters};\n' \
                            f'- фотографий: {self.count_of_images}.'
 
@@ -351,51 +371,92 @@ class Worker(swarm.workers.worker.Worker):
 
         keys = []
 
-        if mode == 'all':
-            keys_ = distributors.models.Product.objects.filter(distributor=self.distributor).values('part_number')
-            for key_ in keys_:
-                keys.append(key_['part_number'])
-
-        elif mode == 'clear':
+        # Получаем ключи из базы
+        if mode == 'clear':
             keys_ = distributors.models.Product.objects.filter(distributor=self.distributor,
                                                                content__isnull=True).values('part_number')
-            for key_ in keys_:
-                keys.append(key_['part_number'])
+        else:
+            keys_ = distributors.models.Product.objects.filter(distributor=self.distributor).values('part_number')
+
+        # Чистим ключи
+        for key_ in keys_:
+            keys.append(self.fix_part_number(key_['part_number']))
 
         return keys
 
-    def update_content(self, keys):
+    def update_content(self, keys, mode='all'):
 
+        # Количество продуктов в одном запросе
+        if mode in ['all', 'clear']:
+            quantity_in_request = 100
+        else:
+            quantity_in_request = 500
+
+        # Оформляем дату старта
+        start = ''
+        if mode == 'day':
+            start = datetime.utcnow() - timedelta(days=1)
+            start = self.datetime_to_str(x=start)
+
+        elif mode == 'week':
+            start = datetime.utcnow() - timedelta(days=7)
+            start = self.datetime_to_str(x=start)
+
+        elif mode == 'month':
+            start = datetime.utcnow() - timedelta(days=31)
+            start = self.datetime_to_str(x=start)
+
+        # Готовим обрамление урлов
+        url_params_start = f'https://b2b.marvel.ru/Api/GetItems' \
+                           f'?user={settings.MARVEL_LOGIN}' \
+                           f'&password={settings.MARVEL_PASSWORD}' \
+                           f'&packStatus=0' \
+                           f'&responseFormat=1' \
+                           f'&getExtendedItemInfo=1' \
+                           f'{start}' \
+                           f'&items=<Root><WareItem>'
+
+        url_images_start = f'https://b2b.marvel.ru/Api/GetItemPhotos' \
+                           f'?user={settings.MARVEL_LOGIN}' \
+                           f'&password={settings.MARVEL_PASSWORD}' \
+                           f'&packStatus=0' \
+                           f'&responseFormat=1' \
+                           f'{start}' \
+                           f'&items=<Root><WareItem>'
+
+        url_end = '</WareItem></Root>'
+
+        # Готовим запросы и выполняем их
+        url_ = ''
         for n, key in enumerate(keys):
 
             print(f'{n+1} of {len(keys)} {key}')
+            url_ = f'{url_}<ItemId>{key}</ItemId>'
 
-            url = f'https://b2b.marvel.ru/Api/GetItems' \
-                  f'?user={settings.MARVEL_LOGIN}' \
-                  f'&password={settings.MARVEL_PASSWORD}' \
-                  f'&packStatus=0' \
-                  f'&responseFormat=1' \
-                  f'&getExtendedItemInfo=1' \
-                  f'&items=<Root><WareItem><ItemId>{key}</ItemId></WareItem></Root>'
+            # Если счётчик кратен партии или последний
+            if n + 1 == len(keys) or (n + 1) % quantity_in_request == 0:
 
-            data = self.load(url=url, result_type='json', request_type='POST')
-            if data['Header']['Code'] == 0:
-                self.parse_content(data['Body']['CategoryItem'])
-            else:
-                print('Ошибка!', data['Header']['Message'])
+                # Загружаем параметры
+                url = f'{url_params_start}{url_}{url_end}'
+                data = self.load(url=url, result_type='json', request_type='POST')
+                if data['Header']['Code'] == 0:
+                    try:
+                        self.parse_content(data['Body']['CategoryItem'])
+                    except TypeError:
+                        pass
+                else:
+                    print('Ошибка!', data['Header']['Message'])
 
-            url = f'https://b2b.marvel.ru/Api/GetItemPhotos' \
-                  f'?user={settings.MARVEL_LOGIN}' \
-                  f'&password={settings.MARVEL_PASSWORD}' \
-                  f'&packStatus=0' \
-                  f'&responseFormat=1' \
-                  f'&items=<Root><WareItem><ItemId>{key}</ItemId></WareItem></Root>'
+                # Загружаем изображения
+                url = f'{url_images_start}{url_}{url_end}'
+                data = self.load(url=url, result_type='json', request_type='POST')
+                if data['Header']['Code'] == 0:
+                    self.parse_images(data['Body']['Photo'])
+                else:
+                    print('Ошибка!', data['Header']['Message'])
 
-            data = self.load(url=url, result_type='json', request_type='POST')
-            if data['Header']['Code'] == 0:
-                self.parse_images(data['Body']['Photo'])
-            else:
-                print('Ошибка!', data['Header']['Message'])
+                # Обнуляем url
+                url_ = ''
 
     def parse_content(self, data):
 
@@ -467,3 +528,21 @@ class Worker(swarm.workers.worker.Worker):
             quantity = quantity.replace(key, dictionary[key])
 
         return int(quantity), quantity_great_than
+
+    @staticmethod
+    def fix_part_number(part_number):
+
+        # Насильно превращаем в строку
+        part_number = str(part_number)
+
+        dictionary = {'#': '', '@': '', ':': '', '&': '', '?': ''}
+        for key in dictionary:
+            part_number = part_number.replace(key, dictionary[key])
+
+        return part_number
+
+    @staticmethod
+    def datetime_to_str(x):
+        x = x.strftime('%d%m%Y')
+        x = f'&updatedSince={x}'
+        return x

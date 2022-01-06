@@ -111,8 +111,12 @@ class Worker:
                     el.tag = el.tag[el.tag.index('}')+1:]
             return tree
         elif result_type == 'json':
-            data = json.loads(result.text)
-            return data
+            try:
+                data = json.loads(result.text)
+                return data
+            except json.decoder.JSONDecodeError:
+                print(result.text)
+                return None
         elif result_type == 'content':
             return result.content
 
