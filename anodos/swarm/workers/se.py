@@ -94,7 +94,11 @@ class Worker(swarm.workers.worker.Worker):
 
     def update_product_and_content(self, product_url, clear=False):
 
-        if clear and distributors.models.Product.objects.filter(url=product_url).count() > 0:
+        # Фиксируем источник данный в базе
+        source = swarm.models.SourceData.objects.take(url=product_url)
+
+        # Проверяем, требуется ли загрузка данных
+        if clear and source.parced is not None:
             return None
 
         # Загружаем данные
@@ -232,6 +236,9 @@ class Worker(swarm.workers.worker.Worker):
                 print(image)
                 self.count_of_images += 1
                 time.sleep(2)
+
+        # Фиксируем факт загрузки данных с источника
+        source.set_parced()
 
     @staticmethod
     def fix_logistic_value(text):

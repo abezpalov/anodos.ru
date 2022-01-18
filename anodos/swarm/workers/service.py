@@ -115,11 +115,17 @@ class Worker(swarm.workers.worker.Worker):
             except pflops.models.Vendor.DoesNotExist:
                 print('Нечего вычищать!')
 
+            products = distributors.models.Product.objects.all()
+            for n, product in enumerate(products):
+                print(f'{n+1} of {len(products)} {product}')
+                swarm.models.SourceData.objects.take(url=product.url)
+
         elif self.command == 'update_sitemap':
             self.update_sitemap()
 
             # Готовим оповещение
             self.message = f'- ссылок: {self.count_of_urls}.'
+
 
         else:
             print('Неизвестная команда!')
@@ -180,6 +186,7 @@ class Worker(swarm.workers.worker.Worker):
             print(f'{n + 1} of {len(ids_)} {product}')
 
     def update_prices_and_quantities(self):
+        """ Обновляет цены и количество товаров на складах """
 
         rub_ = distributors.models.Currency.objects.take(key="RUB")
         rub = pflops.models.Currency.objects.take(key="RUB")

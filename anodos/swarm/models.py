@@ -42,9 +42,11 @@ class Source(models.Model):
 
 class SourceDataManager(models.Manager):
 
-    def take(self, source, url=None):
-        if not source:
+    def take(self, source=None, url=None):
+
+        if url is None:
             return None
+
         try:
             o = self.get(source=source, url=url)
         except SourceData.DoesNotExist:
@@ -54,7 +56,11 @@ class SourceDataManager(models.Manager):
             o.save()
 
         # Проверяем наличие уже скачанного файла
-        file_name = '{}swarm/{}/{}'.format(settings.MEDIA_ROOT, o.source.name, o.url)
+        if o.source is None:
+            file_name = '{}swarm/{}/{}'.format(settings.MEDIA_ROOT, 'None', o.url)
+        else:
+            file_name = '{}swarm/{}/{}'.format(settings.MEDIA_ROOT, o.source.name, o.url)
+
         if os.path.isfile(file_name):
             o.file_name = file_name
             o.save()
