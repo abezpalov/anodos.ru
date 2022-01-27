@@ -54,6 +54,8 @@ class SourceDataManager(models.Manager):
             o.source = source
             o.url = url
             o.save()
+        except SourceData.MultipleObjectsReturned:
+            o = self.filter(source=source, url=url)[0]
 
         # Проверяем наличие уже скачанного файла
         if o.source is None:

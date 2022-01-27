@@ -1,6 +1,7 @@
 import os
 import time
 import telebot
+import requests
 
 from django.conf import settings
 
@@ -17,7 +18,11 @@ def send(content='test', chat_id=settings.TELEGRAM_LOG_CHAT,
                              disable_web_page_preview=disable_web_page_preview)
             break
         except telebot.apihelper.ApiTelegramException:
+            print('Не удалось отправить сообщение.')
             time.sleep(30)
+        except requests.exceptions.ConnectionError:
+            print('Не удалось отправить сообщение.')
+            time.sleep(1)
     time.sleep(1)
 
 

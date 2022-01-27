@@ -314,9 +314,7 @@ class ProductManager(models.Manager):
         try:
             o = super().get(**kwargs)
         except Product.MultipleObjectsReturned:
-            for n, o_ in enumerate(self.filter(**kwargs)):
-                if n == 0:
-                    o = o_
+            o = self.filter(**kwargs)[0]
         return o
 
     def take_by_party_key(self, distributor, party_key, name, **kwargs):
@@ -500,12 +498,7 @@ class ProductManager(models.Manager):
             o.name = name
             need_save = True
         except Product.MultipleObjectsReturned:
-            os_ = self.filter(distributor=distributor, vendor=vendor, part_number__iexact=part_number)
-            for n, o_ in enumerate(os_):
-                if n == 0:
-                    o = o_
-                else:
-                    o_.delete()
+            o = self.filter(distributor=distributor, vendor=vendor, part_number__iexact=part_number)[0]
 
         # party_key
         party_key = kwargs.get('party_key', None)
@@ -952,12 +945,7 @@ class ParameterManager(models.Manager):
             need_save = True
 
         except Parameter.MultipleObjectsReturned:
-            os_ = self.filter(distributor=distributor, name=name)
-            for n, o_ in enumerate(os_):
-                if n == 0:
-                    o = o_
-                else:
-                    o_.delete()
+            o = self.filter(distributor=distributor, name=name)[0]
 
         description = kwargs.get('description', None)
         if description is not None and o.description is None:
