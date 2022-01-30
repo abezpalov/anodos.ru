@@ -755,7 +755,7 @@ class Product(models.Model):
 
     class Meta:
         ordering = ['-created']
-        indexes = [GinIndex(fields=['names_search', 'parameters_search'],
+        indexes = [GinIndex(fields=['names_search', 'parameters_search', 'part_number'],
                             name='product_search_idx')]
 
 
