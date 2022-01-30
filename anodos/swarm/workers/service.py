@@ -149,7 +149,7 @@ class Worker(swarm.workers.worker.Worker):
 
             self.count_of_products += 1
 
-            print(f'{n + 1} of {len(ids_)} {product}')
+            print(f'{n + 1} of {len(products_)} {product}')
 
     def update_prices_and_quantities(self):
         """ Обновляет цены и количество товаров на складах """
