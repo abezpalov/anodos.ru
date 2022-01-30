@@ -157,10 +157,8 @@ class Worker(swarm.workers.worker.Worker):
         rub_ = distributors.models.Currency.objects.take(key="RUB")
         rub = pflops.models.Currency.objects.take(key="RUB")
 
-        ids_ = pflops.models.Product.objects.all().values('id')
-        for n, id_ in enumerate(ids_):
-            product = pflops.models.Product.objects.get(id=id_['id'])
-
+        products = pflops.models.Product.objects.all()
+        for n, product in enumerate(products):
             parties = distributors.models.Party.objects.filter(product__to_pflops=product)
             price = None
             quantity = 0
@@ -201,7 +199,7 @@ class Worker(swarm.workers.worker.Worker):
             product.quantity_great_than = quantity_great_than
             product.save()
 
-            print(f'{n + 1} of {len(ids_)} {product} | {product.quantity} | {product.price}')
+            print(f'{n + 1} of {len(products)} {product} | {product.quantity} | {product.price}')
 
             self.count_of_parties += 1
 
