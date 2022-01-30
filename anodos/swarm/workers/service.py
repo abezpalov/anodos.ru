@@ -39,12 +39,16 @@ class Worker(swarm.workers.worker.Worker):
             # Обновляем продукты
             self.update_products()
 
+            # Готовим оповещение
+            self.message = f'- продуктов: {self.count_of_products}.'
+
+        elif self.command == 'update_prices_and_quantities':
+
             # Обновляем цены и наличие
             self.update_prices_and_quantities()
 
             # Готовим оповещение
-            self.message = f'- продуктов: {self.count_of_products};\n' \
-                           f'- партий: {self.count_of_parties}.'
+            self.message = f'- партий: {self.count_of_parties}.'
 
         elif self.command == 'update_parameters':
             # Характеристики

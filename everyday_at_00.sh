@@ -7,6 +7,7 @@
 ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py marvel update_stocks
 
 ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py service update_products
+~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py service update_prices_and_quantities
 
 # Обновление карты сайта
 ~/anodos.ru/venv/bin/python3 ~/anodos.ru/anodos/swarm/run.py service update_sitemap
