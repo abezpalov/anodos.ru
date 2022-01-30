@@ -133,9 +133,8 @@ class Worker(swarm.workers.worker.Worker):
     def update_products(self):
         """ Переносит сущность продукт в чистовик """
 
-        ids_ = distributors.models.Product.objects.filter(vendor__to_pflops__isnull=False).values('id')
-        for n, id_ in enumerate(ids_):
-            product_ = distributors.models.Product.objects.get(id=id_['id'])
+        products_ = distributors.models.Product.objects.filter(vendor__to_pflops__isnull=False)
+        for n, product_ in enumerate(products_):
 
             if product_.category is not None:
                 category = product_.category.to_pflops
