@@ -435,11 +435,7 @@ class ProductManager(models.Manager):
             o.part_number = part_number
             need_save = True
         except Product.MultipleObjectsReturned:
-            for n, o_ in enumerate(self.filter(vendor=vendor, part_number__iexact=part_number)):
-                if n == 0:
-                    o = o_
-                else:
-                    o_.delete()
+            o = self.filter(vendor=vendor, part_number__iexact=part_number)[0]
 
         # category
         category = kwargs.get('category', None)
@@ -902,9 +898,9 @@ class ProductImageManager(models.Manager):
 
         return o
 
-    def upload(self, bytes):
+    def upload(self, data):
 
-        im = PIL.Image.open(io.BytesIO(bytes))
+        im = PIL.Image.open(io.BytesIO(data))
 
         # Масштабируем исходное изображение
         dx = self.width / im.size[0]

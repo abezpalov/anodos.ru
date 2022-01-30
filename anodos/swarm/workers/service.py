@@ -75,51 +75,24 @@ class Worker(swarm.workers.worker.Worker):
                 print(f'{n + 1} of {len(ids_)} {value}')
                 value.save()
 
+        elif self.command == 'del_all_sourcedata':
+            swarm.models.SourceData.objects.all().delete()
+
         elif self.command == 'del_all_images':
             pflops.models.ProductImage.objects.all().delete()
 
         elif self.command == 'fix':
-            bad_name = 'Schneder Electric'
-            print(bad_name)
-
-            try:
-                distributor = distributors.models.Distributor.objects.get(name=bad_name)
-                print(distributor)
-
-                products = distributors.models.Product.objects.filter(distributor=distributor)
-                for product in products:
-                    print(product)
-                    product.delete()
-
-                vendors = distributors.models.Vendor.objects.filter(distributor=distributor)
-                for vendor in vendors:
-                    print(product)
-                    vendor.delete()
-
-                distributor.delete()
-
-            except distributors.models.Distributor.DoesNotExist:
-                print('Нечего вычищать!')
-
-            try:
-                vendor = pflops.models.Vendor.objects.get(name=bad_name)
-                print(vendor)
-
-                products = pflops.models.Product.objects.filter(vendor=vendor)
-                for product in products:
-                    print(product)
-                    product.delete()
-
-                vendor.delete()
-
-            except pflops.models.Vendor.DoesNotExist:
-                print('Нечего вычищать!')
+            products = distributors.models.Product.objects.all()
+            for n, product in enumerate(products):
+                print(f'{n+1} of {len(products)} {product}')
+                swarm.models.SourceData.objects.take(url=product.url)
 
         elif self.command == 'update_sitemap':
             self.update_sitemap()
 
             # Готовим оповещение
             self.message = f'- ссылок: {self.count_of_urls}.'
+
 
         else:
             print('Неизвестная команда!')
@@ -179,6 +152,7 @@ class Worker(swarm.workers.worker.Worker):
             print(f'{n + 1} of {len(ids_)} {product}')
 
     def update_prices_and_quantities(self):
+        """ Обновляет цены и количество товаров на складах """
 
         rub_ = distributors.models.Currency.objects.take(key="RUB")
         rub = pflops.models.Currency.objects.take(key="RUB")
