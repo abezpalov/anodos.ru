@@ -13,7 +13,7 @@ def view_login(request):
 def ajax_login(request):
     """AJAX-представление: Log-in."""
 
-    if not request.is_ajax() or request.method != 'POST':
+    if request.method != 'POST':
         return HttpResponse(status=400)
 
     username = request.POST.get('username')
@@ -41,7 +41,7 @@ def ajax_logout(request):
 
     import json
 
-    if not request.is_ajax() or request.method != 'POST':
+    if request.method != 'POST':
         return HttpResponse(status=400)
 
     logout(request)
